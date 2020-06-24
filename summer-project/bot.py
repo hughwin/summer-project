@@ -1,14 +1,13 @@
 import requests
 import os
 import settings
+import line_graph
 from mastodon import Mastodon
 from dotenv import load_dotenv
 
-# Important variables such as my secret key are stored in a .env file.
-# These are loaded as required.
 MASTODON_SERVER = settings.BASE_ADDRESS
 JSON_ERROR_MESSAGE = "Decoding JSON has failed"
-load_dotenv()
+load_dotenv()  # Important variables such as my secret key are stored in a .env file.
 
 #   Set up Mastodon
 mastodon = Mastodon(
@@ -41,6 +40,6 @@ def get_instance_activity():
     try:
         r = requests.get("%sapi/v1/instance/activity" % MASTODON_SERVER)
         activity = r.json()
-        print(activity)
+        line_graph.plot_weekly_statuses(activity)
     except ValueError:
         print(JSON_ERROR_MESSAGE)
