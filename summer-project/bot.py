@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 # Important variables such as my secret key are stored in a .env file.
 # These are loaded as required.
 MASTODON_SERVER = settings.BASE_ADDRESS
+JSON_ERROR_MESSAGE = "Decoding JSON has failed"
 load_dotenv()
 
 #   Set up Mastodon
@@ -17,7 +18,7 @@ mastodon = Mastodon(
 
 
 def get_posts():
-    r = requests.get("%sapi/v1/timelines/public?limit=5" % MASTODON_SERVER)
+    r = requests.get("%sapi/v1/timelines/public?limit=5" % MASTODON_SERVER)  # Consider changing
     statuses = r.json()
     print(statuses[0])
     print(statuses[1])
@@ -33,7 +34,7 @@ def get_trends():
         trends = r.json()
         print(trends)
     except ValueError:
-        print("Decoding JSON has failed")
+        print(JSON_ERROR_MESSAGE)
 
 
 def get_instance_activity():
@@ -42,4 +43,4 @@ def get_instance_activity():
         activity = r.json()
         print(activity)
     except ValueError:
-        print("Decoding JSON has failed")
+        print(JSON_ERROR_MESSAGE)
