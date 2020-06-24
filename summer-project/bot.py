@@ -1,21 +1,23 @@
 import requests
 import os
+import settings
 from mastodon import Mastodon
 from dotenv import load_dotenv
 
 # Important variables such as my secret key are stored in a .env file.
 # These are loaded as required.
+MASTODON_SERVER = settings.BASE_ADDRESS
 load_dotenv()
 
 #   Set up Mastodon
 mastodon = Mastodon(
     access_token=os.getenv("ACCESS_TOKEN"),
-    api_base_url='https://hostux.social/'
+    api_base_url=MASTODON_SERVER
 )
 
 
 def get_posts():
-    r = requests.get("https://hostux.social/api/v1/timelines/public?limit=5")
+    r = requests.get("%sapi/v1/timelines/public?limit=5" % MASTODON_SERVER)
     statuses = r.json()
     print(statuses[0])
     print(statuses[1])
@@ -27,7 +29,7 @@ def post_hello_world():
 
 def get_trends():
     try:
-        r = requests.get("https://hostux.social/api/v1/trends/")
+        r = requests.get("%s/api/v1/trends/" % MASTODON_SERVER)
         trends = r.json()
         print(trends)
     except ValueError:
@@ -36,7 +38,7 @@ def get_trends():
 
 def get_instance_activity():
     try:
-        r = requests.get("https://hostux.social/api/v1/instance/activity")
+        r = requests.get("%sapi/v1/instance/activity" % MASTODON_SERVER)
         activity = r.json()
         print(activity)
     except ValueError:
