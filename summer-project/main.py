@@ -2,8 +2,7 @@ import bot
 
 
 def main():
-    bot.get_posts()
-    bot.post_hello_world()
+    bot.get_instance_activity()
 
 
 if __name__ == "__main__":
