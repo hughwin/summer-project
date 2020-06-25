@@ -11,8 +11,7 @@ load_dotenv()  # Important variables such as my secret key are stored in a .env 
 
 #   Set up Mastodon
 mastodon = Mastodon(
-    access_token="KnzqeNTkHBqucW5nm8n6rBftOjpU5SbdVebNFXcurKY",
-    # access_token=os.getenv("ACCESS_TOKEN"),
+    access_token=os.getenv("ACCESS_TOKEN"),
     api_base_url=MASTODON_SERVER
 )
 
@@ -30,9 +29,8 @@ def post_hello_world():
 
 
 def toot_image(image):
-    media_dict = mastodon.media_post(image)
-    print(media_dict["url"])
-    mastodon.toot(media_dict["url"])
+    image_dict = mastodon.media_post(image)
+    mastodon.status_post(status="A space invader", media_ids=image_dict["id"])
 
 
 def get_trends():
