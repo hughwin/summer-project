@@ -1,10 +1,8 @@
-import bot
+import space_invader_generator
 
 
 def main():
-    bot.get_instance_activity()
-    bot.get_posts()
-
+    space_invader_generator.generate_image(9, 32, 1500)
 
 
 if __name__ == "__main__":

@@ -11,7 +11,8 @@ load_dotenv()  # Important variables such as my secret key are stored in a .env 
 
 #   Set up Mastodon
 mastodon = Mastodon(
-    access_token=os.getenv("ACCESS_TOKEN"),
+    access_token="KnzqeNTkHBqucW5nm8n6rBftOjpU5SbdVebNFXcurKY",
+    # access_token=os.getenv("ACCESS_TOKEN"),
     api_base_url=MASTODON_SERVER
 )
 
@@ -25,6 +26,13 @@ def get_posts():
 
 def post_hello_world():
     mastodon.status_post("Hello world!")
+    # TODO: Consider removing this method.
+
+
+def toot_image(image):
+    media_dict = mastodon.media_post(image)
+    print(media_dict["url"])
+    mastodon.toot(media_dict["url"])
 
 
 def get_trends():
@@ -43,3 +51,6 @@ def get_instance_activity():
         line_graph.plot_weekly_statuses(activity)
     except ValueError:
         print(JSON_ERROR_MESSAGE)
+
+def test_access_token():
+    print(os.getenv("ACCESS_TOKEN"))
