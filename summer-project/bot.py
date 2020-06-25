@@ -49,6 +49,3 @@ def get_instance_activity():
         line_graph.plot_weekly_statuses(activity)
     except ValueError:
         print(JSON_ERROR_MESSAGE)
-
-def test_access_token():
-    print(os.getenv("ACCESS_TOKEN"))
