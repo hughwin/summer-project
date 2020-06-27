@@ -70,6 +70,7 @@ def reply_to_request_for_invader():
                 print("Tooting!")
             except ValueError:
                 print("Something went wrong!")
+    mastodon.notifications_clear()
 
 
 def get_instance_activity():
