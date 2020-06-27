@@ -1,7 +1,5 @@
 import random
-import sys
 import bot
-import os
 
 from PIL import Image, ImageDraw
 
