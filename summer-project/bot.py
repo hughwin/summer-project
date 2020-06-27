@@ -3,9 +3,9 @@ import os
 import settings
 import line_graph
 import html_stripper
+import space_invader_generator
 from mastodon import Mastodon
 from dotenv import load_dotenv
-
 
 MASTODON_SERVER = settings.BASE_ADDRESS
 JSON_ERROR_MESSAGE = "Decoding JSON has failed"
@@ -30,14 +30,16 @@ def post_hello_world():
     # TODO: Consider removing this method.
 
 
-def toot_image(image):
-    image_dict = mastodon.media_post(image)
+def toot_image():
+    image = space_invader_generator.generate_image(3, 16, 64)
+    image_dict = mastodon.media_post(image, mime_type="image/png")
     mastodon.status_post(status="A space invader", media_ids=image_dict["id"])
 
 
-def toot_image_on_request(image, user_id):
+def toot_image_on_request(image, post_id):
     image_dict = mastodon.media_post(image)
-    mastodon.status_post(status="A space invader", media_ids=image_dict["id"])
+    message = "Here is your bespoke space invader!"
+    mastodon.status_post(status=message, media_ids=image_dict["id"], in_reply_to_id=post_id)
 
 
 def get_trends():
@@ -49,15 +51,25 @@ def get_trends():
         print(JSON_ERROR_MESSAGE)
 
 
-def get_mentions():
+def reply_to_request_for_invader():
     notifications = mastodon.notifications(mentions_only=True)
     for n in notifications:
         if n["type"] == "mention":
-            content = (n["status"]["content"])
-            content = strip_tags(content)
-            print(content)
-            # message = n["mention"]["content"]
-            user_id = n["id"]
+            status_id = n["status"]["id"]
+            content = n["status"]["content"]
+            print(n)
+            content = strip_tags(content)  # Removes HTML
+            content = content.replace("@hughwin ", "")
+            params = content.split(" ")
+            try:
+                size = int(params[0])
+                invaders = int(params[1])
+                img_size = int(params[2])
+                image = space_invader_generator.generate_image(size, invaders, img_size)
+                toot_image_on_request(image, status_id)
+                print("Tooting!")
+            except ValueError:
+                print("Something went wrong!")
 
 
 def get_instance_activity():

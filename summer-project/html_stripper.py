@@ -1,6 +1,7 @@
 from io import StringIO
 from html.parser import HTMLParser
 
+
 class MLStripper(HTMLParser):
     def error(self, message):
         pass

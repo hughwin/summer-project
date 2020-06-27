@@ -3,7 +3,7 @@ import bot
 
 
 def main():
-    bot.get_mentions()
+    bot.toot_image()
 
 
 if __name__ == "__main__":
