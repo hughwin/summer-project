@@ -3,7 +3,7 @@ import bot
 
 
 def main():
-    bot.toot_image()
+    bot.reply_to_request_for_invader()
 
 
 if __name__ == "__main__":

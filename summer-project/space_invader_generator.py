@@ -53,8 +53,6 @@ def generate_image(size, invaders, img_size):
             bot_right_x = top_left_x + invader_size - padding
             bot_right_y = top_left_y + invader_size - padding
             create_invader((top_left_x, top_left_y, bot_right_x, bot_right_y), draw, size)
-    orig_image.save(
-        "Examples/Example-" + str(size) + "x" + str(size) + "-" + str(invaders) + "-" + str(img_size) + ".jpg")
     b = BytesIO()
     orig_image.save(b, 'png')
     return b.getvalue()

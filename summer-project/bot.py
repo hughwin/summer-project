@@ -37,7 +37,7 @@ def toot_image():
 
 
 def toot_image_on_request(image, post_id):
-    image_dict = mastodon.media_post(image)
+    image_dict = mastodon.media_post(image, mime_type="image/png")
     message = "Here is your bespoke space invader!"
     mastodon.status_post(status=message, media_ids=image_dict["id"], in_reply_to_id=post_id)
 
