@@ -1,9 +1,8 @@
-import space_invader_generator
 import bot
 
 
 def main():
-    bot.reply_to_request_for_invader()
+    bot.start_bot()
 
 
 if __name__ == "__main__":

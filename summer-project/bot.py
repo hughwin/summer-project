@@ -1,5 +1,7 @@
 import requests
 import os
+import threading
+import time
 import settings
 import line_graph
 import html_stripper
@@ -16,6 +18,11 @@ mastodon = Mastodon(
     access_token=os.getenv("ACCESS_TOKEN"),
     api_base_url=MASTODON_SERVER
 )
+
+
+def start_bot():
+    x = threading.Thread(target=listen_to_request_for_invader())
+    x.start()
 
 
 def get_posts():
@@ -51,26 +58,28 @@ def get_trends():
         print(JSON_ERROR_MESSAGE)
 
 
-def reply_to_request_for_invader():
-    notifications = mastodon.notifications(mentions_only=True)
-    for n in notifications:
-        if n["type"] == "mention":
-            status_id = n["status"]["id"]
-            content = n["status"]["content"]
-            print(n)
-            content = strip_tags(content)  # Removes HTML
-            content = content.replace("@hughwin ", "")
-            params = content.split(" ")
-            try:
-                size = int(params[0])
-                invaders = int(params[1])
-                img_size = int(params[2])
-                image = space_invader_generator.generate_image(size, invaders, img_size)
-                toot_image_on_request(image, status_id)
-                print("Tooting!")
-            except ValueError:
-                print("Something went wrong!")
-    mastodon.notifications_clear()
+def listen_to_request_for_invader():
+    while True:
+        print("Checking notifications!")
+        notifications = mastodon.notifications(mentions_only=True)
+        for n in notifications:
+            if n["type"] == "mention":
+                status_id = n["status"]["id"]
+                content = n["status"]["content"]
+                print(n)
+                content = strip_tags(content)  # Removes HTML
+                content = content.replace("@hughwin ", "")
+                params = content.split(" ")
+                try:
+                    size = int(params[0])
+                    invaders = int(params[1])
+                    image = space_invader_generator.generate_image(size, invaders, (size * invaders + 1))
+                    toot_image_on_request(image, status_id)
+                    print("Tooting!")
+                except ValueError:
+                    print("Something went wrong!")
+        mastodon.notifications_clear()
+        time.sleep(2)
 
 
 def get_instance_activity():
