@@ -91,6 +91,10 @@ def get_instance_activity():
         print(JSON_ERROR_MESSAGE)
 
 
+def clear_notifications():
+    mastodon.notifications_clear()
+
+
 def strip_tags(html):
     s = html_stripper.MLStripper()
     s.feed(html)
