@@ -66,7 +66,7 @@ def listen_to_request_for_invader():
             if n["type"] == "mention":
                 status_id = n["status"]["id"]
                 content = n["status"]["content"]
-                media = n["status"]["media_attachments"]
+                media = n["status"]["media_attachments"]  # Will have to go down another layer
                 print(n)
                 print(media)
                 content = strip_tags(content)  # Removes HTML
