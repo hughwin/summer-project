@@ -3,11 +3,13 @@ import os
 import threading
 import time
 import settings
-import line_graph
 import html_stripper
-import space_invader_generator
+import urllib.request
+import subprocess
+import shutil
 from mastodon import Mastodon
 from dotenv import load_dotenv
+from pathlib import Path, PureWindowsPath
 
 MASTODON_SERVER = settings.BASE_ADDRESS
 JSON_ERROR_MESSAGE = "Decoding JSON has failed"
@@ -19,9 +21,12 @@ mastodon = Mastodon(
     api_base_url=MASTODON_SERVER
 )
 
+input_folder = Path("pix2pix/val/")
+output_folder = Path("pix2pix/test/images/")
+
 
 def start_bot():
-    x = threading.Thread(target=listen_to_request_for_invader())
+    x = threading.Thread(target=listen_to_request())
     x.start()
 
 
@@ -37,15 +42,10 @@ def post_hello_world():
     # TODO: Consider removing this method.
 
 
-def toot_image():
-    image = space_invader_generator.generate_image(3, 16, 64)
-    image_dict = mastodon.media_post(image, mime_type="image/png")
-    mastodon.status_post(status="A space invader", media_ids=image_dict["id"])
-
-
-def toot_image_on_request(image, post_id):
-    image_dict = mastodon.media_post(image, mime_type="image/png")
-    message = "Here is your bespoke space invader!"
+def toot_image_on_request(image_path, post_id):
+    image_dict = mastodon.media_post(image_path)
+    print(image_dict)
+    message = "Here is my best guess!"
     mastodon.status_post(status=message, media_ids=image_dict["id"], in_reply_to_id=post_id)
 
 
@@ -58,7 +58,28 @@ def get_trends():
         print(JSON_ERROR_MESSAGE)
 
 
-def listen_to_request_for_invader():
+class UserNotification:
+    def __init__(self, status_id, content):
+        self.status_id = status_id
+        self.content = content
+        self.media = []
+
+    def get_status_id(self):
+        return self.status_id
+
+    def get_user_content(self):
+        return self.get_user_content()
+
+    def get_media(self):
+        return self.media
+
+    def add_media(self, media_path):
+        self.media.append(media_path)
+
+
+def listen_to_request():
+    count = 0
+    status_notifications = []
     while True:
         print("Checking notifications!")
         notifications = mastodon.notifications(mentions_only=True)
@@ -66,29 +87,62 @@ def listen_to_request_for_invader():
             if n["type"] == "mention":
                 status_id = n["status"]["id"]
                 content = n["status"]["content"]
-                media = n["status"]["media_attachments"]  # Will have to go down another layer
-                print(n)
-                print(media)
-                content = strip_tags(content)  # Removes HTML
-                content = content.replace("@hughwin ", "")
-                params = content.split(" ")
+                user = UserNotification(status_id, content)
+                media = n["status"]["media_attachments"]
+                for m in media:
+                    media_url = m["url"]
+                    media_path = "{}.jpg".format(count)
+                    urllib.request.urlretrieve(media_url, (str(input_folder / media_path)))
+                    user.add_media(count)
+                    count += 1
+                status_notifications.append(user)
+        count = 0
+        num_files = os.listdir(str(input_folder))
+        if len(num_files) != 0:
+            try:
+                subprocess.call("python pix2pix/pix2pix.py "
+                                "--mode test "
+                                "--input_dir pix2pix/val "
+                                "--output_dir pix2pix/test "
+                                "--checkpoint pix2pix/checkpoint")
+            except Exception:
+                print("Problem with TensorFlow")
+        # content = strip_tags(content)  # Removes HTML
+        # content = content.replace("@hughwin ", "")
+        # params = content.split(" ")
+        for reply in status_notifications:
+            for image in range(len(reply.get_media())):
                 try:
-                    size = int(params[0])
-                    invaders = int(params[1])
-                    image = space_invader_generator.generate_image(size, invaders, (size * invaders + 1))
-                    toot_image_on_request(image, status_id)
+                    image_path = str(output_folder / "{}-outputs.png".format(image))
+                    toot_image_on_request(image_path, reply.get_status_id())
                     print("Tooting!")
                 except ValueError:
                     print("Something went wrong!")
         mastodon.notifications_clear()
+        status_notifications.clear()
+        bot_delete_files_in_directory(input_folder)
+        bot_delete_files_in_directory(output_folder)
         time.sleep(2)
+
+
+def bot_delete_files_in_directory(path):
+    path = str(path)
+    for filename in os.listdir(path):
+        file_path = os.path.join(path, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
 
 
 def get_instance_activity():
     try:
         r = requests.get("%sapi/v1/instance/activity" % MASTODON_SERVER)
         activity = r.json()
-        line_graph.plot_weekly_statuses(activity)
+        # line_graph.plot_weekly_statuses(activity)
     except ValueError:
         print(JSON_ERROR_MESSAGE)
 
