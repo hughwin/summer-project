@@ -6,6 +6,7 @@ import settings
 import html_stripper
 import urllib.request
 import subprocess
+import shutil
 from mastodon import Mastodon
 from dotenv import load_dotenv
 from pathlib import Path, PureWindowsPath
@@ -57,39 +58,64 @@ def get_trends():
         print(JSON_ERROR_MESSAGE)
 
 
+class UserNotification:
+    def __init__(self, status_id, content):
+        self.status_id = status_id
+        self.content = content
+        self.media = []
+
+    def get_status_id(self):
+        return self.status_id
+
+    def get_user_content(self):
+        return self.get_user_content()
+
+    def get_media(self):
+        return self.media
+
+    def add_media(self, media_path):
+        self.media.append(media_path)
+
+
 def listen_to_request():
+    count = 0
+    status_notifications = []
     while True:
-        count = 0
         print("Checking notifications!")
         notifications = mastodon.notifications(mentions_only=True)
         for n in notifications:
             if n["type"] == "mention":
                 status_id = n["status"]["id"]
                 content = n["status"]["content"]
+                user = UserNotification(status_id, content)
                 media = n["status"]["media_attachments"]
                 for m in media:
                     media_url = m["url"]
-                    urllib.request.urlretrieve(media_url, (str(input_folder / "{}.jpg".format(count))))
+                    media_path = "{}.jpg".format(count)
+                    urllib.request.urlretrieve(media_url, (str(input_folder / media_path)))
+                    user.add_media(count)
                     count += 1
-                    try:
-                        subprocess.call("python pix2pix/pix2pix.py "
-                                        "--mode test "
-                                        "--input_dir pix2pix/val "
-                                        "--output_dir pix2pix/test "
-                                        "--checkpoint pix2pix/checkpoint")
-                    except Exception:
-                        print("Problem with TensorFlow")
-                content = strip_tags(content)  # Removes HTML
-                content = content.replace("@hughwin ", "")
-                params = content.split(" ")
-                output_count = 0
-                for i in range(count):
-                    try:
-                        image_path = str(output_folder / "{}-outputs.png".format(output_count))
-                        toot_image_on_request(image_path, status_id)
-                        print("Tooting!")
-                    except ValueError:
-                        print("Something went wrong!")
+                status_notifications.append(user)
+        count = 0
+        try:
+            subprocess.call("python pix2pix/pix2pix.py "
+                            "--mode test "
+                            "--input_dir pix2pix/val "
+                            "--output_dir pix2pix/test "
+                            "--checkpoint pix2pix/checkpoint")
+        except Exception:
+            print("Problem with TensorFlow")
+        # content = strip_tags(content)  # Removes HTML
+        # content = content.replace("@hughwin ", "")
+        # params = content.split(" ")
+        for reply in status_notifications:
+            for image in range(len(reply.get_media())):
+                try:
+                    image_path = str(output_folder / "{}-outputs.png".format(image))
+                    toot_image_on_request(image_path, reply.get_status_id())
+                    print("Tooting!")
+                except ValueError:
+                    print("Something went wrong!")
         mastodon.notifications_clear()
         time.sleep(2)
 
