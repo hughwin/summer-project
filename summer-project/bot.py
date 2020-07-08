@@ -97,14 +97,16 @@ def listen_to_request():
                     count += 1
                 status_notifications.append(user)
         count = 0
-        try:
-            subprocess.call("python pix2pix/pix2pix.py "
-                            "--mode test "
-                            "--input_dir pix2pix/val "
-                            "--output_dir pix2pix/test "
-                            "--checkpoint pix2pix/checkpoint")
-        except Exception:
-            print("Problem with TensorFlow")
+        num_files = os.listdir(str(input_folder))
+        if len(num_files) != 0:
+            try:
+                subprocess.call("python pix2pix/pix2pix.py "
+                                "--mode test "
+                                "--input_dir pix2pix/val "
+                                "--output_dir pix2pix/test "
+                                "--checkpoint pix2pix/checkpoint")
+            except Exception:
+                print("Problem with TensorFlow")
         # content = strip_tags(content)  # Removes HTML
         # content = content.replace("@hughwin ", "")
         # params = content.split(" ")
@@ -117,7 +119,22 @@ def listen_to_request():
                 except ValueError:
                     print("Something went wrong!")
         mastodon.notifications_clear()
+        bot_delete_files_in_directory(input_folder)
+        bot_delete_files_in_directory(output_folder)
         time.sleep(2)
+
+
+def bot_delete_files_in_directory(path):
+    path = str(path)
+    for filename in os.listdir(path):
+        file_path = os.path.join(path, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
 
 
 def get_instance_activity():
