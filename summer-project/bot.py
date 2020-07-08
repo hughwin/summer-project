@@ -3,11 +3,11 @@ import os
 import threading
 import time
 import settings
-import line_graph
 import html_stripper
-import space_invader_generator
+import urllib.request
 from mastodon import Mastodon
 from dotenv import load_dotenv
+from pathlib import Path, PureWindowsPath
 
 MASTODON_SERVER = settings.BASE_ADDRESS
 JSON_ERROR_MESSAGE = "Decoding JSON has failed"
@@ -18,6 +18,9 @@ mastodon = Mastodon(
     access_token=os.getenv("ACCESS_TOKEN"),
     api_base_url=MASTODON_SERVER
 )
+
+count = 0
+folder = Path("pix2pix/val/")
 
 
 def start_bot():
@@ -37,15 +40,15 @@ def post_hello_world():
     # TODO: Consider removing this method.
 
 
-def toot_image():
-    image = space_invader_generator.generate_image(3, 16, 64)
-    image_dict = mastodon.media_post(image, mime_type="image/png")
-    mastodon.status_post(status="A space invader", media_ids=image_dict["id"])
+# def toot_image():
+#     # image = space_invader_generator.generate_image(3, 16, 64)
+#     image_dict = mastodon.media_post(image, mime_type="image/png")
+#     mastodon.status_post(status="Fig. " + count, media_ids=image_dict["id"])
 
 
 def toot_image_on_request(image, post_id):
     image_dict = mastodon.media_post(image, mime_type="image/png")
-    message = "Here is your bespoke space invader!"
+    message = "Here is my best guess!"
     mastodon.status_post(status=message, media_ids=image_dict["id"], in_reply_to_id=post_id)
 
 
@@ -62,21 +65,23 @@ def listen_to_request_for_invader():
     while True:
         print("Checking notifications!")
         notifications = mastodon.notifications(mentions_only=True)
+        win_folder = PureWindowsPath(folder)
+        print(win_folder)
         for n in notifications:
             if n["type"] == "mention":
                 status_id = n["status"]["id"]
                 content = n["status"]["content"]
-                media = n["status"]["media_attachments"]  # Will have to go down another layer
-                print(n)
+                media = n["status"]["media_attachments"][0]["url"]  # Will have to go down another layer
                 print(media)
+                urllib.request.urlretrieve(media, (str(win_folder / "1.jpg")))
+                print("Saving image!")
                 content = strip_tags(content)  # Removes HTML
                 content = content.replace("@hughwin ", "")
                 params = content.split(" ")
                 try:
                     size = int(params[0])
                     invaders = int(params[1])
-                    image = space_invader_generator.generate_image(size, invaders, (size * invaders + 1))
-                    toot_image_on_request(image, status_id)
+                    # toot_image_on_request(image, status_id)
                     print("Tooting!")
                 except ValueError:
                     print("Something went wrong!")
@@ -88,7 +93,7 @@ def get_instance_activity():
     try:
         r = requests.get("%sapi/v1/instance/activity" % MASTODON_SERVER)
         activity = r.json()
-        line_graph.plot_weekly_statuses(activity)
+        # line_graph.plot_weekly_statuses(activity)
     except ValueError:
         print(JSON_ERROR_MESSAGE)
 
