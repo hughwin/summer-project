@@ -119,6 +119,7 @@ def listen_to_request():
                 except ValueError:
                     print("Something went wrong!")
         mastodon.notifications_clear()
+        status_notifications.clear()
         bot_delete_files_in_directory(input_folder)
         bot_delete_files_in_directory(output_folder)
         time.sleep(2)
