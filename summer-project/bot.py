@@ -27,14 +27,11 @@ output_folder = Path("pix2pix/test/images/")
 
 
 def start_bot():
-    print("spam, spam ,spma")
     spam_defender = SpamDefender()
+    spam_defender.start
 
-    print("Spam defender started")
     listener = threading.Thread(target=listen_to_request(spam_defender))
     listener.start()
-    spam_defender.start()
-    print("listener started")
 
 
 def get_posts():
@@ -87,16 +84,20 @@ class UserNotification:
         self.media.append(media_path)
 
 
-class SpamDefender:
+class SpamDefender(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.users_who_have_made_requests = {}
-        self.current_hour = datetime.datetime.now()
+        self.last_updated_time = datetime.datetime.now()
 
     def run(self):
         while True:
-            if self.current_hour < datetime.datetime.now():
+            now_time = datetime.datetime.now()
+            if self.last_updated_time.hour < now_time.hour or self.last_updated_time.day < now_time.day\
+                    or self.last_updated_time.month < now_time.month or self.last_updated_time.year < now_time.year:
                 self.users_who_have_made_requests.clear()
+                self.last_updated_time = now_time
+        time.sleep(1)
 
     def add_user_to_requests(self, account_id):
         if account_id in self.users_who_have_made_requests:
@@ -165,7 +166,7 @@ def listen_to_request(spam_defender):
                 status_notifications.clear()
                 bot_delete_files_in_directory(input_folder)
                 bot_delete_files_in_directory(output_folder)
-            time.sleep(2)
+        time.sleep(2)
 
 
 def bot_delete_files_in_directory(path):
