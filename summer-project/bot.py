@@ -105,8 +105,9 @@ def listen_to_request():
                                 "--input_dir pix2pix/val "
                                 "--output_dir pix2pix/test "
                                 "--checkpoint pix2pix/checkpoint")
-            except Exception:
-                print("Problem with TensorFlow")
+            except subprocess.CalledProcessError as e:
+                print("Problem with subprocess / pix2pix")
+                print(e.output)
         # content = strip_tags(content)  # Removes HTML
         # content = content.replace("@hughwin ", "")
         # params = content.split(" ")
