@@ -2,7 +2,7 @@ import bot
 
 
 def main():
-    bot.listen_to_request()
+    bot.start_bot()
 
 
 if __name__ == "__main__":

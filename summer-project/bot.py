@@ -7,6 +7,7 @@ import html_stripper
 import urllib.request
 import subprocess
 import shutil
+import datetime
 from mastodon import Mastodon
 from dotenv import load_dotenv
 from pathlib import Path, PureWindowsPath
@@ -26,8 +27,11 @@ output_folder = Path("pix2pix/test/images/")
 
 
 def start_bot():
-    x = threading.Thread(target=listen_to_request())
-    x.start()
+    spam_defender = SpamDefender()
+    spam_defender.start
+
+    listener = threading.Thread(target=listen_to_request(spam_defender))
+    listener.start()
 
 
 def get_posts():
@@ -37,9 +41,8 @@ def get_posts():
     print(statuses[1])
 
 
-def post_hello_world():
-    mastodon.status_post("Hello world!")
-    # TODO: Consider removing this method.
+def post_error(post_id):
+    mastodon.status_post("You're making too many requests!", in_reply_to_id=post_id)
 
 
 def toot_image_on_request(image_path, post_id):
@@ -59,10 +62,14 @@ def get_trends():
 
 
 class UserNotification:
-    def __init__(self, status_id, content):
+    def __init__(self, account_id, status_id, content):
+        self.account_id = account_id
         self.status_id = status_id
         self.content = content
         self.media = []
+
+    def get_account_id(self):
+        return self.get_account_id()
 
     def get_status_id(self):
         return self.status_id
@@ -77,7 +84,37 @@ class UserNotification:
         self.media.append(media_path)
 
 
-def listen_to_request():
+class SpamDefender(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.users_who_have_made_requests = {}
+        self.last_updated_time = datetime.datetime.now()
+
+    def run(self):
+        while True:
+            now_time = datetime.datetime.now()
+            if self.last_updated_time.hour < now_time.hour or self.last_updated_time.day < now_time.day\
+                    or self.last_updated_time.month < now_time.month or self.last_updated_time.year < now_time.year:
+                self.users_who_have_made_requests.clear()
+                self.last_updated_time = now_time
+        time.sleep(1)
+
+    def add_user_to_requests(self, account_id):
+        if account_id in self.users_who_have_made_requests:
+            self.users_who_have_made_requests[account_id] += 1
+        else:
+            self.users_who_have_made_requests[account_id] = 1
+
+    def allow_account_to_make_request(self, account_id):
+        if account_id not in self.users_who_have_made_requests:
+            return True
+        if self.users_who_have_made_requests[account_id] >= 4:
+            return False
+        else:
+            return True
+
+
+def listen_to_request(spam_defender):
     count = 0
     status_notifications = []
     while True:
@@ -85,43 +122,50 @@ def listen_to_request():
         notifications = mastodon.notifications(mentions_only=True)
         for n in notifications:
             if n["type"] == "mention":
+                account_id = n["account"]["id"]
                 status_id = n["status"]["id"]
                 content = n["status"]["content"]
-                user = UserNotification(status_id, content)
+                user = UserNotification(account_id, status_id, content)
                 media = n["status"]["media_attachments"]
-                for m in media:
-                    media_url = m["url"]
-                    media_path = "{}.jpg".format(count)
-                    urllib.request.urlretrieve(media_url, (str(input_folder / media_path)))
-                    user.add_media(count)
-                    count += 1
-                status_notifications.append(user)
-        count = 0
-        num_files = os.listdir(str(input_folder))
-        if len(num_files) != 0:
-            try:
-                subprocess.call("python pix2pix/pix2pix.py "
-                                "--mode test "
-                                "--input_dir pix2pix/val "
-                                "--output_dir pix2pix/test "
-                                "--checkpoint pix2pix/checkpoint")
-            except Exception:
-                print("Problem with TensorFlow")
-        # content = strip_tags(content)  # Removes HTML
-        # content = content.replace("@hughwin ", "")
-        # params = content.split(" ")
-        for reply in status_notifications:
-            for image in range(len(reply.get_media())):
-                try:
-                    image_path = str(output_folder / "{}-outputs.png".format(image))
-                    toot_image_on_request(image_path, reply.get_status_id())
-                    print("Tooting!")
-                except ValueError:
-                    print("Something went wrong!")
-        mastodon.notifications_clear()
-        status_notifications.clear()
-        bot_delete_files_in_directory(input_folder)
-        bot_delete_files_in_directory(output_folder)
+                if not spam_defender.allow_account_to_make_request(account_id):
+                    post_error(status_id)
+                    print("Denied!")
+                else:
+                    for m in media:
+                        media_url = m["url"]
+                        media_path = "{}.jpg".format(count)
+                        urllib.request.urlretrieve(media_url, (str(input_folder / media_path)))
+                        user.add_media(count)
+                        count += 1
+                    status_notifications.append(user)
+                    spam_defender.add_user_to_requests(user.account_id)
+                count = 0
+                num_files = os.listdir(str(input_folder))
+                if len(num_files) != 0:
+                    try:
+                        subprocess.call("python pix2pix/pix2pix.py "
+                                        "--mode test "
+                                        "--input_dir pix2pix/val "
+                                        "--output_dir pix2pix/test "
+                                        "--checkpoint pix2pix/checkpoint")
+                    except subprocess.CalledProcessError as e:
+                        print("Problem with subprocess / pix2pix")
+                        print(e.output)
+                # content = strip_tags(content)  # Removes HTML
+                # content = content.replace("@hughwin ", "")
+                # params = content.split(" ")
+                for reply in status_notifications:
+                    for image in range(len(reply.get_media())):
+                        try:
+                            image_path = str(output_folder / "{}-outputs.png".format(image))
+                            toot_image_on_request(image_path, reply.get_status_id())
+                            print("Tooting!")
+                        except ValueError:
+                            print("Something went wrong!")
+                mastodon.notifications_clear()
+                status_notifications.clear()
+                bot_delete_files_in_directory(input_folder)
+                bot_delete_files_in_directory(output_folder)
         time.sleep(2)
 
 
