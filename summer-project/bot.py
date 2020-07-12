@@ -1,3 +1,4 @@
+import numpy as np
 import requests
 import os
 import threading
@@ -136,7 +137,7 @@ def listen_to_request(spam_defender):
                         media_url = m["url"]
                         media_path = "{}".format(count)
                         urllib.request.urlretrieve(media_url, (str(input_folder / media_path)))
-                        check_image_type(str(input_folder / media_path), media_path)
+                        check_image_type(str(input_folder / media_path))
                         user.add_media(count)
                         count += 1
                     status_notifications.append(user)
@@ -166,18 +167,24 @@ def listen_to_request(spam_defender):
                             print("Something went wrong!")
                 mastodon.notifications_clear()
                 status_notifications.clear()
-                bot_delete_files_in_directory(input_folder)
-                bot_delete_files_in_directory(output_folder)
+                # bot_delete_files_in_directory(input_folder)
+                # bot_delete_files_in_directory(output_folder)
         time.sleep(2)
 
 
-def check_image_type(filepath, media_path):
+def check_image_type(filepath):
+    filepath_with_jpg = str(filepath + ".jpg")
     if not is_jpg(filepath):
         im = Image.open(filepath)
         rgb_image = im.convert('RGB')
-        rgb_image.save(str(filepath + ".jpg"))
+        rgb_image.save(filepath_with_jpg)
     else:
-        os.renames(filepath, str(filepath + ".jpg"))
+        os.renames(str(filepath), filepath_with_jpg)
+    img1 = Image.open(filepath_with_jpg)
+    img2 = Image.open(filepath_with_jpg)
+    images = [img1, img2]
+    combined_image = append_images(images, direction="horizontal")
+    combined_image.save(filepath_with_jpg)
 
 
 def is_jpg(filepath):
@@ -185,6 +192,55 @@ def is_jpg(filepath):
     if data[:4] != '\xff\xd8\xff\xe0': return False
     if data[6:] != 'JFIF\0': return False
     return True
+
+
+def append_images(images, direction='horizontal',
+                  bg_color=(255,255,255), aligment='center'):
+    """
+    Appends images in horizontal/vertical direction.
+
+    Args:
+        images: List of PIL images
+        direction: direction of concatenation, 'horizontal' or 'vertical'
+        bg_color: Background color (default: white)
+        aligment: alignment mode if images need padding;
+           'left', 'right', 'top', 'bottom', or 'center'
+
+    Returns:
+        Concatenated image as a new PIL image object.
+    """
+    widths, heights = zip(*(i.size for i in images))
+
+    if direction=='horizontal':
+        new_width = sum(widths)
+        new_height = max(heights)
+    else:
+        new_width = max(widths)
+        new_height = sum(heights)
+
+    new_im = Image.new('RGB', (new_width, new_height), color=bg_color)
+
+
+    offset = 0
+    for im in images:
+        if direction=='horizontal':
+            y = 0
+            if aligment == 'center':
+                y = int((new_height - im.size[1])/2)
+            elif aligment == 'bottom':
+                y = new_height - im.size[1]
+            new_im.paste(im, (offset, y))
+            offset += im.size[0]
+        else:
+            x = 0
+            if aligment == 'center':
+                x = int((new_width - im.size[0])/2)
+            elif aligment == 'right':
+                x = new_width - im.size[0]
+            new_im.paste(im, (x, offset))
+            offset += im.size[1]
+
+    return new_im
 
 
 def bot_delete_files_in_directory(path):
