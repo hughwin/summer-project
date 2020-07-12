@@ -10,7 +10,8 @@ import shutil
 import datetime
 from mastodon import Mastodon
 from dotenv import load_dotenv
-from pathlib import Path, PureWindowsPath
+from pathlib import Path
+from PIL import Image
 
 MASTODON_SERVER = settings.BASE_ADDRESS
 JSON_ERROR_MESSAGE = "Decoding JSON has failed"
@@ -93,7 +94,7 @@ class SpamDefender(threading.Thread):
     def run(self):
         while True:
             now_time = datetime.datetime.now()
-            if self.last_updated_time.hour < now_time.hour or self.last_updated_time.day < now_time.day\
+            if self.last_updated_time.hour < now_time.hour or self.last_updated_time.day < now_time.day \
                     or self.last_updated_time.month < now_time.month or self.last_updated_time.year < now_time.year:
                 self.users_who_have_made_requests.clear()
                 self.last_updated_time = now_time
@@ -133,8 +134,9 @@ def listen_to_request(spam_defender):
                 else:
                     for m in media:
                         media_url = m["url"]
-                        media_path = "{}.jpg".format(count)
+                        media_path = "{}".format(count)
                         urllib.request.urlretrieve(media_url, (str(input_folder / media_path)))
+                        check_image_type(str(input_folder / media_path), media_path)
                         user.add_media(count)
                         count += 1
                     status_notifications.append(user)
@@ -167,6 +169,22 @@ def listen_to_request(spam_defender):
                 bot_delete_files_in_directory(input_folder)
                 bot_delete_files_in_directory(output_folder)
         time.sleep(2)
+
+
+def check_image_type(filepath, media_path):
+    if not is_jpg(filepath):
+        im = Image.open(filepath)
+        rgb_image = im.convert('RGB')
+        rgb_image.save(str(filepath + ".jpg"))
+    else:
+        os.renames(filepath, str(filepath + ".jpg"))
+
+
+def is_jpg(filepath):
+    data = open(filepath, 'rb').read(11)
+    if data[:4] != '\xff\xd8\xff\xe0': return False
+    if data[6:] != 'JFIF\0': return False
+    return True
 
 
 def bot_delete_files_in_directory(path):
