@@ -54,6 +54,16 @@ def toot_image_on_request(image_path, post_id):
     mastodon.status_post(status=message, media_ids=image_dict["id"], in_reply_to_id=post_id)
 
 
+def toot_image_of_the_day():
+    image_of_the_day_path = Path("temp/")
+    r = requests.get(settings.NASA_ADDRESS_IMAGES % os.getenv("NASA"))
+    json = r.json()
+    urllib.request.urlretrieve(json["hdurl"], str(image_of_the_day_path / "image.jpg"))
+    image_dict = mastodon.media_post(str(image_of_the_day_path / "image.jpg"))
+    message = "Here is today's image!"
+    mastodon.status_post(status=message, media_ids=image_dict["id"])
+
+
 def get_trends():
     try:
         r = requests.get("%s/api/v1/trends/" % MASTODON_SERVER)
