@@ -1,18 +1,19 @@
-import numpy as np
-import requests
+import datetime
 import os
+import shutil
+import subprocess
 import threading
 import time
-import settings
-import html_stripper
 import urllib.request
-import subprocess
-import shutil
-import datetime
-from mastodon import Mastodon
-from dotenv import load_dotenv
 from pathlib import Path
+
+import html_stripper
+import requests
+import schedule
+import settings
 from PIL import Image
+from dotenv import load_dotenv
+from mastodon import Mastodon
 
 MASTODON_SERVER = settings.BASE_ADDRESS
 JSON_ERROR_MESSAGE = "Decoding JSON has failed"
@@ -30,7 +31,7 @@ output_folder = Path("pix2pix/test/images/")
 
 def start_bot():
     spam_defender = SpamDefender()
-    spam_defender.start
+    spam_defender.start()
 
     listener = threading.Thread(target=listen_to_request(spam_defender))
     listener.start()
@@ -62,6 +63,7 @@ def toot_image_of_the_day():
     image_dict = mastodon.media_post(str(image_of_the_day_path / "image.jpg"))
     message = "Here is today's image!"
     mastodon.status_post(status=message, media_ids=image_dict["id"])
+    print("Tooting image of the day!f")
 
 
 def get_trends():
@@ -109,7 +111,7 @@ class SpamDefender(threading.Thread):
                     or self.last_updated_time.month < now_time.month or self.last_updated_time.year < now_time.year:
                 self.users_who_have_made_requests.clear()
                 self.last_updated_time = now_time
-        time.sleep(1)
+            time.sleep(1)
 
     def add_user_to_requests(self, account_id):
         if account_id in self.users_who_have_made_requests:
@@ -129,6 +131,7 @@ class SpamDefender(threading.Thread):
 def listen_to_request(spam_defender):
     count = 0
     status_notifications = []
+    schedule.every().day.at("10:30").do(toot_image_of_the_day)
     while True:
         print("Checking notifications!")
         notifications = mastodon.notifications(mentions_only=True)
@@ -179,6 +182,7 @@ def listen_to_request(spam_defender):
                 status_notifications.clear()
                 bot_delete_files_in_directory(input_folder)
                 bot_delete_files_in_directory(output_folder)
+        schedule.run_pending()
         time.sleep(2)
 
 
