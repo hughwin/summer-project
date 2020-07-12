@@ -178,10 +178,10 @@ def listen_to_request(spam_defender):
                             print("Tooting!")
                         except ValueError:
                             print("Something went wrong!")
-                mastodon.notifications_clear()
-                status_notifications.clear()
-                bot_delete_files_in_directory(input_folder)
-                bot_delete_files_in_directory(output_folder)
+            mastodon.notifications_clear()
+            status_notifications.clear()
+            bot_delete_files_in_directory(input_folder)
+            bot_delete_files_in_directory(output_folder)
         schedule.run_pending()
         time.sleep(2)
 
@@ -209,23 +209,10 @@ def is_jpg(filepath):
 
 
 def append_images(images, direction='horizontal',
-                  bg_color=(255,255,255), aligment='center'):
-    """
-    Appends images in horizontal/vertical direction.
-
-    Args:
-        images: List of PIL images
-        direction: direction of concatenation, 'horizontal' or 'vertical'
-        bg_color: Background color (default: white)
-        aligment: alignment mode if images need padding;
-           'left', 'right', 'top', 'bottom', or 'center'
-
-    Returns:
-        Concatenated image as a new PIL image object.
-    """
+                  bg_color=(255, 255, 255), aligment='center'):
     widths, heights = zip(*(i.size for i in images))
 
-    if direction=='horizontal':
+    if direction == 'horizontal':
         new_width = sum(widths)
         new_height = max(heights)
     else:
@@ -234,13 +221,12 @@ def append_images(images, direction='horizontal',
 
     new_im = Image.new('RGB', (new_width, new_height), color=bg_color)
 
-
     offset = 0
     for im in images:
-        if direction=='horizontal':
+        if direction == 'horizontal':
             y = 0
             if aligment == 'center':
-                y = int((new_height - im.size[1])/2)
+                y = int((new_height - im.size[1]) / 2)
             elif aligment == 'bottom':
                 y = new_height - im.size[1]
             new_im.paste(im, (offset, y))
@@ -248,7 +234,7 @@ def append_images(images, direction='horizontal',
         else:
             x = 0
             if aligment == 'center':
-                x = int((new_width - im.size[0])/2)
+                x = int((new_width - im.size[0]) / 2)
             elif aligment == 'right':
                 x = new_width - im.size[0]
             new_im.paste(im, (x, offset))
