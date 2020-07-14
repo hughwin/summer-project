@@ -1,16 +1,21 @@
-import requests
+import datetime
 import os
+import shutil
+import subprocess
 import threading
 import time
-import settings
-import html_stripper
+import numpy
 import urllib.request
-import subprocess
-import shutil
-import datetime
-from mastodon import Mastodon
+from pathlib import Path
+
+import html_stripper
+import requests
+import schedule
+import settings
+import cv2
+from PIL import Image
 from dotenv import load_dotenv
-from pathlib import Path, PureWindowsPath
+from mastodon import Mastodon
 
 MASTODON_SERVER = settings.BASE_ADDRESS
 JSON_ERROR_MESSAGE = "Decoding JSON has failed"
@@ -28,7 +33,7 @@ output_folder = Path("pix2pix/test/images/")
 
 def start_bot():
     spam_defender = SpamDefender()
-    spam_defender.start
+    spam_defender.start()
 
     listener = threading.Thread(target=listen_to_request(spam_defender))
     listener.start()
@@ -50,6 +55,17 @@ def toot_image_on_request(image_path, post_id):
     print(image_dict)
     message = "Here is my best guess!"
     mastodon.status_post(status=message, media_ids=image_dict["id"], in_reply_to_id=post_id)
+
+
+def toot_image_of_the_day():
+    image_of_the_day_path = Path("temp/")
+    r = requests.get(settings.NASA_ADDRESS_IMAGES % os.getenv("NASA"))
+    json = r.json()
+    urllib.request.urlretrieve(json["hdurl"], str(image_of_the_day_path / "image.jpg"))
+    image_dict = mastodon.media_post(str(image_of_the_day_path / "image.jpg"))
+    message = "Here is today's image!"
+    mastodon.status_post(status=message, media_ids=image_dict["id"])
+    print("Tooting image of the day!f")
 
 
 def get_trends():
@@ -93,11 +109,11 @@ class SpamDefender(threading.Thread):
     def run(self):
         while True:
             now_time = datetime.datetime.now()
-            if self.last_updated_time.hour < now_time.hour or self.last_updated_time.day < now_time.day\
+            if self.last_updated_time.hour < now_time.hour or self.last_updated_time.day < now_time.day \
                     or self.last_updated_time.month < now_time.month or self.last_updated_time.year < now_time.year:
                 self.users_who_have_made_requests.clear()
                 self.last_updated_time = now_time
-        time.sleep(1)
+            time.sleep(1)
 
     def add_user_to_requests(self, account_id):
         if account_id in self.users_who_have_made_requests:
@@ -117,14 +133,19 @@ class SpamDefender(threading.Thread):
 def listen_to_request(spam_defender):
     count = 0
     status_notifications = []
+    schedule.every().day.at("10:30").do(toot_image_of_the_day)
     while True:
         print("Checking notifications!")
         notifications = mastodon.notifications(mentions_only=True)
         for n in notifications:
+            print(n)
             if n["type"] == "mention":
                 account_id = n["account"]["id"]
                 status_id = n["status"]["id"]
                 content = n["status"]["content"]
+                content = strip_tags(content)  # Removes HTML
+                content = content.replace("@hughwin ", "")
+                params = content.split(" ")
                 user = UserNotification(account_id, status_id, content)
                 media = n["status"]["media_attachments"]
                 if not spam_defender.allow_account_to_make_request(account_id):
@@ -133,8 +154,9 @@ def listen_to_request(spam_defender):
                 else:
                     for m in media:
                         media_url = m["url"]
-                        media_path = "{}.jpg".format(count)
+                        media_path = "{}".format(count)
                         urllib.request.urlretrieve(media_url, (str(input_folder / media_path)))
+                        check_image_type(str(input_folder / media_path))
                         user.add_media(count)
                         count += 1
                     status_notifications.append(user)
@@ -142,31 +164,101 @@ def listen_to_request(spam_defender):
                 count = 0
                 num_files = os.listdir(str(input_folder))
                 if len(num_files) != 0:
-                    try:
-                        subprocess.call("python pix2pix/pix2pix.py "
-                                        "--mode test "
-                                        "--input_dir pix2pix/val "
-                                        "--output_dir pix2pix/test "
-                                        "--checkpoint pix2pix/checkpoint")
-                    except subprocess.CalledProcessError as e:
-                        print("Problem with subprocess / pix2pix")
-                        print(e.output)
-                # content = strip_tags(content)  # Removes HTML
-                # content = content.replace("@hughwin ", "")
-                # params = content.split(" ")
-                for reply in status_notifications:
-                    for image in range(len(reply.get_media())):
-                        try:
-                            image_path = str(output_folder / "{}-outputs.png".format(image))
-                            toot_image_on_request(image_path, reply.get_status_id())
-                            print("Tooting!")
-                        except ValueError:
-                            print("Something went wrong!")
-                mastodon.notifications_clear()
-                status_notifications.clear()
-                bot_delete_files_in_directory(input_folder)
-                bot_delete_files_in_directory(output_folder)
+                    print(params)
+                    if 'decolourise' in params or 'decolorize' in params:
+                        decolourise_image()
+                    if "pix2pix" in params:
+                        convert_image_using_pix2pix(status_notifications)
+            mastodon.notifications_clear()
+            status_notifications.clear()
+            bot_delete_files_in_directory(input_folder)
+            bot_delete_files_in_directory(output_folder)
+        schedule.run_pending()
         time.sleep(2)
+
+
+def convert_image_using_pix2pix(status_notifications):
+    try:
+        subprocess.call("python pix2pix/pix2pix.py "
+                        "--mode test "
+                        "--input_dir pix2pix/val "
+                        "--output_dir pix2pix/test "
+                        "--checkpoint pix2pix/checkpoint")
+    except subprocess.CalledProcessError as e:
+        print("Problem with subprocess / pix2pix")
+        print(e.output)
+
+    for reply in status_notifications:
+        for image in range(len(reply.get_media())):
+            try:
+                image_path = str(output_folder / "{}-outputs.png".format(image))
+                toot_image_on_request(image_path, reply.get_status_id())
+                print("Tooting!")
+            except ValueError as e:
+                print("Something went wrong!")
+                print(e.output)
+
+
+def decolourise_image():
+    print("Decolourize called!")
+    image = cv2.imread()
+
+
+def check_image_type(filepath):
+    filepath_with_jpg = str(filepath + ".jpg")
+    if not is_jpg(filepath):
+        im = Image.open(filepath)
+        rgb_image = im.convert('RGB')
+        rgb_image.save(filepath_with_jpg)
+    else:
+        os.renames(str(filepath), filepath_with_jpg)
+    img1 = Image.open(filepath_with_jpg)
+    img2 = Image.open(filepath_with_jpg)
+    images = [img1, img2]
+    combined_image = append_images(images, direction="horizontal")
+    combined_image.save(filepath_with_jpg)
+
+
+def is_jpg(filepath):
+    data = open(filepath, 'rb').read(11)
+    if data[:4] != '\xff\xd8\xff\xe0': return False
+    if data[6:] != 'JFIF\0': return False
+    return True
+
+
+def append_images(images, direction='horizontal',
+                  bg_color=(255, 255, 255), aligment='center'):
+    widths, heights = zip(*(i.size for i in images))
+
+    if direction == 'horizontal':
+        new_width = sum(widths)
+        new_height = max(heights)
+    else:
+        new_width = max(widths)
+        new_height = sum(heights)
+
+    new_im = Image.new('RGB', (new_width, new_height), color=bg_color)
+
+    offset = 0
+    for im in images:
+        if direction == 'horizontal':
+            y = 0
+            if aligment == 'center':
+                y = int((new_height - im.size[1]) / 2)
+            elif aligment == 'bottom':
+                y = new_height - im.size[1]
+            new_im.paste(im, (offset, y))
+            offset += im.size[0]
+        else:
+            x = 0
+            if aligment == 'center':
+                x = int((new_width - im.size[0]) / 2)
+            elif aligment == 'right':
+                x = new_width - im.size[0]
+            new_im.paste(im, (x, offset))
+            offset += im.size[1]
+
+    return new_im
 
 
 def bot_delete_files_in_directory(path):
