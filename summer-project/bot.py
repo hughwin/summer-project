@@ -138,7 +138,6 @@ def listen_to_request(spam_defender):
         print("Checking notifications!")
         notifications = mastodon.notifications(mentions_only=True)
         for n in notifications:
-            print(n)
             if n["type"] == "mention":
                 account_id = n["account"]["id"]
                 status_id = n["status"]["id"]
