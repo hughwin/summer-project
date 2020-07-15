@@ -46,14 +46,10 @@ def get_posts():
     print(statuses[1])
 
 
-def post_error(post_id):
-    mastodon.status_post("You're making too many requests!", in_reply_to_id=post_id)
-
-
-def toot_image_on_request(image_path, post_id):
-    image_dict = mastodon.media_post(image_path)
-    print(image_dict)
-    message = "Here is my best guess!"
+def reply_to_toot(post_id, image_path=None, message=None):
+    image_dict = None
+    if image_path is not None:
+        image_dict = mastodon.media_post(image_path)
     mastodon.status_post(status=message, media_ids=image_dict["id"], in_reply_to_id=post_id)
 
 
@@ -147,7 +143,7 @@ def listen_to_request(spam_defender):
                 user = UserNotification(account_id, status_id, content)
                 media = n["status"]["media_attachments"]
                 if not spam_defender.allow_account_to_make_request(account_id):
-                    post_error(status_id)
+                    reply_to_toot(status_id, message="You're making too many requests!")
                     print("Denied!")
                 else:
                     for m in media:
@@ -193,7 +189,7 @@ def convert_image_using_pix2pix(status_notifications):
         for image in range(len(reply.get_media())):
             try:
                 image_path = str(output_folder / "{}-outputs.png".format(image))
-                toot_image_on_request(image_path, reply.get_status_id())
+                reply_to_toot(reply.get_status_id(), image_path=image_path)
                 print("Tooting!")
             except ValueError as e:
                 print("Something went wrong!")
@@ -203,11 +199,12 @@ def convert_image_using_pix2pix(status_notifications):
 def decolourise_image(status_notifications):
     for reply in status_notifications:
         for image in range(len(reply.get_media())):
-            image_path = str(input_folder / "{}".format(image))
-            img_open = cv2.imread(image_path)
+            input_image = str(input_folder / "{}.jpg".format(image))
+            output_image = str(output_folder / "{}.jpeg".format(image))
+            img_open = cv2.imread(input_image)
             gray = cv2.cvtColor(img_open, cv2.COLOR_BGR2GRAY)
-            cv2.imwrite(str(output_folder / "{}.jpeg".format(image)), gray)
-            toot_image_on_request(image_path, reply.get_status_id())
+            cv2.imwrite(output_image, gray)
+            reply_to_toot(reply.get_status_id(), image_path=output_image)
 
 
 def get_text_from_image(status_notifications):
@@ -217,8 +214,24 @@ def get_text_from_image(status_notifications):
             pytesseract.pytesseract.tesseract_cmd = r'C:\\Program Files (x86)\\Tesseract-OCR\\tesseract'
             # Must be local install path of tesseract
             img = cv2.imread(str(input_folder / "{}".format(image)))
-            file = open("recognized.txt", "a")
             text = pytesseract.image_to_string(img)
+
+            if len(text) <= settings.MAX_MESSAGE_LENGTH:
+                reply_to_toot(reply_to_toot(reply.get_status_id()), message=text)
+                return
+
+            parts = []
+            while len(text) > 0:
+                if len(text) > settings.MAX_MESSAGE_LENGTH:
+                    parts.append(part)
+                    text = text[settings.MAX_MESSAGE_LENGTH:]
+                else:
+                    parts.append(text)
+                    break
+
+            for part in parts:
+                reply_to_toot(reply.get_status_id())
+                time.sleep(1)
 
 
 def check_image_type(filepath):
