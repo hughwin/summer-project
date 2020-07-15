@@ -6,13 +6,13 @@ import threading
 import time
 import numpy
 import urllib.request
-from pathlib import Path
-
+import pytesseract
 import html_stripper
 import requests
 import schedule
 import settings
 import cv2
+from pathlib import Path
 from PIL import Image
 from dotenv import load_dotenv
 from mastodon import Mastodon
@@ -142,8 +142,7 @@ def listen_to_request(spam_defender):
                 account_id = n["account"]["id"]
                 status_id = n["status"]["id"]
                 content = n["status"]["content"]
-                content = strip_tags(content)  # Removes HTML
-                content = content.replace("@hughwin ", "")
+                content = strip_tags(content).replace("@hughwin ", "")
                 params = content.split(" ")
                 user = UserNotification(account_id, status_id, content)
                 media = n["status"]["media_attachments"]
@@ -165,18 +164,21 @@ def listen_to_request(spam_defender):
                 if len(num_files) != 0:
                     print(params)
                     if 'decolourise' in params or 'decolorize' in params:
-                        decolourise_image()
+                        decolourise_image(status_notifications)
                     if "pix2pix" in params:
                         convert_image_using_pix2pix(status_notifications)
+                    if "text" in params:
+                        get_text_from_image(status_notifications)
             mastodon.notifications_clear()
             status_notifications.clear()
-            bot_delete_files_in_directory(input_folder)
-            bot_delete_files_in_directory(output_folder)
+            # bot_delete_files_in_directory(input_folder)
+            # bot_delete_files_in_directory(output_folder)
         schedule.run_pending()
         time.sleep(2)
 
 
 def convert_image_using_pix2pix(status_notifications):
+    # TODO: Make this change the files so the right sized images are output.
     try:
         subprocess.call("python pix2pix/pix2pix.py "
                         "--mode test "
@@ -198,9 +200,25 @@ def convert_image_using_pix2pix(status_notifications):
                 print(e.output)
 
 
-def decolourise_image():
-    print("Decolourize called!")
-    image = cv2.imread()
+def decolourise_image(status_notifications):
+    for reply in status_notifications:
+        for image in range(len(reply.get_media())):
+            image_path = str(input_folder / "{}".format(image))
+            img_open = cv2.imread(image_path)
+            gray = cv2.cvtColor(img_open, cv2.COLOR_BGR2GRAY)
+            cv2.imwrite(str(output_folder / "{}.jpeg".format(image)), gray)
+            toot_image_on_request(image_path, reply.get_status_id())
+
+
+def get_text_from_image(status_notifications):
+    for reply in status_notifications:
+        for image in range(len(reply.get_media())):
+
+            pytesseract.pytesseract.tesseract_cmd = r'C:\\Program Files (x86)\\Tesseract-OCR\\tesseract'
+            # Must be local install path of tesseract
+            img = cv2.imread(str(input_folder / "{}".format(image)))
+            file = open("recognized.txt", "a")
+            text = pytesseract.image_to_string(img)
 
 
 def check_image_type(filepath):
@@ -211,11 +229,16 @@ def check_image_type(filepath):
         rgb_image.save(filepath_with_jpg)
     else:
         os.renames(str(filepath), filepath_with_jpg)
-    img1 = Image.open(filepath_with_jpg)
-    img2 = Image.open(filepath_with_jpg)
+
+
+def combine_image(filepath1, filepath2=None):
+    if filepath2 is None:
+        filepath2 = filepath1
+    img1 = Image.open(filepath1)
+    img2 = Image.open(filepath2)
     images = [img1, img2]
     combined_image = append_images(images, direction="horizontal")
-    combined_image.save(filepath_with_jpg)
+    combined_image.save(filepath1)
 
 
 def is_jpg(filepath):
