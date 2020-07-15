@@ -12,6 +12,7 @@ import requests
 import schedule
 import settings
 import cv2
+import imutils
 from pathlib import Path
 from PIL import Image
 from dotenv import load_dotenv
@@ -165,6 +166,9 @@ def listen_to_request(spam_defender):
                         convert_image_using_pix2pix(status_notifications)
                     if "text" in params:
                         get_text_from_image(status_notifications)
+                    if "rotate" in params:
+                        rotate_image(status_notifications, rotate_by_degrees=params[params.index("rotate") + 1],
+                                     rotation_type=[params.index("rotate") + 2])
             mastodon.notifications_clear()
             status_notifications.clear()
             bot_delete_files_in_directory(input_folder)
@@ -242,6 +246,22 @@ def check_image_type(filepath):
         rgb_image.save(filepath_with_jpg)
     else:
         os.renames(str(filepath), filepath_with_jpg)
+
+
+def rotate_image(status_notifications, rotate_by_degrees=None, rotation_type=None):
+    for reply in status_notifications:
+        for image in range(len(reply.get_media())):
+            input_image = str(input_folder / "{}.jpg".format(image))
+            output_image = str(output_folder / "{}.jpeg".format(image))
+            image_open = cv2.imread(input_image)
+            # if str(rotation_type).lower() != "complex":
+            #     rotated = imutils.rotate(image_open, int(rotate_by_degrees))
+            # else:
+            print("bound")
+            rotated = imutils.rotate_bound(image_open, int(rotate_by_degrees))
+            cv2.imwrite(output_image, rotated)
+            reply_to_toot(reply.get_status_id(), image_path=output_image,
+                          message=(str("Rotated by {} degrees").format(rotate_by_degrees)))
 
 
 def combine_image(filepath1, filepath2=None):
