@@ -167,8 +167,8 @@ def listen_to_request(spam_defender):
                         get_text_from_image(status_notifications)
             mastodon.notifications_clear()
             status_notifications.clear()
-            # bot_delete_files_in_directory(input_folder)
-            # bot_delete_files_in_directory(output_folder)
+            bot_delete_files_in_directory(input_folder)
+            bot_delete_files_in_directory(output_folder)
         schedule.run_pending()
         time.sleep(2)
 
