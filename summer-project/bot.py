@@ -20,6 +20,10 @@ from mastodon import Mastodon
 
 MASTODON_SERVER = settings.BASE_ADDRESS
 JSON_ERROR_MESSAGE = "Decoding JSON has failed"
+INPUT_FOLDER = settings.INPUT_FOLDER
+OUTPUT_FOLDER = settings.OUTPUT_FOLDER
+JPEG_INPUT = settings.JPEG_INPUT
+JPEG_OUTPUT = settings.JPEG_INPUT
 load_dotenv()  # Important variables such as my secret key are stored in a .env file.
 
 #   Set up Mastodon
@@ -27,9 +31,6 @@ mastodon = Mastodon(
     access_token=os.getenv("ACCESS_TOKEN"),
     api_base_url=MASTODON_SERVER
 )
-
-input_folder = Path("pix2pix/val/")
-output_folder = Path("pix2pix/test/images/")
 
 
 def start_bot():
@@ -48,10 +49,11 @@ def get_posts():
 
 
 def reply_to_toot(post_id, image_path=None, message=None):
-    image_dict = None
-    if image_path is not None:
+    if image_path is None:
+        mastodon.status_post(status=message, in_reply_to_id=post_id)
+    else:
         image_dict = mastodon.media_post(image_path)
-    mastodon.status_post(status=message, media_ids=image_dict["id"], in_reply_to_id=post_id)
+        mastodon.status_post(status=message, media_ids=image_dict["id"], in_reply_to_id=post_id)
 
 
 def toot_image_of_the_day():
@@ -150,14 +152,14 @@ def listen_to_request(spam_defender):
                     for m in media:
                         media_url = m["url"]
                         media_path = "{}".format(count)
-                        urllib.request.urlretrieve(media_url, (str(input_folder / media_path)))
-                        check_image_type(str(input_folder / media_path))
+                        urllib.request.urlretrieve(media_url, (str(INPUT_FOLDER / media_path)))
+                        check_image_type(str(INPUT_FOLDER / media_path))
                         user.add_media(count)
                         count += 1
                     status_notifications.append(user)
                     spam_defender.add_user_to_requests(user.account_id)
                 count = 0
-                num_files = os.listdir(str(input_folder))
+                num_files = os.listdir(str(INPUT_FOLDER))
                 if len(num_files) != 0:
                     print(params)
                     if 'decolourise' in params or 'decolorize' in params:
@@ -172,8 +174,8 @@ def listen_to_request(spam_defender):
                                      rotation_type=params[params.index(settings.ROTATE_COMMAND) + 2])
             mastodon.notifications_clear()
             status_notifications.clear()
-            bot_delete_files_in_directory(input_folder)
-            bot_delete_files_in_directory(output_folder)
+            bot_delete_files_in_directory(INPUT_FOLDER)
+            bot_delete_files_in_directory(OUTPUT_FOLDER)
         schedule.run_pending()
         time.sleep(2)
 
@@ -193,7 +195,7 @@ def convert_image_using_pix2pix(status_notifications):
     for reply in status_notifications:
         for image in range(len(reply.get_media())):
             try:
-                image_path = str(output_folder / "{}-outputs.png".format(image))
+                image_path = str(OUTPUT_FOLDER / "{}-outputs.png".format(image))
                 reply_to_toot(reply.get_status_id(), image_path=image_path)
                 print("Tooting!")
             except ValueError as e:
@@ -204,8 +206,8 @@ def convert_image_using_pix2pix(status_notifications):
 def decolourise_image(status_notifications):
     for reply in status_notifications:
         for image in range(len(reply.get_media())):
-            input_image = str(input_folder / "{}.jpg".format(image))
-            output_image = str(output_folder / "{}.jpeg".format(image))
+            input_image = JPEG_INPUT
+            output_image = JPEG_OUTPUT
             img_open = cv2.imread(input_image)
             gray = cv2.cvtColor(img_open, cv2.COLOR_BGR2GRAY)
             cv2.imwrite(output_image, gray)
@@ -218,42 +220,43 @@ def get_text_from_image(status_notifications):
 
             pytesseract.pytesseract.tesseract_cmd = r'C:\\Program Files (x86)\\Tesseract-OCR\\tesseract'
             # Must be local install path of tesseract
-            img = cv2.imread(str(input_folder / "{}".format(image)))
+            img = cv2.imread(JPEG_INPUT.format(image))
             text = pytesseract.image_to_string(img)
 
             if len(text) <= settings.MAX_MESSAGE_LENGTH:
-                reply_to_toot(reply_to_toot(reply.get_status_id()), message=text)
-                return
+                reply_to_toot(reply.get_status_id(), message=text)
 
             parts = []
             while len(text) > 0:
                 if len(text) > settings.MAX_MESSAGE_LENGTH:
                     parts.append(part)
+                    print(part)
                     text = text[settings.MAX_MESSAGE_LENGTH:]
                 else:
                     parts.append(text)
                     break
 
             for part in parts:
-                reply_to_toot(reply.get_status_id())
+                print(part)
+                reply_to_toot(reply.get_status_id(), message=part)
                 time.sleep(1)
 
 
 def check_image_type(filepath):
-    filepath_with_jpg = str(filepath + ".jpg")
+    filepath_with_jpeg = str(filepath + ".jpeg")
     if not is_jpg(filepath):
         im = Image.open(filepath)
         rgb_image = im.convert('RGB')
-        rgb_image.save(filepath_with_jpg)
+        rgb_image.save(filepath_with_jpeg)
     else:
-        os.renames(str(filepath), filepath_with_jpg)
+        os.renames(str(filepath), filepath_with_jpeg)
 
 
 def rotate_image(status_notifications, rotate_by_degrees=None, rotation_type=None):
     for reply in status_notifications:
         for image in range(len(reply.get_media())):
-            input_image = str(input_folder / "{}.jpg".format(image))
-            output_image = str(output_folder / "{}.jpeg".format(image))
+            input_image = JPEG_INPUT.format(image)
+            output_image = JPEG_OUTPUT.format(image)
             image_open = cv2.imread(input_image)
             if str(rotation_type).lower() == settings.ROTATE_COMMAND:
                 rotated = imutils.rotate(image_open, int(rotate_by_degrees))
