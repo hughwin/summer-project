@@ -170,6 +170,8 @@ def listen_to_request(spam_defender):
                         get_text_from_image(status_notifications)
                     if "about" in params:
                         get_information_about_image(status_notifications)
+                    if "preserve" in params:
+                        display_colour_channel(status_notifications, params[params.index("preserve") + 1])
                     if settings.ROTATE_COMMAND in params:
                         rotate_image(status_notifications,
                                      rotate_by_degrees=params[params.index(settings.ROTATE_COMMAND) + 1],
@@ -225,6 +227,25 @@ def decolourise_image(status_notifications):
             gray = cv2.cvtColor(img_open, cv2.COLOR_BGR2GRAY)
             cv2.imwrite(output_image, gray)
             reply_to_toot(reply.get_status_id(), image_path=output_image)
+
+
+def display_colour_channel(status_notifications, colour):
+    colour = colour.lower()
+    for reply in status_notifications:
+        for image in range(len(reply.get_media())):
+            image_open = cv2.imread(JPEG_INPUT.format(image))
+            temp_image = image_open.copy()
+            if colour == "red":
+                temp_image[:, :, 0] = 0
+                temp_image[:, :, 1] = 0
+            if colour == "green":
+                temp_image[:, :, 0] = 0
+                temp_image[:, :, 2] = 0
+            if colour == "blue":
+                temp_image[:, :, 1] = 0
+                temp_image[:, :, 2] = 0
+            output = cv2.imwrite(JPEG_OUTPUT.format(image), temp_image)
+            reply_to_toot(reply.get_status_id(), image_path=JPEG_OUTPUT.format(image))
 
 
 def get_text_from_image(status_notifications):
