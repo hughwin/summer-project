@@ -60,8 +60,8 @@ def toot_image_of_the_day():
     image_of_the_day_path = Path("temp/")
     r = requests.get(settings.NASA_ADDRESS_IMAGES % os.getenv("NASA"))
     json = r.json()
-    urllib.request.urlretrieve(json["hdurl"], str(image_of_the_day_path / "image.jpg"))
-    image_dict = mastodon.media_post(str(image_of_the_day_path / "image.jpg"))
+    urllib.request.urlretrieve(json["hdurl"], str(image_of_the_day_path / "image.jpeg"))
+    image_dict = mastodon.media_post(str(image_of_the_day_path / "image.jpeg"))
     message = "Here is today's image!"
     mastodon.status_post(status=message, media_ids=image_dict["id"])
     print("Tooting image of the day!f")
@@ -168,6 +168,8 @@ def listen_to_request(spam_defender):
                         convert_image_using_pix2pix(status_notifications)
                     if "text" in params:
                         get_text_from_image(status_notifications)
+                    if "about" in params:
+                        get_information_about_image(status_notifications)
                     if settings.ROTATE_COMMAND in params:
                         rotate_image(status_notifications,
                                      rotate_by_degrees=params[params.index(settings.ROTATE_COMMAND) + 1],
@@ -178,6 +180,17 @@ def listen_to_request(spam_defender):
             bot_delete_files_in_directory(OUTPUT_FOLDER)
         schedule.run_pending()
         time.sleep(2)
+
+
+def get_information_about_image(status_notifications):
+    for reply in status_notifications:
+        for image in range(len(reply.get_media())):
+            input_image = JPEG_INPUT.format(image)
+            img_open = cv2.imread(input_image)
+            message = "Image properties: \n" \
+                      "- Number of Pixels: " + str(img_open.size) \
+                      + "\n- Shape/Dimensions: " + str(img_open.shape)
+            reply_to_toot(reply.get_status_id(), message=message)
 
 
 def convert_image_using_pix2pix(status_notifications):
@@ -206,8 +219,8 @@ def convert_image_using_pix2pix(status_notifications):
 def decolourise_image(status_notifications):
     for reply in status_notifications:
         for image in range(len(reply.get_media())):
-            input_image = JPEG_INPUT
-            output_image = JPEG_OUTPUT
+            input_image = JPEG_INPUT.format(image)
+            output_image = JPEG_OUTPUT.format(image)
             img_open = cv2.imread(input_image)
             gray = cv2.cvtColor(img_open, cv2.COLOR_BGR2GRAY)
             cv2.imwrite(output_image, gray)
