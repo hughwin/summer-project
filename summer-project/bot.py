@@ -94,8 +94,6 @@ class SpamDefender(threading.Thread):
         self.users_who_have_made_requests = {}
         self.last_updated_time = datetime.datetime.now()
 
-    def __setattr__(self, key, value):
-        raise Exception("Can't change attributes directly!")
 
     def run(self):
         while True:
@@ -149,7 +147,7 @@ def listen_to_request(spam_defender):
                             media_path = "{}".format(count)
                             urllib.request.urlretrieve(media_url, (str(INPUT_FOLDER / media_path)))
                             check_image_type(str(INPUT_FOLDER / media_path))
-                            user.media = count
+                            user.media.append(media)
                             user.meta = ["meta"]
                             count += 1
                     status_notifications.append(user)
@@ -249,8 +247,8 @@ def display_colour_channel(status_notifications, colour):
 def get_text_from_image(status_notifications):
     for reply in status_notifications:
         for image in range(len(reply.media)):
-        # TODO:
-            pytesseract.pytesseract.tesseract_cmd = r'C:\\Program Files (x86)\\Tesseract-OCR\\tesseract'
+            # TODO: Look into removing this hardcoded path
+            # pytesseract.pytesseract.tesseract_cmd = r'C:\\Program Files (x86)\\Tesseract-OCR\\tesseract'
             # Must be local install path of tesseract
             img = cv2.imread(JPEG_INPUT.format(image))
             text = pytesseract.image_to_string(img)
