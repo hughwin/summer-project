@@ -130,6 +130,8 @@ class SpamDefender(threading.Thread):
             return True
 
 
+# TODO: Just change image dictionary.
+
 def listen_to_request(spam_defender):
     count = 0
     status_notifications = []
@@ -254,7 +256,7 @@ def display_colour_channel(status_notifications, colour):
 def get_text_from_image(status_notifications):
     for reply in status_notifications:
         for image in range(len(reply.get_media())):
-
+        # TODO:
             pytesseract.pytesseract.tesseract_cmd = r'C:\\Program Files (x86)\\Tesseract-OCR\\tesseract'
             # Must be local install path of tesseract
             img = cv2.imread(JPEG_INPUT.format(image))
