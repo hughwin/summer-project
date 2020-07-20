@@ -13,6 +13,7 @@ import schedule
 import settings
 import cv2
 import imutils
+from matplotlib import pyplot as plt
 from pathlib import Path
 from PIL import Image
 from dotenv import load_dotenv
@@ -141,7 +142,7 @@ def listen_to_request(spam_defender):
                 account_id = n["account"]["id"]
                 status_id = n["status"]["id"]
                 content = n["status"]["content"]
-                content = strip_tags(content).replace("@hughwin ", "")
+                content = strip_tags(content).replace("@hughwin ", "").lower()
                 params = content.split(" ")
                 user = UserNotification(account_id, status_id, content)
                 media = n["status"]["media_attachments"]
@@ -172,14 +173,16 @@ def listen_to_request(spam_defender):
                         get_information_about_image(status_notifications)
                     if "preserve" in params:
                         display_colour_channel(status_notifications, params[params.index("preserve") + 1])
+                    if "histogram" in params:
+                        show_image_histogram(status_notifications)
                     if settings.ROTATE_COMMAND in params:
                         rotate_image(status_notifications,
                                      rotate_by_degrees=params[params.index(settings.ROTATE_COMMAND) + 1],
                                      rotation_type=params[params.index(settings.ROTATE_COMMAND) + 2])
             mastodon.notifications_clear()
             status_notifications.clear()
-            bot_delete_files_in_directory(INPUT_FOLDER)
-            bot_delete_files_in_directory(OUTPUT_FOLDER)
+            # bot_delete_files_in_directory(INPUT_FOLDER)
+            # bot_delete_files_in_directory(OUTPUT_FOLDER)
         schedule.run_pending()
         time.sleep(2)
 
@@ -189,8 +192,8 @@ def get_information_about_image(status_notifications):
         for image in range(len(reply.get_media())):
             input_image = JPEG_INPUT.format(image)
             img_open = cv2.imread(input_image)
-            message = "Image properties: \n" \
-                      "- Number of Pixels: " + str(img_open.size) \
+            message = "Image properties: " \
+                      "\n- Number of Pixels: " + str(img_open.size) \
                       + "\n- Shape/Dimensions: " + str(img_open.shape)
             reply_to_toot(reply.get_status_id(), message=message)
 
@@ -230,7 +233,7 @@ def decolourise_image(status_notifications):
 
 
 def display_colour_channel(status_notifications, colour):
-    colour = colour.lower()
+    colour = colour()
     for reply in status_notifications:
         for image in range(len(reply.get_media())):
             image_open = cv2.imread(JPEG_INPUT.format(image))
@@ -244,7 +247,7 @@ def display_colour_channel(status_notifications, colour):
             if colour == "blue":
                 temp_image[:, :, 1] = 0
                 temp_image[:, :, 2] = 0
-            output = cv2.imwrite(JPEG_OUTPUT.format(image), temp_image)
+            cv2.imwrite(JPEG_OUTPUT.format(image), temp_image)
             reply_to_toot(reply.get_status_id(), image_path=JPEG_OUTPUT.format(image))
 
 
@@ -292,7 +295,7 @@ def rotate_image(status_notifications, rotate_by_degrees=None, rotation_type=Non
             input_image = JPEG_INPUT.format(image)
             output_image = JPEG_OUTPUT.format(image)
             image_open = cv2.imread(input_image)
-            if str(rotation_type).lower() == settings.ROTATE_COMMAND:
+            if str(rotation_type)() == settings.ROTATE_COMMAND:
                 rotated = imutils.rotate(image_open, int(rotate_by_degrees))
             else:
                 rotated = imutils.rotate_bound(image_open, int(rotate_by_degrees))
@@ -309,6 +312,21 @@ def combine_image(filepath1, filepath2=None):
     images = [img1, img2]
     combined_image = append_images(images, direction="horizontal")
     combined_image.save(filepath1)
+
+
+def show_image_histogram(status_notifications):
+    for reply in status_notifications:
+        for image in range(len(reply.get_media())):
+            input_image = cv2.imread(JPEG_INPUT.format(image))
+            color = ('b', 'g', 'r')
+            for i, col in enumerate(color):
+                histogram = cv2.calcHist([input_image], [i], None, [256], [0, 256])
+                plt.plot(histogram, color=col)
+                plt.xlim([0, 256])
+            plt.draw()
+            plt.savefig(JPEG_OUTPUT.format(image), bbox_inches='tight')
+            reply_to_toot(reply.get_status_id(), image_path=JPEG_OUTPUT.format(image),
+                          message="Histogram")
 
 
 def is_jpg(filepath):
