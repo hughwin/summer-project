@@ -49,11 +49,13 @@ def get_posts():
     print(statuses[1])
 
 
-def reply_to_toot(post_id, image_path=None, message=None):
+def reply_to_toot(post_id, image_path=None, message=None, meta=None):
     if image_path is None:
         mastodon.status_post(status=message, in_reply_to_id=post_id)
     else:
         image_dict = mastodon.media_post(image_path)
+        if meta is not None:
+            image_dict["meta"] == meta
         mastodon.status_post(status=message, media_ids=image_dict["id"], in_reply_to_id=post_id)
 
 
@@ -83,21 +85,7 @@ class UserNotification:
         self.status_id = status_id
         self.content = content
         self.media = []
-
-    def get_account_id(self):
-        return self.get_account_id()
-
-    def get_status_id(self):
-        return self.status_id
-
-    def get_user_content(self):
-        return self.get_user_content()
-
-    def get_media(self):
-        return self.media
-
-    def add_media(self, media_path):
-        self.media.append(media_path)
+        self.meta = []
 
 
 class SpamDefender(threading.Thread):
@@ -105,6 +93,9 @@ class SpamDefender(threading.Thread):
         threading.Thread.__init__(self)
         self.users_who_have_made_requests = {}
         self.last_updated_time = datetime.datetime.now()
+
+    def __setattr__(self, key, value):
+        raise Exception("Can't change attributes directly!")
 
     def run(self):
         while True:
@@ -153,12 +144,14 @@ def listen_to_request(spam_defender):
                     print("Denied!")
                 else:
                     for m in media:
-                        media_url = m["url"]
-                        media_path = "{}".format(count)
-                        urllib.request.urlretrieve(media_url, (str(INPUT_FOLDER / media_path)))
-                        check_image_type(str(INPUT_FOLDER / media_path))
-                        user.add_media(count)
-                        count += 1
+                        if m["type"] == "image":
+                            media_url = m["url"]
+                            media_path = "{}".format(count)
+                            urllib.request.urlretrieve(media_url, (str(INPUT_FOLDER / media_path)))
+                            check_image_type(str(INPUT_FOLDER / media_path))
+                            user.media = count
+                            user.meta = ["meta"]
+                            count += 1
                     status_notifications.append(user)
                     spam_defender.add_user_to_requests(user.account_id)
                 count = 0
@@ -191,13 +184,13 @@ def listen_to_request(spam_defender):
 
 def get_information_about_image(status_notifications):
     for reply in status_notifications:
-        for image in range(len(reply.get_media())):
+        for image in range(len(reply.media)):
             input_image = JPEG_INPUT.format(image)
             img_open = cv2.imread(input_image)
             message = "Image properties: " \
                       "\n- Number of Pixels: " + str(img_open.size) \
                       + "\n- Shape/Dimensions: " + str(img_open.shape)
-            reply_to_toot(reply.get_status_id(), message=message)
+            reply_to_toot(reply.status_id, message=message)
 
 
 def convert_image_using_pix2pix(status_notifications):
@@ -213,10 +206,10 @@ def convert_image_using_pix2pix(status_notifications):
         print(e.output)
 
     for reply in status_notifications:
-        for image in range(len(reply.get_media())):
+        for image in range(len(reply.media)):
             try:
                 image_path = str(OUTPUT_FOLDER / "{}-outputs.png".format(image))
-                reply_to_toot(reply.get_status_id(), image_path=image_path)
+                reply_to_toot(reply.status_id, image_path=image_path)
                 print("Tooting!")
             except ValueError as e:
                 print("Something went wrong!")
@@ -225,19 +218,19 @@ def convert_image_using_pix2pix(status_notifications):
 
 def decolourise_image(status_notifications):
     for reply in status_notifications:
-        for image in range(len(reply.get_media())):
+        for image in range(len(reply.media)):
             input_image = JPEG_INPUT.format(image)
             output_image = JPEG_OUTPUT.format(image)
             img_open = cv2.imread(input_image)
             gray = cv2.cvtColor(img_open, cv2.COLOR_BGR2GRAY)
             cv2.imwrite(output_image, gray)
-            reply_to_toot(reply.get_status_id(), image_path=output_image)
+            reply_to_toot(reply.status_id, image_path=output_image, meta=reply.meta)
 
 
 def display_colour_channel(status_notifications, colour):
     colour = colour()
     for reply in status_notifications:
-        for image in range(len(reply.get_media())):
+        for image in range(len(reply.media)):
             image_open = cv2.imread(JPEG_INPUT.format(image))
             temp_image = image_open.copy()
             if colour == "red":
@@ -250,12 +243,12 @@ def display_colour_channel(status_notifications, colour):
                 temp_image[:, :, 1] = 0
                 temp_image[:, :, 2] = 0
             cv2.imwrite(JPEG_OUTPUT.format(image), temp_image)
-            reply_to_toot(reply.get_status_id(), image_path=JPEG_OUTPUT.format(image))
+            reply_to_toot(reply.status_id, image_path=JPEG_OUTPUT.format(image), meta=reply.meta)
 
 
 def get_text_from_image(status_notifications):
     for reply in status_notifications:
-        for image in range(len(reply.get_media())):
+        for image in range(len(reply.media)):
         # TODO:
             pytesseract.pytesseract.tesseract_cmd = r'C:\\Program Files (x86)\\Tesseract-OCR\\tesseract'
             # Must be local install path of tesseract
@@ -263,7 +256,7 @@ def get_text_from_image(status_notifications):
             text = pytesseract.image_to_string(img)
 
             if len(text) <= settings.MAX_MESSAGE_LENGTH:
-                reply_to_toot(reply.get_status_id(), message=text)
+                reply_to_toot(reply.status_id, message=text)
             else:
                 parts = []
                 while len(text) > 0:
@@ -277,7 +270,7 @@ def get_text_from_image(status_notifications):
 
                 for part in parts:
                     print(part)
-                    reply_to_toot(reply.get_status_id(), message=part)
+                    reply_to_toot(reply.status_id, message=part)
                     time.sleep(1)
 
 
@@ -293,7 +286,7 @@ def check_image_type(filepath):
 
 def rotate_image(status_notifications, rotate_by_degrees=None, rotation_type=None):
     for reply in status_notifications:
-        for image in range(len(reply.get_media())):
+        for image in range(len(reply.media)):
             input_image = JPEG_INPUT.format(image)
             output_image = JPEG_OUTPUT.format(image)
             image_open = cv2.imread(input_image)
@@ -302,8 +295,8 @@ def rotate_image(status_notifications, rotate_by_degrees=None, rotation_type=Non
             else:
                 rotated = imutils.rotate_bound(image_open, int(rotate_by_degrees))
             cv2.imwrite(output_image, rotated)
-            reply_to_toot(reply.get_status_id(), image_path=output_image,
-                          message=(str("Rotated by {} degrees").format(rotate_by_degrees)))
+            reply_to_toot(reply.status_id, image_path=output_image,
+                          message=(str("Rotated by {} degrees").format(rotate_by_degrees)), meta=reply.meta)
 
 
 def combine_image(filepath1, filepath2=None):
@@ -318,7 +311,7 @@ def combine_image(filepath1, filepath2=None):
 
 def show_image_histogram(status_notifications):
     for reply in status_notifications:
-        for image in range(len(reply.get_media())):
+        for image in range(len(reply.media)):
             input_image = cv2.imread(JPEG_INPUT.format(image))
             color = ('b', 'g', 'r')
             for i, col in enumerate(color):
@@ -327,7 +320,7 @@ def show_image_histogram(status_notifications):
                 plt.xlim([0, 256])
             plt.draw()
             plt.savefig(JPEG_OUTPUT.format(image), bbox_inches='tight')
-            reply_to_toot(reply.get_status_id(), image_path=JPEG_OUTPUT.format(image),
+            reply_to_toot(reply.status_id, image_path=JPEG_OUTPUT.format(image),
                           message="Histogram")
 
 
