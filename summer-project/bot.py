@@ -259,21 +259,21 @@ def get_text_from_image(status_notifications):
 
             if len(text) <= settings.MAX_MESSAGE_LENGTH:
                 reply_to_toot(reply.get_status_id(), message=text)
+            else:
+                parts = []
+                while len(text) > 0:
+                    if len(text) > settings.MAX_MESSAGE_LENGTH:
+                        parts.append(part)
+                        print(part)
+                        text = text[settings.MAX_MESSAGE_LENGTH:]
+                    else:
+                        parts.append(text)
+                        break
 
-            parts = []
-            while len(text) > 0:
-                if len(text) > settings.MAX_MESSAGE_LENGTH:
-                    parts.append(part)
+                for part in parts:
                     print(part)
-                    text = text[settings.MAX_MESSAGE_LENGTH:]
-                else:
-                    parts.append(text)
-                    break
-
-            for part in parts:
-                print(part)
-                reply_to_toot(reply.get_status_id(), message=part)
-                time.sleep(1)
+                    reply_to_toot(reply.get_status_id(), message=part)
+                    time.sleep(1)
 
 
 def check_image_type(filepath):
