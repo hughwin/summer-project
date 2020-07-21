@@ -25,6 +25,8 @@ INPUT_FOLDER = settings.INPUT_FOLDER
 OUTPUT_FOLDER = settings.OUTPUT_FOLDER
 JPEG_INPUT = settings.JPEG_INPUT
 JPEG_OUTPUT = settings.JPEG_INPUT
+TESSERACT_PATH = settings.TESSERACT_PATH
+HELP_MESSAGE = settings.HELP_MESSAGE
 load_dotenv()  # Important variables such as my secret key are stored in a .env file.
 
 #   Set up Mastodon
@@ -50,19 +52,27 @@ def get_posts():
 
 
 def reply_to_toot(post_id, image_path=None, message=None, meta=None):
-    if image_path is None:
-        mastodon.status_post(status=message, in_reply_to_id=post_id)
-    else:
+    if message is None or len(message) <= settings.MAX_MESSAGE_LENGTH:
         image_dict = mastodon.media_post(image_path)
         if meta is not None:
             image_dict["meta"] == meta
         mastodon.status_post(status=message, media_ids=image_dict["id"], in_reply_to_id=post_id)
+    else:
+        parts = []
+        while len(message) > 0:
+            parts.append(message[:500])
+            message = message[settings.MAX_MESSAGE_LENGTH:]
+        for part in parts:
+            print(part)
+            mastodon.status_post(status=part, in_reply_to_id=post_id)
+            time.sleep(1)
 
 
 def toot_image_of_the_day():
     image_of_the_day_path = Path("temp/")
     r = requests.get(settings.NASA_ADDRESS_IMAGES % os.getenv("NASA"))
     json = r.json()
+    print(json)
     urllib.request.urlretrieve(json["hdurl"], str(image_of_the_day_path / "image.jpeg"))
     image_dict = mastodon.media_post(str(image_of_the_day_path / "image.jpeg"))
     message = "Here is today's image!"
@@ -93,7 +103,6 @@ class SpamDefender(threading.Thread):
         threading.Thread.__init__(self)
         self.users_who_have_made_requests = {}
         self.last_updated_time = datetime.datetime.now()
-
 
     def run(self):
         while True:
@@ -137,8 +146,11 @@ def listen_to_request(spam_defender):
                 params = content.split(" ")
                 user = UserNotification(account_id, status_id, content)
                 media = n["status"]["media_attachments"]
+                if "help" in params:
+                    print("help")
+                    reply_to_toot(status_id, message=HELP_MESSAGE)
                 if not spam_defender.allow_account_to_make_request(account_id):
-                    reply_to_toot(status_id, message="You're making too many requests!")
+                    reply_to_toot(status_id, message=settings.TOO_MANY_REQUESTS_MESSAGE)
                     print("Denied!")
                 else:
                     for m in media:
@@ -169,13 +181,18 @@ def listen_to_request(spam_defender):
                     if "histogram" in params:
                         show_image_histogram(status_notifications)
                     if settings.ROTATE_COMMAND in params:
-                        rotate_image(status_notifications,
-                                     rotate_by_degrees=params[params.index(settings.ROTATE_COMMAND) + 1],
-                                     rotation_type=params[params.index(settings.ROTATE_COMMAND) + 2])
+                        try:
+                            rotate_image(status_notifications,
+                                         rotate_by_degrees=params[params.index(settings.ROTATE_COMMAND) + 1],
+                                         rotation_type=params[params.index(settings.ROTATE_COMMAND) + 2])
+                        except IndexError:
+                            rotate_image(status_notifications,
+                                         rotate_by_degrees=params[params.index(settings.ROTATE_COMMAND) + 1])
+
             mastodon.notifications_clear()
             status_notifications.clear()
-            # bot_delete_files_in_directory(INPUT_FOLDER)
-            # bot_delete_files_in_directory(OUTPUT_FOLDER)
+            bot_delete_files_in_directory(INPUT_FOLDER)
+            bot_delete_files_in_directory(OUTPUT_FOLDER)
         schedule.run_pending()
         time.sleep(2)
 
@@ -248,28 +265,10 @@ def get_text_from_image(status_notifications):
     for reply in status_notifications:
         for image in range(len(reply.media)):
             # TODO: Look into removing this hardcoded path
-            # pytesseract.pytesseract.tesseract_cmd = r'C:\\Program Files (x86)\\Tesseract-OCR\\tesseract'
+            pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
             # Must be local install path of tesseract
             img = cv2.imread(JPEG_INPUT.format(image))
             text = pytesseract.image_to_string(img)
-
-            if len(text) <= settings.MAX_MESSAGE_LENGTH:
-                reply_to_toot(reply.status_id, message=text)
-            else:
-                parts = []
-                while len(text) > 0:
-                    if len(text) > settings.MAX_MESSAGE_LENGTH:
-                        parts.append(part)
-                        print(part)
-                        text = text[settings.MAX_MESSAGE_LENGTH:]
-                    else:
-                        parts.append(text)
-                        break
-
-                for part in parts:
-                    print(part)
-                    reply_to_toot(reply.status_id, message=part)
-                    time.sleep(1)
 
 
 def check_image_type(filepath):
@@ -288,7 +287,7 @@ def rotate_image(status_notifications, rotate_by_degrees=None, rotation_type=Non
             input_image = JPEG_INPUT.format(image)
             output_image = JPEG_OUTPUT.format(image)
             image_open = cv2.imread(input_image)
-            if str(rotation_type)() == settings.ROTATE_COMMAND:
+            if str(rotation_type) == settings.ROTATE_COMMAND:
                 rotated = imutils.rotate(image_open, int(rotate_by_degrees))
             else:
                 rotated = imutils.rotate_bound(image_open, int(rotate_by_degrees))
