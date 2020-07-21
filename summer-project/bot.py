@@ -158,8 +158,8 @@ def listen_to_request(spam_defender):
                 count = 0
                 num_files = os.listdir(str(settings.INPUT_FOLDER))
                 if len(num_files) != 0:
+                    print(params)
                     for reply in status_notifications:
-                        print(params)
                         if 'decolourise' in params or 'decolorize' in params:
                             decolourise_image(reply)
                         if "pix2pix" in params:
@@ -319,6 +319,8 @@ def crop_image(reply):
     for image in range(len(reply.media)):
         img = Image.open(settings.JPEG_INPUT.format(image))
         width, height = img.size
+
+        # TODO: Change these to make them user generated
         left = 5
         top = height / 4
         right = 164
@@ -326,6 +328,8 @@ def crop_image(reply):
 
         cropped_img = img.crop((left, top, right, bottom))
         cropped_img.save(settings.JPEG_OUTPUT.format(image))
+        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image),
+                      message="Here is your cropped image")
 
 
 # def give_title(status_notifications):
