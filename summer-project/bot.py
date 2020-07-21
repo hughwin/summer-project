@@ -19,20 +19,13 @@ from PIL import Image
 from dotenv import load_dotenv
 from mastodon import Mastodon
 
-MASTODON_SERVER = settings.BASE_ADDRESS
-JSON_ERROR_MESSAGE = "Decoding JSON has failed"
-INPUT_FOLDER = settings.INPUT_FOLDER
-OUTPUT_FOLDER = settings.OUTPUT_FOLDER
-JPEG_INPUT = settings.JPEG_INPUT
-JPEG_OUTPUT = settings.JPEG_INPUT
-TESSERACT_PATH = settings.TESSERACT_PATH
-HELP_MESSAGE = settings.HELP_MESSAGE
+
 load_dotenv()  # Important variables such as my secret key are stored in a .env file.
 
 #   Set up Mastodon
 mastodon = Mastodon(
     access_token=os.getenv("ACCESS_TOKEN"),
-    api_base_url=MASTODON_SERVER
+    api_base_url=settings.BASE_ADDRESS
 )
 
 
@@ -45,7 +38,7 @@ def start_bot():
 
 
 def get_posts():
-    r = requests.get("%sapi/v1/timelines/public?limit=5" % MASTODON_SERVER)  # Consider changing
+    r = requests.get("%sapi/v1/timelines/public?limit=5" % settings.BASE_ADDRESS)  # Consider changing
     statuses = r.json()
     print(statuses[0])
     print(statuses[1])
@@ -65,7 +58,6 @@ def reply_to_toot(post_id, image_path=None, message=None, meta=None):
         for part in parts:
             print(part)
             mastodon.status_post(status=part, in_reply_to_id=post_id)
-            time.sleep(1)
 
 
 def toot_image_of_the_day():
@@ -82,11 +74,11 @@ def toot_image_of_the_day():
 
 def get_trends():
     try:
-        r = requests.get("%s/api/v1/trends/" % MASTODON_SERVER)
+        r = requests.get("%s/api/v1/trends/" % settings.BASE_ADDRESS)
         trends = r.json()
         print(trends)
     except ValueError:
-        print(JSON_ERROR_MESSAGE)
+        print(settings.JSON_ERROR_MESSAGE)
 
 
 class UserNotification:
@@ -148,7 +140,7 @@ def listen_to_request(spam_defender):
                 media = n["status"]["media_attachments"]
                 if "help" in params:
                     print("help")
-                    reply_to_toot(status_id, message=HELP_MESSAGE)
+                    reply_to_toot(status_id, message=settings.HELP_MESSAGE)
                 if not spam_defender.allow_account_to_make_request(account_id):
                     reply_to_toot(status_id, message=settings.TOO_MANY_REQUESTS_MESSAGE)
                     print("Denied!")
@@ -157,15 +149,15 @@ def listen_to_request(spam_defender):
                         if m["type"] == "image":
                             media_url = m["url"]
                             media_path = "{}".format(count)
-                            urllib.request.urlretrieve(media_url, (str(INPUT_FOLDER / media_path)))
-                            check_image_type(str(INPUT_FOLDER / media_path))
+                            urllib.request.urlretrieve(media_url, (str(settings.INPUT_FOLDER / media_path)))
+                            check_image_type(str(settings.INPUT_FOLDER / media_path))
                             user.media.append(media)
                             user.meta = ["meta"]
                             count += 1
                     status_notifications.append(user)
                     spam_defender.add_user_to_requests(user.account_id)
                 count = 0
-                num_files = os.listdir(str(INPUT_FOLDER))
+                num_files = os.listdir(str(settings.INPUT_FOLDER))
                 if len(num_files) != 0:
                     print(params)
                     if 'decolourise' in params or 'decolorize' in params:
@@ -180,6 +172,10 @@ def listen_to_request(spam_defender):
                         display_colour_channel(status_notifications, params[params.index("preserve") + 1])
                     if "histogram" in params:
                         show_image_histogram(status_notifications)
+                    if "border" in params:
+                        create_border(status_notifications)
+                    if "crop" in params:
+                        crop_image(status_notifications)
                     if settings.ROTATE_COMMAND in params:
                         try:
                             rotate_image(status_notifications,
@@ -188,19 +184,18 @@ def listen_to_request(spam_defender):
                         except IndexError:
                             rotate_image(status_notifications,
                                          rotate_by_degrees=params[params.index(settings.ROTATE_COMMAND) + 1])
-
             mastodon.notifications_clear()
             status_notifications.clear()
-            bot_delete_files_in_directory(INPUT_FOLDER)
-            bot_delete_files_in_directory(OUTPUT_FOLDER)
+            # bot_delete_files_in_directory(INPUT_FOLDER)
+            # bot_delete_files_in_directory(OUTPUT_FOLDER)
         schedule.run_pending()
-        time.sleep(2)
+        time.sleep(1)
 
 
 def get_information_about_image(status_notifications):
     for reply in status_notifications:
         for image in range(len(reply.media)):
-            input_image = JPEG_INPUT.format(image)
+            input_image = settings.JPEG_INPUT.format(image)
             img_open = cv2.imread(input_image)
             message = "Image properties: " \
                       "\n- Number of Pixels: " + str(img_open.size) \
@@ -223,7 +218,7 @@ def convert_image_using_pix2pix(status_notifications):
     for reply in status_notifications:
         for image in range(len(reply.media)):
             try:
-                image_path = str(OUTPUT_FOLDER / "{}-outputs.png".format(image))
+                image_path = str(settings.OUTPUT_FOLDER / "{}-outputs.png".format(image))
                 reply_to_toot(reply.status_id, image_path=image_path)
                 print("Tooting!")
             except ValueError as e:
@@ -234,19 +229,17 @@ def convert_image_using_pix2pix(status_notifications):
 def decolourise_image(status_notifications):
     for reply in status_notifications:
         for image in range(len(reply.media)):
-            input_image = JPEG_INPUT.format(image)
-            output_image = JPEG_OUTPUT.format(image)
-            img_open = cv2.imread(input_image)
+            img_open = cv2.imread(settings.JPEG_INPUT.format(image))
             gray = cv2.cvtColor(img_open, cv2.COLOR_BGR2GRAY)
-            cv2.imwrite(output_image, gray)
-            reply_to_toot(reply.status_id, image_path=output_image, meta=reply.meta)
+            cv2.imwrite(settings.JPEG_OUTPUT.format(image), gray)
+            reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image), meta=reply.meta)
 
 
 def display_colour_channel(status_notifications, colour):
     colour = colour()
     for reply in status_notifications:
         for image in range(len(reply.media)):
-            image_open = cv2.imread(JPEG_INPUT.format(image))
+            image_open = cv2.imread(settings.JPEG_INPUT.format(image))
             temp_image = image_open.copy()
             if colour == "red":
                 temp_image[:, :, 0] = 0
@@ -257,17 +250,17 @@ def display_colour_channel(status_notifications, colour):
             if colour == "blue":
                 temp_image[:, :, 1] = 0
                 temp_image[:, :, 2] = 0
-            cv2.imwrite(JPEG_OUTPUT.format(image), temp_image)
-            reply_to_toot(reply.status_id, image_path=JPEG_OUTPUT.format(image), meta=reply.meta)
+            cv2.imwrite(settings.JPEG_OUTPUT.format(image), temp_image)
+            reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image), meta=reply.meta)
 
 
 def get_text_from_image(status_notifications):
     for reply in status_notifications:
         for image in range(len(reply.media)):
             # TODO: Look into removing this hardcoded path
-            pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
+            pytesseract.pytesseract.tesseract_cmd = settings.TESSERACT_PATH
             # Must be local install path of tesseract
-            img = cv2.imread(JPEG_INPUT.format(image))
+            img = cv2.imread(settings.JPEG_INPUT.format(image))
             text = pytesseract.image_to_string(img)
 
 
@@ -284,10 +277,10 @@ def check_image_type(filepath):
 def rotate_image(status_notifications, rotate_by_degrees=None, rotation_type=None):
     for reply in status_notifications:
         for image in range(len(reply.media)):
-            input_image = JPEG_INPUT.format(image)
-            output_image = JPEG_OUTPUT.format(image)
+            input_image = settings.JPEG_INPUT.format(image)
+            output_image = settings.JPEG_OUTPUT.format(image)
             image_open = cv2.imread(input_image)
-            if str(rotation_type) == settings.ROTATE_COMMAND:
+            if str(rotation_type) == settings.ROTATE_SIMPLE:
                 rotated = imutils.rotate(image_open, int(rotate_by_degrees))
             else:
                 rotated = imutils.rotate_bound(image_open, int(rotate_by_degrees))
@@ -309,16 +302,45 @@ def combine_image(filepath1, filepath2=None):
 def show_image_histogram(status_notifications):
     for reply in status_notifications:
         for image in range(len(reply.media)):
-            input_image = cv2.imread(JPEG_INPUT.format(image))
+            input_image = cv2.imread(settings.JPEG_INPUT.format(image))
             color = ('b', 'g', 'r')
             for i, col in enumerate(color):
                 histogram = cv2.calcHist([input_image], [i], None, [256], [0, 256])
                 plt.plot(histogram, color=col)
                 plt.xlim([0, 256])
             plt.draw()
-            plt.savefig(JPEG_OUTPUT.format(image), bbox_inches='tight')
-            reply_to_toot(reply.status_id, image_path=JPEG_OUTPUT.format(image),
+            plt.savefig(settings.JPEG_OUTPUT.format(image), bbox_inches='tight')
+            reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image),
                           message="Histogram")
+
+
+def create_border(status_notifications):
+    for reply in status_notifications:
+        for image in range(len(reply.media)):
+            input_image = cv2.imread(settings.JPEG_INPUT.format(image))
+            input_image = cv2.copyMakeBorder(input_image, 10, 10, 10, 10, cv2.BORDER_REFLECT)
+            cv2.imwrite(settings.JPEG_OUTPUT.format(image), input_image)
+            reply_to_toot(reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image)))
+
+
+def crop_image(status_notifications):
+    for reply in status_notifications:
+        for image in range(len(reply.media)):
+            img = Image.open(settings.JPEG_INPUT.format(image))
+            width, height = img.size
+            left = 5
+            top = height / 4
+            right = 164
+            bottom = 3 * height / 4
+
+
+            cropped_img = img.crop((left, top, right, bottom))
+            cropped_img.save(settings.JPEG_OUTPUT.format(image))
+
+
+# def give_title(status_notifications):
+#     for reply in status_notifications:
+#         for image in range(len(reply.media)):
 
 
 def is_jpg(filepath):
@@ -378,11 +400,11 @@ def bot_delete_files_in_directory(path):
 
 def get_instance_activity():
     try:
-        r = requests.get("%sapi/v1/instance/activity" % MASTODON_SERVER)
+        r = requests.get("%sapi/v1/instance/activity" % settings.MASTODON_SERVER)
         activity = r.json()
         # line_graph.plot_weekly_statuses(activity)
     except ValueError:
-        print(JSON_ERROR_MESSAGE)
+        print(settings.JSON_ERROR_MESSAGE)
 
 
 def clear_notifications():
