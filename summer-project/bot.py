@@ -19,7 +19,6 @@ from PIL import Image
 from dotenv import load_dotenv
 from mastodon import Mastodon
 
-
 load_dotenv()  # Important variables such as my secret key are stored in a .env file.
 
 #   Set up Mastodon
@@ -159,51 +158,51 @@ def listen_to_request(spam_defender):
                 count = 0
                 num_files = os.listdir(str(settings.INPUT_FOLDER))
                 if len(num_files) != 0:
-                    print(params)
-                    if 'decolourise' in params or 'decolorize' in params:
-                        decolourise_image(status_notifications)
-                    if "pix2pix" in params:
-                        convert_image_using_pix2pix(status_notifications)
-                    if "text" in params:
-                        get_text_from_image(status_notifications)
-                    if "about" in params:
-                        get_information_about_image(status_notifications)
-                    if "preserve" in params:
-                        display_colour_channel(status_notifications, params[params.index("preserve") + 1])
-                    if "histogram" in params:
-                        show_image_histogram(status_notifications)
-                    if "border" in params:
-                        create_border(status_notifications)
-                    if "crop" in params:
-                        crop_image(status_notifications)
-                    if settings.ROTATE_COMMAND in params:
-                        try:
-                            rotate_image(status_notifications,
-                                         rotate_by_degrees=params[params.index(settings.ROTATE_COMMAND) + 1],
-                                         rotation_type=params[params.index(settings.ROTATE_COMMAND) + 2])
-                        except IndexError:
-                            rotate_image(status_notifications,
-                                         rotate_by_degrees=params[params.index(settings.ROTATE_COMMAND) + 1])
+                    for reply in status_notifications:
+                        print(params)
+                        if 'decolourise' in params or 'decolorize' in params:
+                            decolourise_image(reply)
+                        if "pix2pix" in params:
+                            convert_image_using_pix2pix(reply)
+                        if "text" in params:
+                            get_text_from_image(reply)
+                        if "about" in params:
+                            get_information_about_image(reply)
+                        if "preserve" in params:
+                            display_colour_channel(reply, params[params.index("preserve") + 1])
+                        if "histogram" in params:
+                            show_image_histogram(reply)
+                        if "border" in params:
+                            create_border(reply)
+                        if "crop" in params:
+                            crop_image(reply)
+                        if settings.ROTATE_COMMAND in params:
+                            try:
+                                rotate_image(reply,
+                                             rotate_by_degrees=params[params.index(settings.ROTATE_COMMAND) + 1],
+                                             rotation_type=params[params.index(settings.ROTATE_COMMAND) + 2])
+                            except IndexError:
+                                rotate_image(reply,
+                                             rotate_by_degrees=params[params.index(settings.ROTATE_COMMAND) + 1])
             mastodon.notifications_clear()
             status_notifications.clear()
-            # bot_delete_files_in_directory(INPUT_FOLDER)
-            # bot_delete_files_in_directory(OUTPUT_FOLDER)
+            bot_delete_files_in_directory(settings.INPUT_FOLDER)
+            bot_delete_files_in_directory(settings.OUTPUT_FOLDER)
         schedule.run_pending()
         time.sleep(1)
 
 
-def get_information_about_image(status_notifications):
-    for reply in status_notifications:
-        for image in range(len(reply.media)):
-            input_image = settings.JPEG_INPUT.format(image)
-            img_open = cv2.imread(input_image)
-            message = "Image properties: " \
-                      "\n- Number of Pixels: " + str(img_open.size) \
-                      + "\n- Shape/Dimensions: " + str(img_open.shape)
-            reply_to_toot(reply.status_id, message=message)
+def get_information_about_image(reply):
+    for image in range(len(reply.media)):
+        input_image = settings.JPEG_INPUT.format(image)
+        img_open = cv2.imread(input_image)
+        message = "Image properties: " \
+                  "\n- Number of Pixels: " + str(img_open.size) \
+                  + "\n- Shape/Dimensions: " + str(img_open.shape)
+        reply_to_toot(reply.status_id, message=message)
 
 
-def convert_image_using_pix2pix(status_notifications):
+def convert_image_using_pix2pix(reply):
     # TODO: Make this change the files so the right sized images are output.
     try:
         subprocess.call("python pix2pix/pix2pix.py "
@@ -215,7 +214,6 @@ def convert_image_using_pix2pix(status_notifications):
         print("Problem with subprocess / pix2pix")
         print(e.output)
 
-    for reply in status_notifications:
         for image in range(len(reply.media)):
             try:
                 image_path = str(settings.OUTPUT_FOLDER / "{}-outputs.png".format(image))
@@ -226,42 +224,39 @@ def convert_image_using_pix2pix(status_notifications):
                 print(e.output)
 
 
-def decolourise_image(status_notifications):
-    for reply in status_notifications:
-        for image in range(len(reply.media)):
-            img_open = cv2.imread(settings.JPEG_INPUT.format(image))
-            gray = cv2.cvtColor(img_open, cv2.COLOR_BGR2GRAY)
-            cv2.imwrite(settings.JPEG_OUTPUT.format(image), gray)
-            reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image), meta=reply.meta)
+def decolourise_image(reply):
+    for image in range(len(reply.media)):
+        img_open = cv2.imread(settings.JPEG_INPUT.format(image))
+        gray = cv2.cvtColor(img_open, cv2.COLOR_BGR2GRAY)
+        cv2.imwrite(settings.JPEG_OUTPUT.format(image), gray)
+        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image), meta=reply.meta)
 
 
-def display_colour_channel(status_notifications, colour):
+def display_colour_channel(reply, colour):
     colour = colour()
-    for reply in status_notifications:
-        for image in range(len(reply.media)):
-            image_open = cv2.imread(settings.JPEG_INPUT.format(image))
-            temp_image = image_open.copy()
-            if colour == "red":
-                temp_image[:, :, 0] = 0
-                temp_image[:, :, 1] = 0
-            if colour == "green":
-                temp_image[:, :, 0] = 0
-                temp_image[:, :, 2] = 0
-            if colour == "blue":
-                temp_image[:, :, 1] = 0
-                temp_image[:, :, 2] = 0
-            cv2.imwrite(settings.JPEG_OUTPUT.format(image), temp_image)
-            reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image), meta=reply.meta)
+    for image in range(len(reply.media)):
+        image_open = cv2.imread(settings.JPEG_INPUT.format(image))
+        temp_image = image_open.copy()
+        if colour == "red":
+            temp_image[:, :, 0] = 0
+            temp_image[:, :, 1] = 0
+        if colour == "green":
+            temp_image[:, :, 0] = 0
+            temp_image[:, :, 2] = 0
+        if colour == "blue":
+            temp_image[:, :, 1] = 0
+            temp_image[:, :, 2] = 0
+        cv2.imwrite(settings.JPEG_OUTPUT.format(image), temp_image)
+        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image), meta=reply.meta)
 
 
-def get_text_from_image(status_notifications):
-    for reply in status_notifications:
-        for image in range(len(reply.media)):
-            # TODO: Look into removing this hardcoded path
-            pytesseract.pytesseract.tesseract_cmd = settings.TESSERACT_PATH
-            # Must be local install path of tesseract
-            img = cv2.imread(settings.JPEG_INPUT.format(image))
-            text = pytesseract.image_to_string(img)
+def get_text_from_image(reply):
+    for image in range(len(reply.media)):
+        # TODO: Look into removing this hardcoded path
+        pytesseract.pytesseract.tesseract_cmd = settings.TESSERACT_PATH
+        # Must be local install path of tesseract
+        img = cv2.imread(settings.JPEG_INPUT.format(image))
+        text = pytesseract.image_to_string(img)
 
 
 def check_image_type(filepath):
@@ -274,19 +269,18 @@ def check_image_type(filepath):
         os.renames(str(filepath), filepath_with_jpeg)
 
 
-def rotate_image(status_notifications, rotate_by_degrees=None, rotation_type=None):
-    for reply in status_notifications:
-        for image in range(len(reply.media)):
-            input_image = settings.JPEG_INPUT.format(image)
-            output_image = settings.JPEG_OUTPUT.format(image)
-            image_open = cv2.imread(input_image)
-            if str(rotation_type) == settings.ROTATE_SIMPLE:
-                rotated = imutils.rotate(image_open, int(rotate_by_degrees))
-            else:
-                rotated = imutils.rotate_bound(image_open, int(rotate_by_degrees))
-            cv2.imwrite(output_image, rotated)
-            reply_to_toot(reply.status_id, image_path=output_image,
-                          message=(str("Rotated by {} degrees").format(rotate_by_degrees)), meta=reply.meta)
+def rotate_image(reply, rotate_by_degrees=None, rotation_type=None):
+    for image in range(len(reply.media)):
+        input_image = settings.JPEG_INPUT.format(image)
+        output_image = settings.JPEG_OUTPUT.format(image)
+        image_open = cv2.imread(input_image)
+        if str(rotation_type) == settings.ROTATE_SIMPLE:
+            rotated = imutils.rotate(image_open, int(rotate_by_degrees))
+        else:
+            rotated = imutils.rotate_bound(image_open, int(rotate_by_degrees))
+        cv2.imwrite(output_image, rotated)
+        reply_to_toot(reply.status_id, image_path=output_image,
+                      message=(str("Rotated by {} degrees").format(rotate_by_degrees)), meta=reply.meta)
 
 
 def combine_image(filepath1, filepath2=None):
@@ -299,43 +293,39 @@ def combine_image(filepath1, filepath2=None):
     combined_image.save(filepath1)
 
 
-def show_image_histogram(status_notifications):
-    for reply in status_notifications:
-        for image in range(len(reply.media)):
-            input_image = cv2.imread(settings.JPEG_INPUT.format(image))
-            color = ('b', 'g', 'r')
-            for i, col in enumerate(color):
-                histogram = cv2.calcHist([input_image], [i], None, [256], [0, 256])
-                plt.plot(histogram, color=col)
-                plt.xlim([0, 256])
-            plt.draw()
-            plt.savefig(settings.JPEG_OUTPUT.format(image), bbox_inches='tight')
-            reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image),
-                          message="Histogram")
+def show_image_histogram(reply):
+    for image in range(len(reply.media)):
+        input_image = cv2.imread(settings.JPEG_INPUT.format(image))
+        color = ('b', 'g', 'r')
+        for i, col in enumerate(color):
+            histogram = cv2.calcHist([input_image], [i], None, [256], [0, 256])
+            plt.plot(histogram, color=col)
+            plt.xlim([0, 256])
+        plt.draw()
+        plt.savefig(settings.JPEG_OUTPUT.format(image), bbox_inches='tight')
+        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image),
+                      message="Histogram")
 
 
-def create_border(status_notifications):
-    for reply in status_notifications:
-        for image in range(len(reply.media)):
-            input_image = cv2.imread(settings.JPEG_INPUT.format(image))
-            input_image = cv2.copyMakeBorder(input_image, 10, 10, 10, 10, cv2.BORDER_REFLECT)
-            cv2.imwrite(settings.JPEG_OUTPUT.format(image), input_image)
-            reply_to_toot(reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image)))
+def create_border(reply):
+    for image in range(len(reply.media)):
+        input_image = cv2.imread(settings.JPEG_INPUT.format(image))
+        input_image = cv2.copyMakeBorder(input_image, 10, 10, 10, 10, cv2.BORDER_REFLECT)
+        cv2.imwrite(settings.JPEG_OUTPUT.format(image), input_image)
+        reply_to_toot(reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image)))
 
 
-def crop_image(status_notifications):
-    for reply in status_notifications:
-        for image in range(len(reply.media)):
-            img = Image.open(settings.JPEG_INPUT.format(image))
-            width, height = img.size
-            left = 5
-            top = height / 4
-            right = 164
-            bottom = 3 * height / 4
+def crop_image(reply):
+    for image in range(len(reply.media)):
+        img = Image.open(settings.JPEG_INPUT.format(image))
+        width, height = img.size
+        left = 5
+        top = height / 4
+        right = 164
+        bottom = 3 * height / 4
 
-
-            cropped_img = img.crop((left, top, right, bottom))
-            cropped_img.save(settings.JPEG_OUTPUT.format(image))
+        cropped_img = img.crop((left, top, right, bottom))
+        cropped_img.save(settings.JPEG_OUTPUT.format(image))
 
 
 # def give_title(status_notifications):
