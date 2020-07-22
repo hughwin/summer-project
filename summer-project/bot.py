@@ -15,7 +15,7 @@ import cv2
 import imutils
 from matplotlib import pyplot as plt
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageEnhance
 from dotenv import load_dotenv
 from mastodon import Mastodon
 
@@ -52,7 +52,7 @@ def reply_to_toot(post_id, image_path=None, message=None, meta=None):
     else:
         parts = []
         while len(message) > 0:
-            parts.append(message[:500])
+            parts.append(message[:settings.MAX_MESSAGE_LENGTH])
             message = message[settings.MAX_MESSAGE_LENGTH:]
         for part in parts:
             print(part)
@@ -176,6 +176,8 @@ def listen_to_request(spam_defender):
                             create_border(reply)
                         if "crop" in params:
                             crop_image(reply)
+                        if "enhance" in params:
+                            enhance_image(reply)
                         if settings.ROTATE_COMMAND in params:
                             try:
                                 rotate_image(reply,
@@ -330,6 +332,18 @@ def crop_image(reply):
         cropped_img.save(settings.JPEG_OUTPUT.format(image))
         reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image),
                       message="Here is your cropped image")
+
+
+def enhance_image(reply):
+    for image in range(len(reply.media)):
+        img = Image.open(settings.JPEG_INPUT.format(image))
+        enhancer = ImageEnhance.Sharpness(img)
+        img_enhanced = enhancer.enhance(10.0)
+        img_enhanced.save(settings.JPEG_OUTPUT.format(image))
+        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
+
+
+
 
 
 # def give_title(status_notifications):
