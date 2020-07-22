@@ -343,7 +343,31 @@ def enhance_image(reply):
         reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
 
 
+def adjust_brightness(reply, value):
+    for image in range(len(reply.media)):
+        img = Image.open(settings.JPEG_INPUT.format(image))
+        enhancer = ImageEnhance.Brightness(img)
+        img_enhanced = enhancer.enhance(value)
+        img_enhanced.save(settings.JPEG_OUTPUT.format(image))
+        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
 
+
+def adjust_contrast(reply, value):
+    for image in range(len(reply.media)):
+        img = Image.open(settings.JPEG_INPUT.format(image))
+        enhancer = ImageEnhance.Contrast(img)
+        img_enhanced = enhancer.enhance(value)
+        img_enhanced.save(settings.JPEG_OUTPUT.format(image))
+        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
+
+
+def adjust_colour(reply, value):
+    for image in range(len(reply.media)):
+        img = Image.open(settings.JPEG_INPUT.format(image))
+        enhancer = ImageEnhance.Color(img)
+        img_enhanced = enhancer.enhance(value)
+        img_enhanced.save(settings.JPEG_OUTPUT.format(image))
+        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
 
 
 # def give_title(status_notifications):
