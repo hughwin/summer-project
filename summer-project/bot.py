@@ -4,7 +4,6 @@ import shutil
 import subprocess
 import threading
 import time
-import numpy
 import urllib.request
 import pytesseract
 import html_stripper
@@ -81,10 +80,11 @@ def get_trends():
 
 
 class UserNotification:
-    def __init__(self, account_id, status_id, content):
+    def __init__(self, account_id, status_id, content, params):
         self.account_id = account_id
         self.status_id = status_id
         self.content = content
+        self.params = params
         self.media = []
         self.meta = []
 
@@ -135,7 +135,7 @@ def listen_to_request(spam_defender):
                 content = n["status"]["content"]
                 content = strip_tags(content).replace("@hughwin ", "").lower()
                 params = content.split(" ")
-                user = UserNotification(account_id, status_id, content)
+                user = UserNotification(account_id, status_id, content, params)
                 media = n["status"]["media_attachments"]
                 if "help" in params:
                     print("help")
@@ -158,9 +158,9 @@ def listen_to_request(spam_defender):
                 count = 0
                 num_files = os.listdir(str(settings.INPUT_FOLDER))
                 if len(num_files) != 0:
-                    print(params)
                     for reply in status_notifications:
-                        if 'decolourise' in params or 'decolorize' in params:
+                        print(reply.params)
+                        if 'decolourise' in reply.params or 'decolorize' in params:
                             decolourise_image(reply)
                         if "pix2pix" in params:
                             convert_image_using_pix2pix(reply)
@@ -178,6 +178,21 @@ def listen_to_request(spam_defender):
                             crop_image(reply)
                         if "enhance" in params:
                             enhance_image(reply)
+                        if "brightness" in params:
+                            try:
+                                adjust_brightness(reply, value=params[params.index("brightness") + 1])
+                            except IndexError:
+                                adjust_brightness(reply)
+                        if "contrast" in params:
+                            try:
+                                adjust_contrast(reply, value=params[params.index("contrast") + 1])
+                            except IndexError:
+                                adjust_contrast(reply)
+                        if "colour" in params:
+                            try:
+                                adjust_colour(reply, value=params[params.index("colour") + 1])
+                            except IndexError:
+                                adjust_contrast(reply)
                         if settings.ROTATE_COMMAND in params:
                             try:
                                 rotate_image(reply,
@@ -186,10 +201,12 @@ def listen_to_request(spam_defender):
                             except IndexError:
                                 rotate_image(reply,
                                              rotate_by_degrees=params[params.index(settings.ROTATE_COMMAND) + 1])
+                        # else:
+                        #     reply_to_toot(reply.status_id, message=settings.INVALID_COMMAND)
             mastodon.notifications_clear()
             status_notifications.clear()
-            bot_delete_files_in_directory(settings.INPUT_FOLDER)
-            bot_delete_files_in_directory(settings.OUTPUT_FOLDER)
+            # bot_delete_files_in_directory(settings.INPUT_FOLDER)
+            # bot_delete_files_in_directory(settings.OUTPUT_FOLDER)
         schedule.run_pending()
         time.sleep(1)
 
@@ -256,7 +273,6 @@ def get_text_from_image(reply):
     for image in range(len(reply.media)):
         # TODO: Look into removing this hardcoded path
         pytesseract.pytesseract.tesseract_cmd = settings.TESSERACT_PATH
-        # Must be local install path of tesseract
         img = cv2.imread(settings.JPEG_INPUT.format(image))
         text = pytesseract.image_to_string(img)
 
@@ -343,7 +359,8 @@ def enhance_image(reply):
         reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
 
 
-def adjust_brightness(reply, value):
+def adjust_brightness(reply, value=1.5):
+    value = float(value)
     for image in range(len(reply.media)):
         img = Image.open(settings.JPEG_INPUT.format(image))
         enhancer = ImageEnhance.Brightness(img)
@@ -352,7 +369,8 @@ def adjust_brightness(reply, value):
         reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
 
 
-def adjust_contrast(reply, value):
+def adjust_contrast(reply, value=1.5):
+    value = float(value)
     for image in range(len(reply.media)):
         img = Image.open(settings.JPEG_INPUT.format(image))
         enhancer = ImageEnhance.Contrast(img)
@@ -361,7 +379,8 @@ def adjust_contrast(reply, value):
         reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
 
 
-def adjust_colour(reply, value):
+def adjust_colour(reply, value=1.5):
+    value = float(value)
     for image in range(len(reply.media)):
         img = Image.open(settings.JPEG_INPUT.format(image))
         enhancer = ImageEnhance.Color(img)
