@@ -14,7 +14,7 @@ import cv2
 import imutils
 from matplotlib import pyplot as plt
 from pathlib import Path
-from PIL import Image, ImageEnhance, ImageOps
+from PIL import Image, ImageEnhance, ImageOps, ImageFilter
 from dotenv import load_dotenv
 from mastodon import Mastodon
 
@@ -198,6 +198,8 @@ def listen_to_request(spam_defender):
                             mirror_image(reply)
                         if "flip" in params:
                             flip_image(reply)
+                        if "transparent" in params:
+                            make_transparent_image(reply)
                         if settings.ROTATE_COMMAND in params:
                             try:
                                 rotate_image(reply,
@@ -210,8 +212,8 @@ def listen_to_request(spam_defender):
                         #     reply_to_toot(reply.status_id, message=settings.INVALID_COMMAND)
             mastodon.notifications_clear()
             status_notifications.clear()
-            # bot_delete_files_in_directory(settings.INPUT_FOLDER)
-            # bot_delete_files_in_directory(settings.OUTPUT_FOLDER)
+            bot_delete_files_in_directory(settings.INPUT_FOLDER)
+            bot_delete_files_in_directory(settings.OUTPUT_FOLDER)
         schedule.run_pending()
         time.sleep(1)
 
@@ -410,9 +412,22 @@ def mirror_image(reply):
         reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
 
 
+def make_transparent_image(reply):
+    for image in range(len(reply.media)):
+        img_transparent = Image.open(settings.JPEG_INPUT.format(image))
+        img_transparent.putalpha(128)
+        img_transparent.save(settings.PNG_OUTPUT.format(image))
+        reply_to_toot(reply.status_id, image_path=settings.PNG_OUTPUT.format(image))
+
+
 # def give_title(status_notifications):
 #     for reply in status_notifications:
 #         for image in range(len(reply.media)):
+
+
+def convert_image_to_png(image_path):
+    img = Image.open(image_path)
+    img.save()
 
 
 def is_jpg(filepath):
