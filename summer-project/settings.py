@@ -13,6 +13,7 @@ OUTPUT_FOLDER = Path("pix2pix/test/images/")
 JPEG_INPUT = str(INPUT_FOLDER / "{}.jpeg")
 JPEG_OUTPUT = str(OUTPUT_FOLDER / "{}.jpeg")
 PNG_OUTPUT = str(OUTPUT_FOLDER / "{}.png")
+BMP_OUTPUT = str(OUTPUT_FOLDER / "{}.bmp")
 TESSERACT_PATH = r"C:\\Program Files (x86)\\Tesseract-OCR\\tesseract"
 HELP_MESSAGE = "Welcome to my image processing bot!" \
     "\nThe bot can perform simple (and not so simple) image transformations." \

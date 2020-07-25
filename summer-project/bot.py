@@ -202,6 +202,8 @@ def listen_to_request(spam_defender):
                             make_transparent_image(reply)
                         if "convert-png" in params:
                             convert_image_to_png(reply)
+                        if "convert-bmp" in params:
+                            convert_image_to_bmp(reply)
                         if settings.ROTATE_COMMAND in params:
                             try:
                                 rotate_image(reply,
@@ -429,9 +431,14 @@ def make_transparent_image(reply):
 
 def convert_image_to_png(reply):
     for image in range(len(reply.media)):
-        img = Image.open(settings.JPEG_INPUT.format(image))
-        img.save(settings.PNG_OUTPUT.format(image))
+        Image.open(settings.JPEG_INPUT.format(image)).save(settings.PNG_OUTPUT.format(image))
         reply_to_toot(reply.status_id, image_path=settings.PNG_OUTPUT.format(image))
+
+
+def convert_image_to_bmp(reply):
+    for image in range(len(reply.media)):
+        Image.open(settings.JPEG_INPUT.format(image)).save(settings.PNG_OUTPUT.format(image))
+        reply_to_toot(reply.status_id, image_path=settings.BMP_OUTPUT.format(image))
 
 
 def is_jpg(filepath):
