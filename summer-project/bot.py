@@ -200,6 +200,8 @@ def listen_to_request(spam_defender):
                             flip_image(reply)
                         if "transparent" in params:
                             make_transparent_image(reply)
+                        if "convert-png" in params:
+                            convert_image_to_png(reply)
                         if settings.ROTATE_COMMAND in params:
                             try:
                                 rotate_image(reply,
@@ -425,9 +427,11 @@ def make_transparent_image(reply):
 #         for image in range(len(reply.media)):
 
 
-def convert_image_to_png(image_path):
-    img = Image.open(image_path)
-    img.save()
+def convert_image_to_png(reply):
+    for image in range(len(reply.media)):
+        img = Image.open(settings.JPEG_INPUT.format(image))
+        img.save(settings.PNG_OUTPUT.format(image))
+        reply_to_toot(reply.status_id, image_path=settings.PNG_OUTPUT.format(image))
 
 
 def is_jpg(filepath):
