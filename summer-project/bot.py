@@ -14,7 +14,7 @@ import cv2
 import imutils
 from matplotlib import pyplot as plt
 from pathlib import Path
-from PIL import Image, ImageEnhance
+from PIL import Image, ImageEnhance, ImageOps
 from dotenv import load_dotenv
 from mastodon import Mastodon
 
@@ -178,6 +178,7 @@ def listen_to_request(spam_defender):
                             crop_image(reply)
                         if "enhance" in params:
                             enhance_image(reply)
+
                         if "brightness" in params:
                             try:
                                 adjust_brightness(reply, value=params[params.index("brightness") + 1])
@@ -193,6 +194,10 @@ def listen_to_request(spam_defender):
                                 adjust_colour(reply, value=params[params.index("colour") + 1])
                             except IndexError:
                                 adjust_contrast(reply)
+                        if "mirror" in params:
+                            mirror_image(reply)
+                        if "flip" in params:
+                            flip_image(reply)
                         if settings.ROTATE_COMMAND in params:
                             try:
                                 rotate_image(reply,
@@ -386,6 +391,22 @@ def adjust_colour(reply, value=1.5):
         enhancer = ImageEnhance.Color(img)
         img_enhanced = enhancer.enhance(value)
         img_enhanced.save(settings.JPEG_OUTPUT.format(image))
+        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
+
+
+def flip_image(reply):
+    for image in range(len(reply.media)):
+        img = Image.open(settings.JPEG_INPUT.format(image))
+        img_flipped = ImageOps.flip(img)
+        img_flipped.save(settings.JPEG_OUTPUT.format(image))
+        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
+
+
+def mirror_image(reply):
+    for image in range(len(reply.media)):
+        img = Image.open(settings.JPEG_INPUT.format(image))
+        img_mirrored = ImageOps.mirror(img)
+        img_mirrored.save(settings.JPEG_OUTPUT.format(image))
         reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
 
 
