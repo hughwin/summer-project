@@ -15,14 +15,12 @@ import imutils
 from matplotlib import pyplot as plt
 from pathlib import Path
 from PIL import Image, ImageEnhance, ImageOps, ImageFilter
-from dotenv import load_dotenv
 from mastodon import Mastodon
 
-load_dotenv()  # Important variables such as my secret key are stored in a .env file.
 
 #   Set up Mastodon
 mastodon = Mastodon(
-    access_token=os.getenv("ACCESS_TOKEN"),
+    access_token=settings.ACCESS_TOKEN,
     api_base_url=settings.BASE_ADDRESS
 )
 

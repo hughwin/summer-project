@@ -1,5 +1,11 @@
+import os
 from pathlib import Path
+from boto.s3.connection import S3Connection
 
+ACCESS_TOKEN = S3Connection(os.environ["ACCESS_TOKEN"])
+CLIENT_KEY = S3Connection(os.environ["CLIENT_KEY"])
+CLIENT_SECRET = S3Connection(os.environ["CLIENT_SECRET"])
+NASA = S3Connection(os.environ["NASA"])
 BASE_ADDRESS = "https://hostux.social/"
 NASA_ADDRESS_IMAGES = "https://api.nasa.gov/planetary/apod?api_key=%s"
 TOO_MANY_REQUESTS_MESSAGE = "You're making too many requests!"
