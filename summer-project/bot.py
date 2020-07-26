@@ -42,7 +42,7 @@ def get_posts():
 
 def reply_to_toot(post_id, image_path=None, message=None, meta=None):
     if image_path is not None:
-        image_dict = mastodon.media_post(image_dict = mastodon.media_post(image_path))
+        image_dict = mastodon.media_post(image_path)
         if meta is not None:
             image_dict["meta"] == meta
         mastodon.status_post(status=message, media_ids=image_dict["id"], in_reply_to_id=post_id)
