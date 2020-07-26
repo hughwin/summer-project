@@ -1,0 +1,4 @@
+# Directory is used for saving output images.
+# Ignore everything in this directory
+# Except this file
+!.gitignore
