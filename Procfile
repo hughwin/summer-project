@@ -1,1 +1,1 @@
-worker: python main.py
+worker: python summer-project/main.py
