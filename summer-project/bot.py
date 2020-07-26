@@ -26,6 +26,7 @@ mastodon = Mastodon(
 
 
 def start_bot():
+    print(os.getcwd())
     spam_defender = SpamDefender()
     spam_defender.start()
 
