@@ -27,6 +27,8 @@ mastodon = Mastodon(
 
 def start_bot():
     print(os.getcwd())
+    print(Path())
+    print(Path.exists(os.getcwd() / "input"))
     spam_defender = SpamDefender()
     spam_defender.start()
 
