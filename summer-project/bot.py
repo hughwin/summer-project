@@ -41,8 +41,8 @@ def get_posts():
 
 
 def reply_to_toot(post_id, image_path=None, message=None, meta=None):
-    if message is None or len(message) <= settings.MAX_MESSAGE_LENGTH:
-        image_dict = mastodon.media_post(image_path)
+    if image_path is not None:
+        image_dict = mastodon.media_post(image_dict = mastodon.media_post(image_path))
         if meta is not None:
             image_dict["meta"] == meta
         mastodon.status_post(status=message, media_ids=image_dict["id"], in_reply_to_id=post_id)
@@ -160,8 +160,6 @@ def listen_to_request(spam_defender):
                         print(reply.params)
                         if 'decolourise' in reply.params or 'decolorize' in params:
                             decolourise_image(reply)
-                        if "pix2pix" in params:
-                            convert_image_using_pix2pix(reply)
                         if "text" in params:
                             get_text_from_image(reply)
                         if "about" in params:
@@ -176,7 +174,6 @@ def listen_to_request(spam_defender):
                             crop_image(reply)
                         if "enhance" in params:
                             enhance_image(reply)
-
                         if "brightness" in params:
                             try:
                                 adjust_brightness(reply, value=params[params.index("brightness") + 1])
