@@ -8,6 +8,7 @@ import urllib.request
 import pytesseract
 import html_stripper
 import requests
+# noinspection PyUnresolvedReferences
 import schedule
 import settings
 import cv2
@@ -31,13 +32,6 @@ def start_bot():
 
     listener = threading.Thread(target=listen_to_request(spam_defender))
     listener.start()
-
-
-def get_posts():
-    r = requests.get("%sapi/v1/timelines/public?limit=5" % settings.BASE_ADDRESS)  # Consider changing
-    statuses = r.json()
-    print(statuses[0])
-    print(statuses[1])
 
 
 def reply_to_toot(post_id, image_path=None, message=None, meta=None):
@@ -130,7 +124,7 @@ def listen_to_request(spam_defender):
             if n["type"] == "mention":
                 account_id = n["account"]["id"]
                 status_id = n["status"]["id"]
-                content = n["status"]["content"]
+                content = str
                 content = strip_tags(content).replace("@hughwin ", "").lower()
                 params = content.split(" ")
                 user = UserNotification(account_id, status_id, content, params)
