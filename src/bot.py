@@ -8,7 +8,6 @@ import urllib.request
 import pytesseract
 import html_stripper
 import requests
-# noinspection PyUnresolvedReferences
 import schedule
 import settings
 import cv2
@@ -40,14 +39,17 @@ def reply_to_toot(post_id, message=None, meta=None):
             print(Path(fn))
             image_dict = mastodon.media_post(str(settings.INPUT_FOLDER / fn))
             media_ids.append(image_dict["id"])
+    if message is not None:
+        parts = []
+        while len(message) > 0:
+            parts.append(message[:settings.MAX_MESSAGE_LENGTH])
+            message = message[settings.MAX_MESSAGE_LENGTH:]
+        for part in parts:
+            print(part)
+            mastodon.status_post(status=part, media_ids=media_ids, in_reply_to_id=post_id)
+    else:
+        mastodon.status_post(status=message, media_ids=media_ids, in_reply_to_id=post_id)
 
-    parts = []
-    while len(message) > 0:
-        parts.append(message[:settings.MAX_MESSAGE_LENGTH])
-        message = message[settings.MAX_MESSAGE_LENGTH:]
-    for part in parts:
-        print(part)
-        mastodon.status_post(status=part, media_ids=media_ids, in_reply_to_id=post_id)
 
 
 def toot_image_of_the_day():
