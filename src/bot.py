@@ -12,6 +12,7 @@ import schedule
 import settings
 import cv2
 import imutils
+from itertools import islice
 from matplotlib import pyplot as plt
 from pathlib import Path
 from PIL import Image, ImageEnhance, ImageOps, ImageFilter
@@ -48,7 +49,9 @@ def reply_to_toot(post_id, message=None, meta=None):
             print(part)
             mastodon.status_post(status=part, media_ids=media_ids, in_reply_to_id=post_id)
     else:
-        mastodon.status_post(status=message, media_ids=media_ids, in_reply_to_id=post_id)
+        while media_ids:
+            mastodon.status_post(status=message, media_ids=islice(media_ids, 0, 3), in_reply_to_id=post_id)
+            dict(media_ids.items()[4:])
 
 
 
