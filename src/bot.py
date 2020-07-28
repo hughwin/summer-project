@@ -36,13 +36,12 @@ def start_bot():
 
 def reply_to_toot(post_id, message=None, meta=None):
     media_ids = []
-    if len(os.listdir(settings.INPUT_FOLDER)) < 0:
+    if len(os.listdir(settings.INPUT_FOLDER)) != 0:
         for file in os.listdir(settings.INPUT_FOLDER):
             image_dict = mastodon.media_post(file)
             media_ids.append(image_dict["id"])
-
         mastodon.status_post(status=message, media_ids=media_ids, in_reply_to_id=post_id)
-    else:
+    if message is not None:
         parts = []
         while len(message) > 0:
             parts.append(message[:settings.MAX_MESSAGE_LENGTH])
