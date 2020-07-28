@@ -8,7 +8,7 @@ import urllib.request
 import pytesseract
 import html_stripper
 import requests
-# import schedule
+import schedule
 import settings
 import cv2
 import imutils
@@ -29,12 +29,11 @@ mastodon = Mastodon(
 def start_bot():
     spam_defender = SpamDefender()
     spam_defender.start()
-
     listener = threading.Thread(target=listen_to_request(spam_defender))
     listener.start()
 
 
-def reply_to_toot(post_id, message="Just work", meta=None):
+def reply_to_toot(post_id, message=None, meta=None):
     media_ids = []
     for fn in os.listdir(str(settings.INPUT_FOLDER)):
         if fn.endswith(('.jpeg', '.png')):
@@ -51,16 +50,16 @@ def reply_to_toot(post_id, message="Just work", meta=None):
         mastodon.status_post(status=part, media_ids=media_ids, in_reply_to_id=post_id)
 
 
-# def toot_image_of_the_day():
-#     r = requests.get(settings.NASA_ADDRESS_IMAGES % os.getenv("NASA"))
-#     json = r.json()
-#     print(json)
-#     urllib.request.urlretrieve(json["hdurl"], settings.DAILY_IMAGE)
-#     image_dict = mastodon.media_post(settings.DAILY_IMAGE)
-#     message = "Here is today's image!"
-#     mastodon.status_post(status=message, media_ids=image_dict["id"])
-#     print("Tooting image of the day!")
-#     bot_delete_files_in_directory(settings.DAILY_IMAGE)
+def toot_image_of_the_day():
+    r = requests.get(settings.NASA_ADDRESS_IMAGES % os.getenv("NASA"))
+    json = r.json()
+    print(json)
+    urllib.request.urlretrieve(json["hdurl"], settings.DAILY_IMAGE)
+    image_dict = mastodon.media_post(settings.DAILY_IMAGE)
+    message = "Here is today's image!"
+    mastodon.status_post(status=message, media_ids=image_dict["id"])
+    print("Tooting image of the day!")
+    bot_delete_files_in_directory(settings.DAILY_IMAGE)
 
 
 def get_trends():
@@ -117,7 +116,7 @@ class SpamDefender(threading.Thread):
 def listen_to_request(spam_defender):
     count = 0
     status_notifications = []
-    # schedule.every().day.at("10:30").do(toot_image_of_the_day)
+    schedule.every().day.at("10:30").do(toot_image_of_the_day)
     while True:
         print("Checking notifications!")
         notifications = mastodon.notifications(mentions_only=True)
@@ -206,9 +205,9 @@ def listen_to_request(spam_defender):
                         reply_to_toot(reply.status_id)
             mastodon.notifications_clear()
             status_notifications.clear()
-            # bot_delete_files_in_directory(settings.INPUT_FOLDER)
-            # bot_delete_files_in_directory(settings.OUTPUT_FOLDER)
-        # schedule.run_pending()
+            bot_delete_files_in_directory(settings.INPUT_FOLDER)
+            bot_delete_files_in_directory(settings.OUTPUT_FOLDER)
+        schedule.run_pending()
         time.sleep(1)
 
 
