@@ -34,12 +34,14 @@ def start_bot():
     listener.start()
 
 
-def reply_to_toot(post_id, image_path=None, message=None, meta=None):
-    if image_path is not None:
-        image_dict = mastodon.media_post(image_path)
-        if meta is not None:
-            image_dict["meta"] == meta
-        mastodon.status_post(status=message, media_ids=image_dict["id"], in_reply_to_id=post_id)
+def reply_to_toot(post_id, message=None, meta=None):
+    media_ids = []
+    if len(os.listdir(settings.INPUT_FOLDER)) < 0:
+        for file in os.listdir(settings.INPUT_FOLDER):
+            image_dict = mastodon.media_post(file)
+            media_ids.append(image_dict["id"])
+
+        mastodon.status_post(status=message, media_ids=media_ids, in_reply_to_id=post_id)
     else:
         parts = []
         while len(message) > 0:
@@ -51,15 +53,15 @@ def reply_to_toot(post_id, image_path=None, message=None, meta=None):
 
 
 def toot_image_of_the_day():
-    image_of_the_day_path = Path("temp/")
     r = requests.get(settings.NASA_ADDRESS_IMAGES % os.getenv("NASA"))
     json = r.json()
     print(json)
-    urllib.request.urlretrieve(json["hdurl"], str(image_of_the_day_path / "image.jpeg"))
-    image_dict = mastodon.media_post(str(image_of_the_day_path / "image.jpeg"))
+    urllib.request.urlretrieve(json["hdurl"], settings.DAILY_IMAGE)
+    image_dict = mastodon.media_post(settings.DAILY_IMAGE)
     message = "Here is today's image!"
     mastodon.status_post(status=message, media_ids=image_dict["id"])
-    print("Tooting image of the day!f")
+    print("Tooting image of the day!")
+    bot_delete_files_in_directory(settings.DAILY_IMAGE)
 
 
 def get_trends():
@@ -201,8 +203,7 @@ def listen_to_request(spam_defender):
                             except IndexError:
                                 rotate_image(reply,
                                              rotate_by_degrees=params[params.index(settings.ROTATE_COMMAND) + 1])
-                        # else:
-                        #     reply_to_toot(reply.status_id, message=settings.INVALID_COMMAND)
+                        reply_to_toot(reply.status_id)
             mastodon.notifications_clear()
             status_notifications.clear()
             bot_delete_files_in_directory(settings.INPUT_FOLDER)
@@ -247,9 +248,7 @@ def decolourise_image(reply):
     for image in range(len(reply.media)):
         img_open = cv2.imread(settings.JPEG_INPUT.format(image))
         gray = cv2.cvtColor(img_open, cv2.COLOR_BGR2GRAY)
-        cv2.imwrite(settings.JPEG_OUTPUT.format(image), gray)
-        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image), meta=reply.meta)
-
+        cv2.imwrite(settings.JPEG_INPUT.format(image), gray)
 
 def display_colour_channel(reply, colour):
     colour = colour()
@@ -266,7 +265,6 @@ def display_colour_channel(reply, colour):
             temp_image[:, :, 1] = 0
             temp_image[:, :, 2] = 0
         cv2.imwrite(settings.JPEG_OUTPUT.format(image), temp_image)
-        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image), meta=reply.meta)
 
 
 def get_text_from_image(reply):
@@ -289,16 +287,12 @@ def check_image_type(filepath):
 
 def rotate_image(reply, rotate_by_degrees=None, rotation_type=None):
     for image in range(len(reply.media)):
-        input_image = settings.JPEG_INPUT.format(image)
-        output_image = settings.JPEG_OUTPUT.format(image)
-        image_open = cv2.imread(input_image)
+        image_open = cv2.imread(settings.JPEG_INPUT.format(image))
         if str(rotation_type) == settings.ROTATE_SIMPLE:
             rotated = imutils.rotate(image_open, int(rotate_by_degrees))
         else:
             rotated = imutils.rotate_bound(image_open, int(rotate_by_degrees))
-        cv2.imwrite(output_image, rotated)
-        reply_to_toot(reply.status_id, image_path=output_image,
-                      message=(str("Rotated by {} degrees").format(rotate_by_degrees)), meta=reply.meta)
+        cv2.imwrite(settings.JPEG_INPUT.format(image), rotated)
 
 
 def combine_image(filepath1, filepath2=None):
@@ -483,15 +477,6 @@ def bot_delete_files_in_directory(path):
                 shutil.rmtree(file_path)
         except Exception as e:
             print('Failed to delete %s. Reason: %s' % (file_path, e))
-
-
-def get_instance_activity():
-    try:
-        r = requests.get("%sapi/v1/instance/activity" % settings.MASTODON_SERVER)
-        activity = r.json()
-        # line_graph.plot_weekly_statuses(activity)
-    except ValueError:
-        print(settings.JSON_ERROR_MESSAGE)
 
 
 def clear_notifications():

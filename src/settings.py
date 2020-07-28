@@ -17,6 +17,7 @@ ROTATE_SIMPLE = "simple"
 BASE_DIRECTORY = Path.cwd() / "src"
 INPUT_FOLDER = BASE_DIRECTORY / "input"
 OUTPUT_FOLDER = BASE_DIRECTORY / "output"
+DAILY_IMAGE = str(BASE_DIRECTORY / "output" / "image.jpeg")
 JPEG_INPUT = str(INPUT_FOLDER / "{}.jpeg")
 JPEG_OUTPUT = str(OUTPUT_FOLDER / "{}.jpeg")
 PNG_OUTPUT = str(OUTPUT_FOLDER / "{}.png")
