@@ -8,11 +8,13 @@ import urllib.request
 import pytesseract
 import html_stripper
 import requests
+# noinspection PyUnresolvedReferences
 import schedule
 import settings
 import cv2
 import imutils
 from dotenv import load_dotenv
+from itertools import islice
 from matplotlib import pyplot as plt
 from pathlib import Path
 from PIL import Image, ImageEnhance, ImageOps, ImageFilter
@@ -26,9 +28,11 @@ mastodon = Mastodon(
     api_base_url=settings.BASE_ADDRESS
 )
 
+
 def start_bot():
     spam_defender = SpamDefender()
     spam_defender.start()
+
     listener = threading.Thread(target=listen_to_request(spam_defender))
     listener.start()
 
@@ -40,14 +44,19 @@ def reply_to_toot(post_id, message=None, meta=None):
             print(Path(fn))
             image_dict = mastodon.media_post(str(settings.INPUT_FOLDER / fn))
             media_ids.append(image_dict["id"])
+    if message is not None:
+        parts = []
+        while len(message) > 0:
+            parts.append(message[:settings.MAX_MESSAGE_LENGTH])
+            message = message[settings.MAX_MESSAGE_LENGTH:]
+        for part in parts:
+            print(part)
+            mastodon.status_post(status=part, media_ids=media_ids, in_reply_to_id=post_id)
+    else:
+        while media_ids:
+            mastodon.status_post(status=message, media_ids=islice(media_ids, 0, 3), in_reply_to_id=post_id)
+            dict(media_ids.items()[4:])
 
-    parts = []
-    while len(message) > 0:
-        parts.append(message[:settings.MAX_MESSAGE_LENGTH])
-        message = message[settings.MAX_MESSAGE_LENGTH:]
-    for part in parts:
-        print(part)
-        mastodon.status_post(status=part, media_ids=media_ids, in_reply_to_id=post_id)
 
 
 def toot_image_of_the_day():
@@ -248,7 +257,6 @@ def decolourise_image(reply):
         img_open = cv2.imread(settings.JPEG_INPUT.format(image))
         gray = cv2.cvtColor(img_open, cv2.COLOR_BGR2GRAY)
         cv2.imwrite(settings.JPEG_INPUT.format(image), gray)
-        print("decolourise_image")
 
 def display_colour_channel(reply, colour):
     colour = colour()
@@ -293,7 +301,6 @@ def rotate_image(reply, rotate_by_degrees=None, rotation_type=None):
         else:
             rotated = imutils.rotate_bound(image_open, int(rotate_by_degrees))
         cv2.imwrite(settings.JPEG_INPUT.format(image), rotated)
-        print("rotated")
 
 
 def combine_image(filepath1, filepath2=None):
@@ -488,4 +495,3 @@ def strip_tags(html):
     s = html_stripper.MLStripper()
     s.feed(html)
     return s.get_data()
-
