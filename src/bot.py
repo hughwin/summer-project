@@ -38,6 +38,7 @@ def reply_to_toot(post_id, message=None, meta=None):
     media_ids = []
     if len(os.listdir(settings.INPUT_FOLDER)) != 0:
         for file in Path.iterdir(settings.INPUT_FOLDER):
+            print(Path(file))
             image_dict = mastodon.media_post(Path(file))
             media_ids.append(image_dict["id"])
         mastodon.status_post(status=message, media_ids=media_ids, in_reply_to_id=post_id)
