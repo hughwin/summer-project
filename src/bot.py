@@ -127,7 +127,7 @@ def listen_to_request(spam_defender):
                 account_id = n["account"]["id"]
                 status_id = n["status"]["id"]
                 content = str
-                content = strip_tags(content).replace("@hughwin ", "").lower()
+                content = strip_tags(str(content)).replace("@hughwin ", "").lower()
                 params = content.split(" ")
                 user = UserNotification(account_id, status_id, content, params)
                 media = n["status"]["media_attachments"]
