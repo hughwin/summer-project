@@ -8,23 +8,23 @@ import urllib.request
 import pytesseract
 import html_stripper
 import requests
-# noinspection PyUnresolvedReferences
-import schedule
+# import schedule
 import settings
 import cv2
 import imutils
+from dotenv import load_dotenv
 from matplotlib import pyplot as plt
 from pathlib import Path
 from PIL import Image, ImageEnhance, ImageOps, ImageFilter
 from mastodon import Mastodon
 
+load_dotenv()  # Important variables such as my secret key are stored in a .env file.
 
 #   Set up Mastodon
 mastodon = Mastodon(
-    access_token=settings.ACCESS_TOKEN,
+    access_token=os.getenv("ACCESS_TOKEN"),
     api_base_url=settings.BASE_ADDRESS
 )
-
 
 def start_bot():
     spam_defender = SpamDefender()
@@ -34,34 +34,33 @@ def start_bot():
     listener.start()
 
 
-def reply_to_toot(post_id, message=None, meta=None):
+def reply_to_toot(post_id, message="Just work", meta=None):
     media_ids = []
-    if len(os.listdir(settings.INPUT_FOLDER)) != 0:
-        for file in Path.iterdir(settings.INPUT_FOLDER):
-            print(Path(file))
-            image_dict = mastodon.media_post(Path(file))
+    for fn in os.listdir(str(settings.INPUT_FOLDER)):
+        if fn.endswith(('.jpeg', '.png')):
+            print(Path(fn))
+            image_dict = mastodon.media_post(str(settings.INPUT_FOLDER / fn))
             media_ids.append(image_dict["id"])
-        mastodon.status_post(status=message, media_ids=media_ids, in_reply_to_id=post_id)
-    if message is not None:
-        parts = []
-        while len(message) > 0:
-            parts.append(message[:settings.MAX_MESSAGE_LENGTH])
-            message = message[settings.MAX_MESSAGE_LENGTH:]
-        for part in parts:
-            print(part)
-            mastodon.status_post(status=part, in_reply_to_id=post_id)
+
+    parts = []
+    while len(message) > 0:
+        parts.append(message[:settings.MAX_MESSAGE_LENGTH])
+        message = message[settings.MAX_MESSAGE_LENGTH:]
+    for part in parts:
+        print(part)
+        mastodon.status_post(status=part, media_ids=media_ids, in_reply_to_id=post_id)
 
 
-def toot_image_of_the_day():
-    r = requests.get(settings.NASA_ADDRESS_IMAGES % os.getenv("NASA"))
-    json = r.json()
-    print(json)
-    urllib.request.urlretrieve(json["hdurl"], settings.DAILY_IMAGE)
-    image_dict = mastodon.media_post(settings.DAILY_IMAGE)
-    message = "Here is today's image!"
-    mastodon.status_post(status=message, media_ids=image_dict["id"])
-    print("Tooting image of the day!")
-    bot_delete_files_in_directory(settings.DAILY_IMAGE)
+# def toot_image_of_the_day():
+#     r = requests.get(settings.NASA_ADDRESS_IMAGES % os.getenv("NASA"))
+#     json = r.json()
+#     print(json)
+#     urllib.request.urlretrieve(json["hdurl"], settings.DAILY_IMAGE)
+#     image_dict = mastodon.media_post(settings.DAILY_IMAGE)
+#     message = "Here is today's image!"
+#     mastodon.status_post(status=message, media_ids=image_dict["id"])
+#     print("Tooting image of the day!")
+#     bot_delete_files_in_directory(settings.DAILY_IMAGE)
 
 
 def get_trends():
@@ -118,7 +117,7 @@ class SpamDefender(threading.Thread):
 def listen_to_request(spam_defender):
     count = 0
     status_notifications = []
-    schedule.every().day.at("10:30").do(toot_image_of_the_day)
+    # schedule.every().day.at("10:30").do(toot_image_of_the_day)
     while True:
         print("Checking notifications!")
         notifications = mastodon.notifications(mentions_only=True)
@@ -126,9 +125,10 @@ def listen_to_request(spam_defender):
             if n["type"] == "mention":
                 account_id = n["account"]["id"]
                 status_id = n["status"]["id"]
-                content = str
-                content = strip_tags(str(content)).replace("@hughwin ", "").lower()
+                content = n["status"]["content"]
+                content = strip_tags(content).replace("@hughwin ", "").lower()
                 params = content.split(" ")
+                print(params)
                 user = UserNotification(account_id, status_id, content, params)
                 media = n["status"]["media_attachments"]
                 if "help" in params:
@@ -206,9 +206,9 @@ def listen_to_request(spam_defender):
                         reply_to_toot(reply.status_id)
             mastodon.notifications_clear()
             status_notifications.clear()
-            bot_delete_files_in_directory(settings.INPUT_FOLDER)
-            bot_delete_files_in_directory(settings.OUTPUT_FOLDER)
-        schedule.run_pending()
+            # bot_delete_files_in_directory(settings.INPUT_FOLDER)
+            # bot_delete_files_in_directory(settings.OUTPUT_FOLDER)
+        # schedule.run_pending()
         time.sleep(1)
 
 
@@ -249,6 +249,7 @@ def decolourise_image(reply):
         img_open = cv2.imread(settings.JPEG_INPUT.format(image))
         gray = cv2.cvtColor(img_open, cv2.COLOR_BGR2GRAY)
         cv2.imwrite(settings.JPEG_INPUT.format(image), gray)
+        print("decolourise_image")
 
 def display_colour_channel(reply, colour):
     colour = colour()
@@ -293,6 +294,7 @@ def rotate_image(reply, rotate_by_degrees=None, rotation_type=None):
         else:
             rotated = imutils.rotate_bound(image_open, int(rotate_by_degrees))
         cv2.imwrite(settings.JPEG_INPUT.format(image), rotated)
+        print("rotated")
 
 
 def combine_image(filepath1, filepath2=None):
@@ -487,3 +489,4 @@ def strip_tags(html):
     s = html_stripper.MLStripper()
     s.feed(html)
     return s.get_data()
+

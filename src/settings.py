@@ -2,10 +2,10 @@ import os
 from pathlib import Path
 
 
-ACCESS_TOKEN = os.environ["ACCESS_TOKEN"]
-CLIENT_KEY = os.environ["CLIENT_KEY"]
-CLIENT_SECRET = os.environ["CLIENT_SECRET"]
-NASA = os.environ["NASA"]
+# ACCESS_TOKEN = os.environ["ACCESS_TOKEN"]
+# CLIENT_KEY = os.environ["CLIENT_KEY"]
+# CLIENT_SECRET = os.environ["CLIENT_SECRET"]
+# NASA = os.environ["NASA"]
 BASE_ADDRESS = "https://hostux.social/"
 NASA_ADDRESS_IMAGES = "https://api.nasa.gov/planetary/apod?api_key=%s"
 TOO_MANY_REQUESTS_MESSAGE = "You're making too many requests!"
@@ -14,7 +14,7 @@ INVALID_COMMAND = "Command not recognised. Type \"@botbot help\" for a list of c
 MAX_MESSAGE_LENGTH = 500
 ROTATE_COMMAND = "rotate"
 ROTATE_SIMPLE = "simple"
-BASE_DIRECTORY = Path.cwd() / "src"
+BASE_DIRECTORY = Path.cwd()
 INPUT_FOLDER = BASE_DIRECTORY / "input"
 OUTPUT_FOLDER = BASE_DIRECTORY / "output"
 DAILY_IMAGE = str(BASE_DIRECTORY / "output" / "image.jpeg")
