@@ -381,16 +381,30 @@ def make_transparent_image(reply):
         img_transparent.save(settings.PNG_OUTPUT.format(image))
 
 
-def negative(reply):
+def negative_image(reply):
     for image in range(len(reply.media)):
         img = Image.open(settings.JPEG_INPUT.format(image))
-        negative_image = Image.new('RGB', img.size)
+        negative_img = Image.new('RGB', img.size)
         for x in range(img.size[0]):
             for y in range(img.size[1]):
                 r, g, b = img.getpixel((x, y))
-                negative_image.putpixel((x, y), (255 - r, 255 - g, 255 - b))
-        negative_image.save(settings.JPEG_INPUT.format(image))
+                negative_img.putpixel((x, y), (255 - r, 255 - g, 255 - b))
+        negative_img.save(settings.JPEG_INPUT.format(image))
 
+
+def sepia(reply):
+    for image in range(len(reply.media)):
+        img = Image.open(settings.JPEG_INPUT.format(image))
+        sepia_img = Image.new('RGB', img.size)
+        for x in range(img.size[0]):
+            for y in range(img.size[1]):
+                r, g, b = img.getpixel((x, y))
+                red = int(r * 0.393 + g * 0.769 + b * 0.189)
+                green = int(r * 0.349 + g * 0.686 + b * 0.168)
+                blue = int(r * 0.272 + g * 0.534 + b * 0.131)
+                sepia_img.putpixel((x, y), (red, green, blue))
+        sepia_img.save()
+        
 
 # def give_title(status_notifications):
 #     for reply in status_notifications:
