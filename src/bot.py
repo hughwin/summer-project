@@ -403,8 +403,15 @@ def sepia(reply):
                 green = int(r * 0.349 + g * 0.686 + b * 0.168)
                 blue = int(r * 0.272 + g * 0.534 + b * 0.131)
                 sepia_img.putpixel((x, y), (red, green, blue))
-        sepia_img.save()
-        
+        sepia_img.save(settings.JPEG_OUTPUT.format(image))
+
+
+def blur_image(reply):
+    for image in range(len(reply.media)):
+        img = Image.open(settings.JPEG_INPUT.format(image))
+        blurred_image = img.filter(ImageFilter.BoxBlur(5))
+        blurred_image.save(settings.JPEG_OUTPUT.format(image))
+
 
 # def give_title(status_notifications):
 #     for reply in status_notifications:
