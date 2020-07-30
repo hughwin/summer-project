@@ -1,20 +1,17 @@
 import datetime
 import os
 import shutil
-import subprocess
 import threading
 import time
 import urllib.request
 import pytesseract
 import html_stripper
 import requests
-# noinspection PyUnresolvedReferences
 import schedule
 import settings
 import cv2
 import imutils
 from dotenv import load_dotenv
-from itertools import islice
 from matplotlib import pyplot as plt
 from pathlib import Path
 from PIL import Image, ImageEnhance, ImageOps, ImageFilter
@@ -54,9 +51,8 @@ def reply_to_toot(post_id, message=None, meta=None):
             mastodon.status_post(status=part, media_ids=media_ids, in_reply_to_id=post_id)
     else:
         while media_ids:
-            mastodon.status_post(status=message, media_ids=islice(media_ids, 0, 3), in_reply_to_id=post_id)
-            dict(media_ids.items()[4:])
-
+            mastodon.status_post(status=message, media_ids=media_ids[0:4], in_reply_to_id=post_id)
+            media_ids = media_ids[4:]
 
 
 def toot_image_of_the_day():
@@ -68,7 +64,6 @@ def toot_image_of_the_day():
     message = "Here is today's image!"
     mastodon.status_post(status=message, media_ids=image_dict["id"])
     print("Tooting image of the day!")
-    bot_delete_files_in_directory(settings.DAILY_IMAGE)
 
 
 def get_trends():
@@ -199,6 +194,12 @@ def listen_to_request(spam_defender):
                             flip_image(reply)
                         if "transparent" in params:
                             make_transparent_image(reply)
+                        if "negative" in params:
+                            make_negative_image(reply)
+                        if "sepia" in params:
+                            make_sepia_image(reply)
+                        if "blur" in params:
+                            blur_image(reply)
                         if "convert-png" in params:
                             convert_image_to_png(reply)
                         if "convert-bmp" in params:
@@ -215,7 +216,6 @@ def listen_to_request(spam_defender):
             mastodon.notifications_clear()
             status_notifications.clear()
             bot_delete_files_in_directory(settings.INPUT_FOLDER)
-            bot_delete_files_in_directory(settings.OUTPUT_FOLDER)
         schedule.run_pending()
         time.sleep(1)
 
@@ -230,33 +230,12 @@ def get_information_about_image(reply):
         reply_to_toot(reply.status_id, message=message)
 
 
-def convert_image_using_pix2pix(reply):
-    # TODO: Make this change the files so the right sized images are output.
-    try:
-        subprocess.call("python pix2pix/pix2pix.py "
-                        "--mode test "
-                        "--input_dir pix2pix/val "
-                        "--output_dir pix2pix/test "
-                        "--checkpoint pix2pix/checkpoint")
-    except subprocess.CalledProcessError as e:
-        print("Problem with subprocess / pix2pix")
-        print(e.output)
-
-        for image in range(len(reply.media)):
-            try:
-                image_path = str(settings.OUTPUT_FOLDER / "{}-outputs.png".format(image))
-                reply_to_toot(reply.status_id, image_path=image_path)
-                print("Tooting!")
-            except ValueError as e:
-                print("Something went wrong!")
-                print(e.output)
-
-
 def decolourise_image(reply):
     for image in range(len(reply.media)):
         img_open = cv2.imread(settings.JPEG_INPUT.format(image))
         gray = cv2.cvtColor(img_open, cv2.COLOR_BGR2GRAY)
         cv2.imwrite(settings.JPEG_INPUT.format(image), gray)
+
 
 def display_colour_channel(reply, colour):
     colour = colour()
@@ -272,7 +251,7 @@ def display_colour_channel(reply, colour):
         if colour == "blue":
             temp_image[:, :, 1] = 0
             temp_image[:, :, 2] = 0
-        cv2.imwrite(settings.JPEG_OUTPUT.format(image), temp_image)
+        cv2.imwrite(settings.JPEG_INPUT.format(image), temp_image)
 
 
 def get_text_from_image(reply):
@@ -322,17 +301,14 @@ def show_image_histogram(reply):
             plt.plot(histogram, color=col)
             plt.xlim([0, 256])
         plt.draw()
-        plt.savefig(settings.JPEG_OUTPUT.format(image), bbox_inches='tight')
-        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image),
-                      message="Histogram")
+        plt.savefig(settings.HISTOGRAM_JPEG.format(image), bbox_inches='tight')
 
 
 def create_border(reply):
     for image in range(len(reply.media)):
         input_image = cv2.imread(settings.JPEG_INPUT.format(image))
         input_image = cv2.copyMakeBorder(input_image, 10, 10, 10, 10, cv2.BORDER_REFLECT)
-        cv2.imwrite(settings.JPEG_OUTPUT.format(image), input_image)
-        reply_to_toot(reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image)))
+        cv2.imwrite(settings.JPEG_INPUT.format(image), input_image)
 
 
 def crop_image(reply):
@@ -347,9 +323,7 @@ def crop_image(reply):
         bottom = 3 * height / 4
 
         cropped_img = img.crop((left, top, right, bottom))
-        cropped_img.save(settings.JPEG_OUTPUT.format(image))
-        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image),
-                      message="Here is your cropped image")
+        cropped_img.save(settings.JPEG_INPUT.format(image))
 
 
 def enhance_image(reply):
@@ -357,8 +331,7 @@ def enhance_image(reply):
         img = Image.open(settings.JPEG_INPUT.format(image))
         enhancer = ImageEnhance.Sharpness(img)
         img_enhanced = enhancer.enhance(10.0)
-        img_enhanced.save(settings.JPEG_OUTPUT.format(image))
-        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
+        img_enhanced.save(settings.JPEG_INPUT.format(image))
 
 
 def adjust_brightness(reply, value=1.5):
@@ -367,8 +340,7 @@ def adjust_brightness(reply, value=1.5):
         img = Image.open(settings.JPEG_INPUT.format(image))
         enhancer = ImageEnhance.Brightness(img)
         img_enhanced = enhancer.enhance(value)
-        img_enhanced.save(settings.JPEG_OUTPUT.format(image))
-        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
+        img_enhanced.save(settings.JPEG_INPUT.format(image))
 
 
 def adjust_contrast(reply, value=1.5):
@@ -377,8 +349,7 @@ def adjust_contrast(reply, value=1.5):
         img = Image.open(settings.JPEG_INPUT.format(image))
         enhancer = ImageEnhance.Contrast(img)
         img_enhanced = enhancer.enhance(value)
-        img_enhanced.save(settings.JPEG_OUTPUT.format(image))
-        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
+        img_enhanced.save(settings.JPEG_INPUT.format(image))
 
 
 def adjust_colour(reply, value=1.5):
@@ -387,24 +358,21 @@ def adjust_colour(reply, value=1.5):
         img = Image.open(settings.JPEG_INPUT.format(image))
         enhancer = ImageEnhance.Color(img)
         img_enhanced = enhancer.enhance(value)
-        img_enhanced.save(settings.JPEG_OUTPUT.format(image))
-        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
+        img_enhanced.save(settings.JPEG_INPUT.format(image))
 
 
 def flip_image(reply):
     for image in range(len(reply.media)):
         img = Image.open(settings.JPEG_INPUT.format(image))
         img_flipped = ImageOps.flip(img)
-        img_flipped.save(settings.JPEG_OUTPUT.format(image))
-        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
+        img_flipped.save(settings.JPEG_INPUT.format(image))
 
 
 def mirror_image(reply):
     for image in range(len(reply.media)):
         img = Image.open(settings.JPEG_INPUT.format(image))
         img_mirrored = ImageOps.mirror(img)
-        img_mirrored.save(settings.JPEG_OUTPUT.format(image))
-        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
+        img_mirrored.save(settings.JPEG_INPUT.format(image))
 
 
 def make_transparent_image(reply):
@@ -412,7 +380,55 @@ def make_transparent_image(reply):
         img_transparent = Image.open(settings.JPEG_INPUT.format(image))
         img_transparent.putalpha(128)
         img_transparent.save(settings.PNG_OUTPUT.format(image))
-        reply_to_toot(reply.status_id, image_path=settings.PNG_OUTPUT.format(image))
+
+
+def make_negative_image(reply):
+    for image in range(len(reply.media)):
+        img = Image.open(settings.JPEG_INPUT.format(image))
+        negative_img = Image.new('RGB', img.size)
+        for x in range(img.size[0]):
+            for y in range(img.size[1]):
+                r, g, b = img.getpixel((x, y))
+                negative_img.putpixel((x, y), (255 - r, 255 - g, 255 - b))
+        negative_img.save(settings.JPEG_INPUT.format(image))
+
+
+def make_sepia_image(reply):
+    for image in range(len(reply.media)):
+        img = Image.open(settings.JPEG_INPUT.format(image))
+        sepia_img = Image.new('RGB', img.size)
+        for x in range(img.size[0]):
+            for y in range(img.size[1]):
+                r, g, b = img.getpixel((x, y))
+                red = int(r * 0.393 + g * 0.769 + b * 0.189)
+                green = int(r * 0.349 + g * 0.686 + b * 0.168)
+                blue = int(r * 0.272 + g * 0.534 + b * 0.131)
+                sepia_img.putpixel((x, y), (red, green, blue))
+        sepia_img.save(settings.JPEG_INPUT.format(image))
+
+
+def blur_image(reply):
+    for image in range(len(reply.media)):
+        img = Image.open(settings.JPEG_INPUT.format(image))
+        blurred_image = img.filter(ImageFilter.BoxBlur(5))
+        blurred_image.save(settings.JPEG_INPUT.format(image))
+
+
+def blur_edges(reply):
+    radius, diameter = 20, 40
+    for image in range(len(reply.media)):
+        img = Image.open(settings.JPEG_INPUT.format(image))  # Paste image on white background
+        background_size = (img.size[0] + diameter, img.size[1] + diameter)
+        background = Image.new('RGB', background_size, (255, 255, 255))
+        background.paste(img, (radius, radius))  # create new images with white and black
+        mask_size = (img.size[0] + diameter, img.size[1] + diameter)
+        mask = Image.new('L', mask_size, 255)
+        black_size = (img.size[0] - diameter, img.size[1] - diameter)
+        black = Image.new('L', black_size, 0)  # create blur mask
+        mask.paste(black, (diameter, diameter))  # Blur image and paste blurred edge according to mask
+        blur = background.filter(ImageFilter.GaussianBlur(radius / 2))
+        background.paste(blur, mask=mask)
+        background.save(settings.JPEG_INPUT.format(image))
 
 
 # def give_title(status_notifications):
@@ -423,13 +439,11 @@ def make_transparent_image(reply):
 def convert_image_to_png(reply):
     for image in range(len(reply.media)):
         Image.open(settings.JPEG_INPUT.format(image)).save(settings.PNG_OUTPUT.format(image))
-        reply_to_toot(reply.status_id, image_path=settings.PNG_OUTPUT.format(image))
 
 
 def convert_image_to_bmp(reply):
     for image in range(len(reply.media)):
         Image.open(settings.JPEG_INPUT.format(image)).save(settings.PNG_OUTPUT.format(image))
-        reply_to_toot(reply.status_id, image_path=settings.BMP_OUTPUT.format(image))
 
 
 def is_jpg(filepath):
@@ -450,7 +464,7 @@ def append_images(images, direction='horizontal',
         new_width = max(widths)
         new_height = sum(heights)
 
-    new_im = Image.new('RGB', (new_width, new_height), color=bg_color)
+    img = Image.new('RGB', (new_width, new_height), color=bg_color)
 
     offset = 0
     for im in images:
@@ -460,7 +474,7 @@ def append_images(images, direction='horizontal',
                 y = int((new_height - im.size[1]) / 2)
             elif aligment == 'bottom':
                 y = new_height - im.size[1]
-            new_im.paste(im, (offset, y))
+            img.paste(im, (offset, y))
             offset += im.size[0]
         else:
             x = 0
@@ -468,10 +482,9 @@ def append_images(images, direction='horizontal',
                 x = int((new_width - im.size[0]) / 2)
             elif aligment == 'right':
                 x = new_width - im.size[0]
-            new_im.paste(im, (x, offset))
+            img.paste(im, (x, offset))
             offset += im.size[1]
-
-    return new_im
+    return img
 
 
 def bot_delete_files_in_directory(path):
