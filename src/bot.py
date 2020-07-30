@@ -8,13 +8,11 @@ import urllib.request
 import pytesseract
 import html_stripper
 import requests
-# noinspection PyUnresolvedReferences
 import schedule
 import settings
 import cv2
 import imutils
 from dotenv import load_dotenv
-from itertools import islice
 from matplotlib import pyplot as plt
 from pathlib import Path
 from PIL import Image, ImageEnhance, ImageOps, ImageFilter
@@ -54,9 +52,8 @@ def reply_to_toot(post_id, message=None, meta=None):
             mastodon.status_post(status=part, media_ids=media_ids, in_reply_to_id=post_id)
     else:
         while media_ids:
-            mastodon.status_post(status=message, media_ids=islice(media_ids, 0, 3), in_reply_to_id=post_id)
-            dict(media_ids.items()[4:])
-
+            mastodon.status_post(status=message, media_ids=media_ids[0:4], in_reply_to_id=post_id)
+            media_ids = media_ids[4:]
 
 
 def toot_image_of_the_day():
@@ -68,7 +65,6 @@ def toot_image_of_the_day():
     message = "Here is today's image!"
     mastodon.status_post(status=message, media_ids=image_dict["id"])
     print("Tooting image of the day!")
-    bot_delete_files_in_directory(settings.DAILY_IMAGE)
 
 
 def get_trends():
@@ -215,7 +211,6 @@ def listen_to_request(spam_defender):
             mastodon.notifications_clear()
             status_notifications.clear()
             bot_delete_files_in_directory(settings.INPUT_FOLDER)
-            bot_delete_files_in_directory(settings.OUTPUT_FOLDER)
         schedule.run_pending()
         time.sleep(1)
 
@@ -257,6 +252,7 @@ def decolourise_image(reply):
         img_open = cv2.imread(settings.JPEG_INPUT.format(image))
         gray = cv2.cvtColor(img_open, cv2.COLOR_BGR2GRAY)
         cv2.imwrite(settings.JPEG_INPUT.format(image), gray)
+
 
 def display_colour_channel(reply, colour):
     colour = colour()
@@ -322,9 +318,7 @@ def show_image_histogram(reply):
             plt.plot(histogram, color=col)
             plt.xlim([0, 256])
         plt.draw()
-        plt.savefig(settings.JPEG_OUTPUT.format(image), bbox_inches='tight')
-        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image),
-                      message="Histogram")
+        plt.savefig(settings.HISTOGRAM_JPEG.format(image), bbox_inches='tight')
 
 
 def create_border(reply):

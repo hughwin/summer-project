@@ -18,6 +18,7 @@ BASE_DIRECTORY = Path.cwd()
 INPUT_FOLDER = BASE_DIRECTORY / "input"
 OUTPUT_FOLDER = BASE_DIRECTORY / "output"
 DAILY_IMAGE = str(BASE_DIRECTORY / "output" / "image.jpeg")
+HISTOGRAM_JPEG = (str(INPUT_FOLDER / "histogram-{}.jpeg"))
 JPEG_INPUT = str(INPUT_FOLDER / "{}.jpeg")
 JPEG_OUTPUT = str(OUTPUT_FOLDER / "{}.jpeg")
 PNG_OUTPUT = str(OUTPUT_FOLDER / "{}.png")
