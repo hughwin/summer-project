@@ -14,7 +14,7 @@ import imutils
 from dotenv import load_dotenv
 from matplotlib import pyplot as plt
 from pathlib import Path
-from PIL import Image, ImageEnhance, ImageOps, ImageFilter
+from PIL import Image, ImageEnhance, ImageOps, ImageFilter, ImageDraw, ImageFont
 from mastodon import Mastodon
 
 load_dotenv()  # Important variables such as my secret key are stored in a .env file.
@@ -429,6 +429,39 @@ def blur_edges(reply):
         blur = background.filter(ImageFilter.GaussianBlur(radius / 2))
         background.paste(blur, mask=mask)
         background.save(settings.JPEG_INPUT.format(image))
+
+
+def add_border(reply):
+    for image in range(len(reply.media)):
+        img = Image.open(settings.JPEG_INPUT.format(image))
+        colour = "white"
+        border = (20, 10, 20, 10)
+        bordered_img = ImageOps.expand(img, border=border, fill=colour)
+        bordered_img.save(settings.JPEG_INPUT.format(image))
+
+
+# def add_watermarks(reply):
+#     # open image to apply watermark to
+#     img = Image.open("watermark_test.jpg")
+#     img.convert("RGB")  # get image size
+#     img_width, img_height = img.size  # 5 by 4 water mark grid
+#     wm_size = (int(img_width * 0.20), int(img_height * 0.25))
+#     wm_txt = Image.new("RGBA", wm_size, (255, 255, 255, 0))  # set text size, 1:40 of the image width
+#     font_size = int(img_width / 40)  # load font e.g. gotham-bold.ttf
+#     font = ImageFont.truetype(path.format("gotham-bold.ttf"), font_size)
+#     d = ImageDraw.Draw(wm_txt)
+#     wm_text = "Kuma Kum"  # centralize text
+#     left = (wm_size[0] - font.getsize(wm_text)[0]) / 2
+#     top = (wm_size[1] - font.getsize(wm_text)[1]) / 2  # RGBA(0, 0, 0, alpha) is black
+#     # alpha channel specifies the opacity for a colour
+#     alpha = 75  # write text on blank wm_text image
+#     d.text((left, top), wm_text, fill=(0, 0, 0, alpha), font=font)  # uncomment to rotate watermark text
+#     # wm_txt = wm_txt.rotate(15,  expand=1)
+#     # wm_txt = wm_txt.resize(wm_size, Image.ANTIALIAS)
+#     for i in range(0, img_width, wm_txt.size[0]):
+#         for j in range(0, img_height, wm_txt.size[1]):
+#             img.paste(wm_txt, (i, j), wm_txt)  # save image with watermark
+#     img.save("watermark-image.jpg")  # show image with watermark in preview
 
 
 # def give_title(status_notifications):
