@@ -414,6 +414,23 @@ def blur_image(reply):
         blurred_image.save(settings.JPEG_INPUT.format(image))
 
 
+def blur_edges(reply):
+    radius, diameter = 20, 40
+    for image in range(len(reply.media)):
+        img = Image.open(settings.JPEG_INPUT.format(image))  # Paste image on white background
+        background_size = (img.size[0] + diameter, img.size[1] + diameter)
+        background = Image.new('RGB', background_size, (255, 255, 255))
+        background.paste(img, (radius, radius))  # create new images with white and black
+        mask_size = (img.size[0] + diameter, img.size[1] + diameter)
+        mask = Image.new('L', mask_size, 255)
+        black_size = (img.size[0] - diameter, img.size[1] - diameter)
+        black = Image.new('L', black_size, 0)  # create blur mask
+        mask.paste(black, (diameter, diameter))  # Blur image and paste blurred edge according to mask
+        blur = background.filter(ImageFilter.GaussianBlur(radius / 2))
+        background.paste(blur, mask=mask)
+        background.save(settings.JPEG_INPUT.format(image))
+
+
 # def give_title(status_notifications):
 #     for reply in status_notifications:
 #         for image in range(len(reply.media)):
