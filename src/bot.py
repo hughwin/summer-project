@@ -1,7 +1,6 @@
 import datetime
 import os
 import shutil
-import subprocess
 import threading
 import time
 import urllib.request
@@ -195,6 +194,12 @@ def listen_to_request(spam_defender):
                             flip_image(reply)
                         if "transparent" in params:
                             make_transparent_image(reply)
+                        if "negative" in params:
+                            make_negative_image(reply)
+                        if "sepia" in params:
+                            make_sepia_image(reply)
+                        if "blur" in params:
+                            blur_image(reply)
                         if "convert-png" in params:
                             convert_image_to_png(reply)
                         if "convert-bmp" in params:
@@ -246,7 +251,7 @@ def display_colour_channel(reply, colour):
         if colour == "blue":
             temp_image[:, :, 1] = 0
             temp_image[:, :, 2] = 0
-        cv2.imwrite(settings.JPEG_OUTPUT.format(image), temp_image)
+        cv2.imwrite(settings.JPEG_INPUT.format(image), temp_image)
 
 
 def get_text_from_image(reply):
@@ -303,8 +308,7 @@ def create_border(reply):
     for image in range(len(reply.media)):
         input_image = cv2.imread(settings.JPEG_INPUT.format(image))
         input_image = cv2.copyMakeBorder(input_image, 10, 10, 10, 10, cv2.BORDER_REFLECT)
-        cv2.imwrite(settings.JPEG_OUTPUT.format(image), input_image)
-        reply_to_toot(reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image)))
+        cv2.imwrite(settings.JPEG_INPUT.format(image), input_image)
 
 
 def crop_image(reply):
@@ -319,9 +323,7 @@ def crop_image(reply):
         bottom = 3 * height / 4
 
         cropped_img = img.crop((left, top, right, bottom))
-        cropped_img.save(settings.JPEG_OUTPUT.format(image))
-        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image),
-                      message="Here is your cropped image")
+        cropped_img.save(settings.JPEG_INPUT.format(image))
 
 
 def enhance_image(reply):
@@ -329,8 +331,7 @@ def enhance_image(reply):
         img = Image.open(settings.JPEG_INPUT.format(image))
         enhancer = ImageEnhance.Sharpness(img)
         img_enhanced = enhancer.enhance(10.0)
-        img_enhanced.save(settings.JPEG_OUTPUT.format(image))
-        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
+        img_enhanced.save(settings.JPEG_INPUT.format(image))
 
 
 def adjust_brightness(reply, value=1.5):
@@ -339,7 +340,7 @@ def adjust_brightness(reply, value=1.5):
         img = Image.open(settings.JPEG_INPUT.format(image))
         enhancer = ImageEnhance.Brightness(img)
         img_enhanced = enhancer.enhance(value)
-        img_enhanced.save(settings.JPEG_OUTPUT.format(image))
+        img_enhanced.save(settings.JPEG_INPUT.format(image))
 
 
 def adjust_contrast(reply, value=1.5):
@@ -348,7 +349,7 @@ def adjust_contrast(reply, value=1.5):
         img = Image.open(settings.JPEG_INPUT.format(image))
         enhancer = ImageEnhance.Contrast(img)
         img_enhanced = enhancer.enhance(value)
-        img_enhanced.save(settings.JPEG_OUTPUT.format(image))
+        img_enhanced.save(settings.JPEG_INPUT.format(image))
 
 
 def adjust_colour(reply, value=1.5):
@@ -357,21 +358,21 @@ def adjust_colour(reply, value=1.5):
         img = Image.open(settings.JPEG_INPUT.format(image))
         enhancer = ImageEnhance.Color(img)
         img_enhanced = enhancer.enhance(value)
-        img_enhanced.save(settings.JPEG_OUTPUT.format(image))
+        img_enhanced.save(settings.JPEG_INPUT.format(image))
 
 
 def flip_image(reply):
     for image in range(len(reply.media)):
         img = Image.open(settings.JPEG_INPUT.format(image))
         img_flipped = ImageOps.flip(img)
-        img_flipped.save(settings.JPEG_OUTPUT.format(image))
+        img_flipped.save(settings.JPEG_INPUT.format(image))
 
 
 def mirror_image(reply):
     for image in range(len(reply.media)):
         img = Image.open(settings.JPEG_INPUT.format(image))
         img_mirrored = ImageOps.mirror(img)
-        img_mirrored.save(settings.JPEG_OUTPUT.format(image))
+        img_mirrored.save(settings.JPEG_INPUT.format(image))
 
 
 def make_transparent_image(reply):
@@ -381,7 +382,7 @@ def make_transparent_image(reply):
         img_transparent.save(settings.PNG_OUTPUT.format(image))
 
 
-def negative_image(reply):
+def make_negative_image(reply):
     for image in range(len(reply.media)):
         img = Image.open(settings.JPEG_INPUT.format(image))
         negative_img = Image.new('RGB', img.size)
@@ -392,7 +393,7 @@ def negative_image(reply):
         negative_img.save(settings.JPEG_INPUT.format(image))
 
 
-def sepia(reply):
+def make_sepia_image(reply):
     for image in range(len(reply.media)):
         img = Image.open(settings.JPEG_INPUT.format(image))
         sepia_img = Image.new('RGB', img.size)
@@ -403,14 +404,14 @@ def sepia(reply):
                 green = int(r * 0.349 + g * 0.686 + b * 0.168)
                 blue = int(r * 0.272 + g * 0.534 + b * 0.131)
                 sepia_img.putpixel((x, y), (red, green, blue))
-        sepia_img.save(settings.JPEG_OUTPUT.format(image))
+        sepia_img.save(settings.JPEG_INPUT.format(image))
 
 
 def blur_image(reply):
     for image in range(len(reply.media)):
         img = Image.open(settings.JPEG_INPUT.format(image))
         blurred_image = img.filter(ImageFilter.BoxBlur(5))
-        blurred_image.save(settings.JPEG_OUTPUT.format(image))
+        blurred_image.save(settings.JPEG_INPUT.format(image))
 
 
 # def give_title(status_notifications):
