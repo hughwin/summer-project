@@ -200,9 +200,13 @@ def listen_to_request(spam_defender):
                             make_sepia_image(reply)
                         if "blur" in params:
                             blur_image(reply)
-                        if "convert-png" in params:
+                        if "blurred" in params:
+                            blur_edges(reply)
+                        if "border" in params:
+                            add_border(reply)
+                        if "png" in params:
                             convert_image_to_png(reply)
-                        if "convert-bmp" in params:
+                        if "bmp" in params:
                             convert_image_to_bmp(reply)
                         if settings.ROTATE_COMMAND in params:
                             try:
