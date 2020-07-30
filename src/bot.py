@@ -225,28 +225,6 @@ def get_information_about_image(reply):
         reply_to_toot(reply.status_id, message=message)
 
 
-def convert_image_using_pix2pix(reply):
-    # TODO: Make this change the files so the right sized images are output.
-    try:
-        subprocess.call("python pix2pix/pix2pix.py "
-                        "--mode test "
-                        "--input_dir pix2pix/val "
-                        "--output_dir pix2pix/test "
-                        "--checkpoint pix2pix/checkpoint")
-    except subprocess.CalledProcessError as e:
-        print("Problem with subprocess / pix2pix")
-        print(e.output)
-
-        for image in range(len(reply.media)):
-            try:
-                image_path = str(settings.OUTPUT_FOLDER / "{}-outputs.png".format(image))
-                reply_to_toot(reply.status_id, image_path=image_path)
-                print("Tooting!")
-            except ValueError as e:
-                print("Something went wrong!")
-                print(e.output)
-
-
 def decolourise_image(reply):
     for image in range(len(reply.media)):
         img_open = cv2.imread(settings.JPEG_INPUT.format(image))
@@ -362,7 +340,6 @@ def adjust_brightness(reply, value=1.5):
         enhancer = ImageEnhance.Brightness(img)
         img_enhanced = enhancer.enhance(value)
         img_enhanced.save(settings.JPEG_OUTPUT.format(image))
-        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
 
 
 def adjust_contrast(reply, value=1.5):
@@ -372,7 +349,6 @@ def adjust_contrast(reply, value=1.5):
         enhancer = ImageEnhance.Contrast(img)
         img_enhanced = enhancer.enhance(value)
         img_enhanced.save(settings.JPEG_OUTPUT.format(image))
-        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
 
 
 def adjust_colour(reply, value=1.5):
@@ -382,7 +358,6 @@ def adjust_colour(reply, value=1.5):
         enhancer = ImageEnhance.Color(img)
         img_enhanced = enhancer.enhance(value)
         img_enhanced.save(settings.JPEG_OUTPUT.format(image))
-        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
 
 
 def flip_image(reply):
@@ -390,7 +365,6 @@ def flip_image(reply):
         img = Image.open(settings.JPEG_INPUT.format(image))
         img_flipped = ImageOps.flip(img)
         img_flipped.save(settings.JPEG_OUTPUT.format(image))
-        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
 
 
 def mirror_image(reply):
@@ -398,7 +372,6 @@ def mirror_image(reply):
         img = Image.open(settings.JPEG_INPUT.format(image))
         img_mirrored = ImageOps.mirror(img)
         img_mirrored.save(settings.JPEG_OUTPUT.format(image))
-        reply_to_toot(reply.status_id, image_path=settings.JPEG_OUTPUT.format(image))
 
 
 def make_transparent_image(reply):
@@ -406,7 +379,17 @@ def make_transparent_image(reply):
         img_transparent = Image.open(settings.JPEG_INPUT.format(image))
         img_transparent.putalpha(128)
         img_transparent.save(settings.PNG_OUTPUT.format(image))
-        reply_to_toot(reply.status_id, image_path=settings.PNG_OUTPUT.format(image))
+
+
+def negative(reply):
+    for image in range(len(reply.media)):
+        img = Image.open(settings.JPEG_INPUT.format(image))
+        negative_image = Image.new('RGB', img.size)
+        for x in range(img.size[0]):
+            for y in range(img.size[1]):
+                r, g, b = img.getpixel((x, y))
+                negative_image.putpixel((x, y), (255 - r, 255 - g, 255 - b))
+        negative_image.save(settings.JPEG_INPUT.format(image))
 
 
 # def give_title(status_notifications):
@@ -417,13 +400,11 @@ def make_transparent_image(reply):
 def convert_image_to_png(reply):
     for image in range(len(reply.media)):
         Image.open(settings.JPEG_INPUT.format(image)).save(settings.PNG_OUTPUT.format(image))
-        reply_to_toot(reply.status_id, image_path=settings.PNG_OUTPUT.format(image))
 
 
 def convert_image_to_bmp(reply):
     for image in range(len(reply.media)):
         Image.open(settings.JPEG_INPUT.format(image)).save(settings.PNG_OUTPUT.format(image))
-        reply_to_toot(reply.status_id, image_path=settings.BMP_OUTPUT.format(image))
 
 
 def is_jpg(filepath):
@@ -444,7 +425,7 @@ def append_images(images, direction='horizontal',
         new_width = max(widths)
         new_height = sum(heights)
 
-    new_im = Image.new('RGB', (new_width, new_height), color=bg_color)
+    img = Image.new('RGB', (new_width, new_height), color=bg_color)
 
     offset = 0
     for im in images:
@@ -454,7 +435,7 @@ def append_images(images, direction='horizontal',
                 y = int((new_height - im.size[1]) / 2)
             elif aligment == 'bottom':
                 y = new_height - im.size[1]
-            new_im.paste(im, (offset, y))
+            img.paste(im, (offset, y))
             offset += im.size[0]
         else:
             x = 0
@@ -462,10 +443,9 @@ def append_images(images, direction='horizontal',
                 x = int((new_width - im.size[0]) / 2)
             elif aligment == 'right':
                 x = new_width - im.size[0]
-            new_im.paste(im, (x, offset))
+            img.paste(im, (x, offset))
             offset += im.size[1]
-
-    return new_im
+    return img
 
 
 def bot_delete_files_in_directory(path):
