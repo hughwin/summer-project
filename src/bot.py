@@ -16,6 +16,7 @@ from matplotlib import pyplot as plt
 from pathlib import Path
 from PIL import Image, ImageEnhance, ImageOps, ImageFilter, ImageDraw, ImageFont
 from mastodon import Mastodon
+from imageai.Detection import ObjectDetection
 
 load_dotenv()  # Important variables such as my secret key are stored in a .env file.
 
@@ -154,13 +155,14 @@ def listen_to_request(spam_defender):
                     spam_defender.add_user_to_requests(user.account_id)
                 count = 0
                 num_files = os.listdir(str(settings.INPUT_FOLDER))
+                reply_message = ""
                 if len(num_files) != 0:
                     for reply in status_notifications:
                         print(reply.params)
                         if 'decolourise' in reply.params or 'decolorize' in params:
                             decolourise_image(reply)
                         if "text" in params:
-                            get_text_from_image(reply)
+                            reply_message += get_text_from_image(reply)
                         if "about" in params:
                             get_information_about_image(reply)
                         if "preserve" in params:
@@ -206,8 +208,12 @@ def listen_to_request(spam_defender):
                             add_border(reply)
                         if "png" in params:
                             convert_image_to_png(reply)
+                        if "detect" in params:
+                            detect_objects(reply)
                         if "bmp" in params:
                             convert_image_to_bmp(reply)
+                        if "watermark" in params:
+                            add_watermarks(reply)
                         if settings.ROTATE_COMMAND in params:
                             try:
                                 rotate_image(reply,
@@ -216,7 +222,7 @@ def listen_to_request(spam_defender):
                             except IndexError:
                                 rotate_image(reply,
                                              rotate_by_degrees=params[params.index(settings.ROTATE_COMMAND) + 1])
-                        reply_to_toot(reply.status_id)
+                        reply_to_toot(reply.status_id, message=reply_message)
             mastodon.notifications_clear()
             status_notifications.clear()
             bot_delete_files_in_directory(settings.INPUT_FOLDER)
@@ -260,10 +266,10 @@ def display_colour_channel(reply, colour):
 
 def get_text_from_image(reply):
     for image in range(len(reply.media)):
-        # TODO: Look into removing this hardcoded path
         pytesseract.pytesseract.tesseract_cmd = settings.TESSERACT_PATH
         img = cv2.imread(settings.JPEG_INPUT.format(image))
         text = pytesseract.image_to_string(img)
+        return text
 
 
 def check_image_type(filepath):
@@ -444,28 +450,40 @@ def add_border(reply):
         bordered_img.save(settings.JPEG_INPUT.format(image))
 
 
-# def add_watermarks(reply):
-#     # open image to apply watermark to
-#     img = Image.open("watermark_test.jpg")
-#     img.convert("RGB")  # get image size
-#     img_width, img_height = img.size  # 5 by 4 water mark grid
-#     wm_size = (int(img_width * 0.20), int(img_height * 0.25))
-#     wm_txt = Image.new("RGBA", wm_size, (255, 255, 255, 0))  # set text size, 1:40 of the image width
-#     font_size = int(img_width / 40)  # load font e.g. gotham-bold.ttf
-#     font = ImageFont.truetype(path.format("gotham-bold.ttf"), font_size)
-#     d = ImageDraw.Draw(wm_txt)
-#     wm_text = "Kuma Kum"  # centralize text
-#     left = (wm_size[0] - font.getsize(wm_text)[0]) / 2
-#     top = (wm_size[1] - font.getsize(wm_text)[1]) / 2  # RGBA(0, 0, 0, alpha) is black
-#     # alpha channel specifies the opacity for a colour
-#     alpha = 75  # write text on blank wm_text image
-#     d.text((left, top), wm_text, fill=(0, 0, 0, alpha), font=font)  # uncomment to rotate watermark text
-#     # wm_txt = wm_txt.rotate(15,  expand=1)
-#     # wm_txt = wm_txt.resize(wm_size, Image.ANTIALIAS)
-#     for i in range(0, img_width, wm_txt.size[0]):
-#         for j in range(0, img_height, wm_txt.size[1]):
-#             img.paste(wm_txt, (i, j), wm_txt)  # save image with watermark
-#     img.save("watermark-image.jpg")  # show image with watermark in preview
+def detect_objects(reply):
+    for image in range(len(reply.media)):
+        detector = ObjectDetection()
+        detector.setModelTypeAsRetinaNet()
+        detector.setModelPath(settings.RESOURCES_FOLDER / "model.h5")
+        detector.loadModel()
+
+        detections = detector.detectObjectsFromImage(input_image=(settings.JPEG_INPUT.format(image)), output_image_path=(settings.JPEG_INPUT.format(image)))
+        for eachObject in detections:
+            print(eachObject["name"], " : ", eachObject["percentage_probability"])
+
+
+def add_watermarks(reply):
+    for image in range(len(reply.media)):
+        img = Image.open(settings.JPEG_INPUT.format(image))  # open image to apply watermark to
+        img.convert("RGB")  # get image size
+        img_width, img_height = img.size  # 5 by 4 water mark grid
+        wm_size = (int(img_width * 0.20), int(img_height * 0.25))
+        wm_txt = Image.new("RGBA", wm_size, (255, 255, 255, 0))  # set text size, 1:40 of the image width
+        font_size = int(img_width / 40)  # load font e.g. gotham-bold.ttf
+        font = ImageFont.truetype("arial.ttf", font_size)
+        d = ImageDraw.Draw(wm_txt)
+        wm_text = "Watermark"  # centralise text
+        left = (wm_size[0] - font.getsize(wm_text)[0]) / 2
+        top = (wm_size[1] - font.getsize(wm_text)[1]) / 2  # RGBA(0, 0, 0, alpha) is black
+        # alpha channel specifies the opacity for a colour
+        alpha = 75  # write text on blank wm_text image
+        d.text((left, top), wm_text, fill=(0, 0, 0, alpha), font=font)  # uncomment to rotate watermark text
+        wm_txt = wm_txt.rotate(15,  expand=1)
+        wm_txt = wm_txt.resize(wm_size, Image.ANTIALIAS)
+        for i in range(0, img_width, wm_txt.size[0]):
+            for j in range(0, img_height, wm_txt.size[1]):
+                img.paste(wm_txt, (i, j), wm_txt)  # save image with watermark
+        img.save(settings.JPEG_INPUT.format(image))  # show image with watermark in preview
 
 
 # def give_title(status_notifications):
