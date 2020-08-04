@@ -266,7 +266,7 @@ def display_colour_channel(reply, colour):
 
 def get_text_from_image(reply):
     for image in range(len(reply.media)):
-        pytesseract.pytesseract.tesseract_cmd = os.getenv("TESSERACT")
+        pytesseract.pytesseract.tesseract_cmd = os.getenv("TESSERACT_PREFIX")
         img = cv2.imread(settings.JPEG_INPUT.format(image))
         text = pytesseract.image_to_string(img)
         return text
