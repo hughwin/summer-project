@@ -21,7 +21,6 @@ HISTOGRAM_JPEG = (str(INPUT_FOLDER / "histogram-{}.jpeg"))
 JPEG_INPUT = str(INPUT_FOLDER / "{}.jpeg")
 PNG_OUTPUT = str(INPUT_FOLDER / "{}.png")
 BMP_OUTPUT = str(INPUT_FOLDER / "{}.bmp")
-TESSERACT_PATH = r"/app/apt/usr/share/tesseract-ocr/4.00/tessdata"
 HELP_MESSAGE = "Welcome to my image processing bot!" \
                "\nThe bot can perform simple (and not so simple) image transformations." \
                "\nCommands:" \
