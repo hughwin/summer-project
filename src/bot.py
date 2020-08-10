@@ -269,7 +269,6 @@ def display_colour_channel(reply, colour):
 
 def get_text_from_image(reply):
     for image in range(len(reply.media)):
-        pytesseract.pytesseract.tesseract_cmd = settings.TESSERACT_PATH
         img = cv2.imread(settings.JPEG_INPUT.format(image))
         text = pytesseract.image_to_string(img)
         return text
@@ -473,7 +472,7 @@ def add_watermarks(reply, wm_text="Example"):
         wm_size = (int(img_width * 0.20), int(img_height * 0.25))
         wm_txt = Image.new("RGBA", wm_size, (255, 255, 255, 0))  # set text size, 1:40 of the image width
         font_size = int(img_width / 40)  # load font e.g. gotham-bold.ttf
-        font = ImageFont.truetype(str(Path("resources/Gotham-Bold.ttf")), font_size)
+        font = ImageFont.truetype(str(settings.BASE_DIRECTORY / "resources" / "Gotham-Bold.ttf"), font_size)
         d = ImageDraw.Draw(wm_txt)
         left = (wm_size[0] - font.getsize(wm_text)[0]) / 2
         top = (wm_size[1] - font.getsize(wm_text)[1]) / 2  # RGBA(0, 0, 0, alpha) is black
