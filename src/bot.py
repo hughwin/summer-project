@@ -77,8 +77,9 @@ def get_trends():
 
 
 class UserNotification:
-    def __init__(self, account_id, status_id, content, params):
+    def __init__(self, account_id, user_id, status_id, content, params):
         self.account_id = account_id
+        self.user_id = user_id
         self.status_id = status_id
         self.content = content
         self.params = params
@@ -128,16 +129,17 @@ def listen_to_request(spam_defender):
         for n in notifications:
             if n["type"] == "mention":
                 account_id = n["account"]["id"]
+                account_name = n["account"]["username"]
                 status_id = n["status"]["id"]
                 content = n["status"]["content"]
                 content = strip_tags(content).replace("@hughwin ", "").lower()
                 params = content.split(" ")
                 print(params)
-                user = UserNotification(account_id, status_id, content, params)
+                user = UserNotification(account_id, account_name, status_id, content, params)
                 media = n["status"]["media_attachments"]
                 if "help" in params:
                     print("help")
-                    reply_to_toot(status_id, message=settings.HELP_MESSAGE)
+                    reply_to_toot(status_id, message="@" + account_name + "\n" + settings.HELP_MESSAGE)
                 if not spam_defender.allow_account_to_make_request(account_id):
                     reply_to_toot(status_id, message=settings.TOO_MANY_REQUESTS_MESSAGE)
                     print("Denied!")
@@ -222,7 +224,7 @@ def listen_to_request(spam_defender):
                             except IndexError:
                                 rotate_image(reply,
                                              rotate_by_degrees=params[params.index(settings.ROTATE_COMMAND) + 1])
-                        reply_to_toot(reply.status_id, message=reply_message)
+                        reply_to_toot(reply.status_id, message="@" + account_name + "\n" + reply_message)
             mastodon.notifications_clear()
             status_notifications.clear()
             bot_delete_files_in_directory(settings.INPUT_FOLDER)
