@@ -213,7 +213,10 @@ def listen_to_request(spam_defender):
                         if "bmp" in params:
                             convert_image_to_bmp(reply)
                         if "watermark" in params:
-                            add_watermarks(reply)
+                            try:
+                                add_watermarks(reply, wm_text=params[params.index("watermark") + 1])
+                            except IndexError:
+                                add_watermarks(reply)
                         if settings.ROTATE_COMMAND in params:
                             try:
                                 rotate_image(reply,
@@ -462,7 +465,7 @@ def detect_objects(reply):
             print(eachObject["name"], " : ", eachObject["percentage_probability"])
 
 
-def add_watermarks(reply):
+def add_watermarks(reply, wm_text="Example"):
     for image in range(len(reply.media)):
         img = Image.open(settings.JPEG_INPUT.format(image))  # open image to apply watermark to
         img.convert("RGB")  # get image size
@@ -472,7 +475,6 @@ def add_watermarks(reply):
         font_size = int(img_width / 40)  # load font e.g. gotham-bold.ttf
         font = ImageFont.truetype("arial.ttf", font_size)
         d = ImageDraw.Draw(wm_txt)
-        wm_text = "Watermark"  # centralise text
         left = (wm_size[0] - font.getsize(wm_text)[0]) / 2
         top = (wm_size[1] - font.getsize(wm_text)[1]) / 2  # RGBA(0, 0, 0, alpha) is black
         # alpha channel specifies the opacity for a colour
