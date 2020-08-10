@@ -469,7 +469,7 @@ def add_watermarks(reply):
         wm_size = (int(img_width * 0.20), int(img_height * 0.25))
         wm_txt = Image.new("RGBA", wm_size, (255, 255, 255, 0))  # set text size, 1:40 of the image width
         font_size = int(img_width / 40)  # load font e.g. gotham-bold.ttf
-        font = ImageFont.truetype("arial.ttf", font_size)
+        font = ImageFont.truetype(str(Path("resources/Gotham-Bold.ttf")), font_size)
         d = ImageDraw.Draw(wm_txt)
         wm_text = "Watermark"  # centralise text
         left = (wm_size[0] - font.getsize(wm_text)[0]) / 2
