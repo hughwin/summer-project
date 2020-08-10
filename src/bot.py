@@ -129,7 +129,7 @@ def listen_to_request(spam_defender):
         for n in notifications:
             if n["type"] == "mention":
                 account_id = n["account"]["id"]
-                account_name = n["account"]["username"]
+                account_name = n["account"]["acct"]
                 status_id = n["status"]["id"]
                 content = n["status"]["content"]
                 content = strip_tags(content).replace("@hughwin ", "").lower()
