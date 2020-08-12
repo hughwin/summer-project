@@ -174,7 +174,14 @@ def listen_to_request(spam_defender):
                         if "border" in params:
                             create_border(reply)
                         if "crop" in params:
-                            crop_image(reply)
+                            try:
+                                reply_message = crop_image(reply,
+                                                           left=params[params.index("crop") + 1],
+                                                           right=params[params.index("crop") + 2],
+                                                           top=params[params.index("crop") + 3],
+                                                           bottom=params[params.index("crop") + 4]),
+                            except IndexError:
+                                reply_message += "\nCrop failed!"
                         if "enhance" in params:
                             enhance_image(reply)
                         if "brightness" in params:
@@ -224,7 +231,7 @@ def listen_to_request(spam_defender):
                             except IndexError:
                                 rotate_image(reply,
                                              rotate_by_degrees=params[params.index(settings.ROTATE_COMMAND) + 1])
-                        reply_to_toot(reply.status_id, message="@" + account_name + "\n" + reply_message)
+                        reply_to_toot(reply.status_id, message="@" + account_name + "\n" + str(reply_message))
             mastodon.notifications_clear()
             status_notifications.clear()
             bot_delete_files_in_directory(settings.INPUT_FOLDER)
@@ -322,18 +329,32 @@ def create_border(reply):
         cv2.imwrite(settings.JPEG_INPUT.format(image), input_image)
 
 
-def crop_image(reply):
+def crop_image(reply, left, top, right, bottom):
     for image in range(len(reply.media)):
         img = Image.open(settings.JPEG_INPUT.format(image))
         width, height = img.size
+        status_message = ""
+        try:
+            left = int(left)
+            top = int(top)
+            right = int(right)
+            bottom = int(bottom)
+        except ValueError:
+            status_message += "Please supply integers in the format crop <int> <int> <int> <int>"
 
-        # TODO: Change these to make them user generated
-        left = 5
-        top = height / 4
-        right = 164
-        bottom = 3 * height / 4
+        if top > height or top < 0:
+            status_message += settings.CROP_OUT_OF_RANGE.format("top", height)
+        if left > width or left < 0:
+            status_message += settings.CROP_OUT_OF_RANGE.format("left", width)
+        if right > width or right < 0:
+            status_message += settings.CROP_OUT_OF_RANGE.format("right", width)
+        if bottom > height or bottom < 0:
+            status_message += settings.CROP_OUT_OF_RANGE.format("bottom", width)
 
-        cropped_img = img.crop((left, top, right, bottom))
+        if status_message != "":
+            return status_message
+
+        cropped_img = ImageOps.crop(img, (left, top, right, bottom))
         cropped_img.save(settings.JPEG_INPUT.format(image))
 
 
@@ -458,7 +479,8 @@ def detect_objects(reply):
         detector.setModelPath(settings.RESOURCES_FOLDER / "model.h5")
         detector.loadModel()
 
-        detections = detector.detectObjectsFromImage(input_image=(settings.JPEG_INPUT.format(image)), output_image_path=(settings.JPEG_INPUT.format(image)))
+        detections = detector.detectObjectsFromImage(input_image=(settings.JPEG_INPUT.format(image)),
+                                                     output_image_path=(settings.JPEG_INPUT.format(image)))
         for eachObject in detections:
             print(eachObject["name"], " : ", eachObject["percentage_probability"])
 
@@ -479,7 +501,7 @@ def add_watermarks(reply):
         # alpha channel specifies the opacity for a colour
         alpha = 75  # write text on blank wm_text image
         d.text((left, top), wm_text, fill=(0, 0, 0, alpha), font=font)  # uncomment to rotate watermark text
-        wm_txt = wm_txt.rotate(15,  expand=1)
+        wm_txt = wm_txt.rotate(15, expand=1)
         wm_txt = wm_txt.resize(wm_size, Image.ANTIALIAS)
         for i in range(0, img_width, wm_txt.size[0]):
             for j in range(0, img_height, wm_txt.size[1]):

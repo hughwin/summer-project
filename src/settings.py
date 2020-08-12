@@ -10,6 +10,9 @@ NASA_ADDRESS_IMAGES = "https://api.nasa.gov/planetary/apod?api_key=%s"
 TOO_MANY_REQUESTS_MESSAGE = "You're making too many requests!"
 JSON_ERROR_MESSAGE = "Decoding JSON has failed"
 INVALID_COMMAND = "Command not recognised. Type \"@botbot help\" for a list of commands"
+CROP_OUT_OF_RANGE = "\nYour {0} value is out of range; {1} is the maximum value, and must be > 0"
+CROP_FAILURE_MESSAGE = "\nCrop failed. You didn't supply enough parameters!" \
+                       "\nPlease supply integers in the format crop <int> <int> <int> <int>"
 MAX_MESSAGE_LENGTH = 500
 ROTATE_COMMAND = "rotate"
 ROTATE_SIMPLE = "simple"
