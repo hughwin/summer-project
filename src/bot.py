@@ -222,7 +222,11 @@ def listen_to_request(spam_defender):
                         if "bmp" in params:
                             convert_image_to_bmp(reply)
                         if "watermark" in params:
-                            add_watermarks(reply)
+                            try:
+                                add_watermarks(reply,
+                                               wm_text=params[params.index("watermark") + 1])
+                            except IndexError:
+                                reply_message += "No watermark specified"
                         if settings.ROTATE_COMMAND in params:
                             try:
                                 rotate_image(reply,
@@ -472,6 +476,7 @@ def add_border(reply):
         bordered_img.save(settings.JPEG_INPUT.format(image))
 
 
+# TODO: Delete this
 def detect_objects(reply):
     for image in range(len(reply.media)):
         detector = ObjectDetection()
@@ -485,7 +490,7 @@ def detect_objects(reply):
             print(eachObject["name"], " : ", eachObject["percentage_probability"])
 
 
-def add_watermarks(reply):
+def add_watermarks(reply, wm_text):
     for image in range(len(reply.media)):
         img = Image.open(settings.JPEG_INPUT.format(image))  # open image to apply watermark to
         img.convert("RGB")  # get image size
@@ -495,7 +500,6 @@ def add_watermarks(reply):
         font_size = int(img_width / 40)  # load font e.g. gotham-bold.ttf
         font = ImageFont.truetype(str(settings.BASE_DIRECTORY / "resources" / "Gotham-Bold.ttf"), font_size)
         d = ImageDraw.Draw(wm_txt)
-        wm_text = "Watermark"  # centralise text
         left = (wm_size[0] - font.getsize(wm_text)[0]) / 2
         top = (wm_size[1] - font.getsize(wm_text)[1]) / 2  # RGBA(0, 0, 0, alpha) is black
         # alpha channel specifies the opacity for a colour
@@ -507,11 +511,6 @@ def add_watermarks(reply):
             for j in range(0, img_height, wm_txt.size[1]):
                 img.paste(wm_txt, (i, j), wm_txt)  # save image with watermark
         img.save(settings.JPEG_INPUT.format(image))  # show image with watermark in preview
-
-
-# def give_title(status_notifications):
-#     for reply in status_notifications:
-#         for image in range(len(reply.media)):
 
 
 def convert_image_to_png(reply):
