@@ -11,6 +11,7 @@ import schedule
 import settings
 import cv2
 import imutils
+import textwrap
 from dotenv import load_dotenv
 from matplotlib import pyplot as plt
 from pathlib import Path
@@ -35,21 +36,26 @@ def start_bot():
     listener.start()
 
 
-def reply_to_toot(post_id, message=None, meta=None):
+def reply_to_toot(post_id, account_name, message=None, meta=None):
     media_ids = []
     for fn in os.listdir(str(settings.INPUT_FOLDER)):
         if fn.endswith(('.jpeg', '.png')):
             print(Path(fn))
             image_dict = mastodon.media_post(str(settings.INPUT_FOLDER / fn))
+            image_dict["meta"] = meta
             media_ids.append(image_dict["id"])
     if message is not None:
         parts = []
+        total_len = str(len(message) // 500 + 1)
+        count = 1
         while len(message) > 0:
+            message = "@" + account_name + " {}/".format(count) + total_len + "\n\n" + message
             parts.append(message[:settings.MAX_MESSAGE_LENGTH])
             message = message[settings.MAX_MESSAGE_LENGTH:]
+            count += 1
         for part in parts:
             print(part)
-            mastodon.status_post(status=part, media_ids=media_ids, in_reply_to_id=post_id)
+            post_id = mastodon.status_post(status=part, media_ids=media_ids, in_reply_to_id=post_id)
     else:
         while media_ids:
             mastodon.status_post(status=message, media_ids=media_ids[0:4], in_reply_to_id=post_id)
@@ -64,7 +70,6 @@ def toot_image_of_the_day():
     image_dict = mastodon.media_post(settings.DAILY_IMAGE)
     message = "Here is today's image!"
     mastodon.status_post(status=message, media_ids=image_dict["id"])
-    print("Tooting image of the day!")
 
 
 def get_trends():
@@ -139,7 +144,7 @@ def listen_to_request(spam_defender):
                 media = n["status"]["media_attachments"]
                 if "help" in params:
                     print("help")
-                    reply_to_toot(status_id, message="@" + account_name + "\n" + settings.HELP_MESSAGE)
+                    reply_to_toot(status_id, message="\n" + settings.HELP_MESSAGE, account_name=account_name)
                 if not spam_defender.allow_account_to_make_request(account_id):
                     reply_to_toot(status_id, message=settings.TOO_MANY_REQUESTS_MESSAGE)
                     print("Denied!")
@@ -166,7 +171,7 @@ def listen_to_request(spam_defender):
                         if "text" in params:
                             reply_message += get_text_from_image(reply)
                         if "about" in params:
-                            get_information_about_image(reply)
+                            reply_message += get_information_about_image(reply)
                         if "preserve" in params:
                             display_colour_channel(reply, params[params.index("preserve") + 1])
                         if "histogram" in params:
@@ -175,11 +180,11 @@ def listen_to_request(spam_defender):
                             create_border(reply)
                         if "crop" in params:
                             try:
-                                reply_message = crop_image(reply,
-                                                           left=params[params.index("crop") + 1],
-                                                           right=params[params.index("crop") + 2],
-                                                           top=params[params.index("crop") + 3],
-                                                           bottom=params[params.index("crop") + 4]),
+                                crop_image(reply,
+                                           left=params[params.index("crop") + 1],
+                                           right=params[params.index("crop") + 2],
+                                           top=params[params.index("crop") + 3],
+                                           bottom=params[params.index("crop") + 4])
                             except IndexError:
                                 reply_message += "\nCrop failed!"
                         if "enhance" in params:
@@ -235,7 +240,7 @@ def listen_to_request(spam_defender):
                             except IndexError:
                                 rotate_image(reply,
                                              rotate_by_degrees=params[params.index(settings.ROTATE_COMMAND) + 1])
-                        reply_to_toot(reply.status_id, message="@" + account_name + "\n" + str(reply_message))
+                        reply_to_toot(reply.status_id, message="\n" + str(reply_message), account_name=account_name)
             mastodon.notifications_clear()
             status_notifications.clear()
             bot_delete_files_in_directory(settings.INPUT_FOLDER)
@@ -250,7 +255,7 @@ def get_information_about_image(reply):
         message = "Image properties: " \
                   "\n- Number of Pixels: " + str(img_open.size) \
                   + "\n- Shape/Dimensions: " + str(img_open.shape)
-        reply_to_toot(reply.status_id, message=message)
+        return message
 
 
 def decolourise_image(reply):
@@ -467,6 +472,7 @@ def blur_edges(reply):
         background.save(settings.JPEG_INPUT.format(image))
 
 
+# TODO: Change this so user can chnage colour
 def add_border(reply):
     for image in range(len(reply.media)):
         img = Image.open(settings.JPEG_INPUT.format(image))

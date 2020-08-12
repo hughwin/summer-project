@@ -16,7 +16,7 @@ CROP_FAILURE_MESSAGE = "\nCrop failed. You didn't supply enough parameters!" \
 MAX_MESSAGE_LENGTH = 500
 ROTATE_COMMAND = "rotate"
 ROTATE_SIMPLE = "simple"
-BASE_DIRECTORY = Path.cwd() / "src"
+BASE_DIRECTORY = Path.cwd()
 INPUT_FOLDER = BASE_DIRECTORY / "input"
 RESOURCES_FOLDER = BASE_DIRECTORY / "resources"
 DAILY_IMAGE = str(BASE_DIRECTORY / "output" / "image.jpeg")
@@ -25,7 +25,7 @@ JPEG_INPUT = str(INPUT_FOLDER / "{}.jpeg")
 PNG_OUTPUT = str(INPUT_FOLDER / "{}.png")
 BMP_OUTPUT = str(INPUT_FOLDER / "{}.bmp")
 HELP_MESSAGE = "Welcome to my image processing bot!" \
-               "\nThe bot can perform simple (and not so simple) image transformations." \
+               "\nThe bot can perform simple (and not so simple) image transformations.\n" \
                "\nCommands:" \
                "\nHelp - get help" \
                "\nAbout - get information about your image(s)" \
