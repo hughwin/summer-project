@@ -11,7 +11,7 @@ import schedule
 import settings
 import cv2
 import imutils
-import textwrap
+import re
 from dotenv import load_dotenv
 from matplotlib import pyplot as plt
 from pathlib import Path
@@ -137,7 +137,9 @@ def listen_to_request(spam_defender):
                 account_name = n["account"]["acct"]
                 status_id = n["status"]["id"]
                 content = n["status"]["content"]
+                pattern = re.compile('[\W_]+')
                 content = strip_tags(content).replace("@hughwin ", "").lower()
+                pattern.sub("", content)
                 params = content.split(" ")
                 print(params)
                 user = UserNotification(account_id, account_name, status_id, content, params)
@@ -166,80 +168,117 @@ def listen_to_request(spam_defender):
                 if len(num_files) != 0:
                     for reply in status_notifications:
                         print(reply.params)
-                        if 'decolourise' in reply.params or 'decolorize' in params:
-                            decolourise_image(reply)
-                        if "text" in params:
-                            reply_message += get_text_from_image(reply)
-                        if "about" in params:
-                            reply_message += get_information_about_image(reply)
-                        if "preserve" in params:
-                            display_colour_channel(reply, params[params.index("preserve") + 1])
-                        if "histogram" in params:
-                            show_image_histogram(reply)
-                        if "border" in params:
-                            create_border(reply)
-                        if "crop" in params:
-                            try:
-                                crop_image(reply,
-                                           left=params[params.index("crop") + 1],
-                                           right=params[params.index("crop") + 2],
-                                           top=params[params.index("crop") + 3],
-                                           bottom=params[params.index("crop") + 4])
-                            except IndexError:
-                                reply_message += "\nCrop failed!"
-                        if "enhance" in params:
-                            enhance_image(reply)
-                        if "brightness" in params:
-                            try:
-                                adjust_brightness(reply, value=params[params.index("brightness") + 1])
-                            except IndexError:
-                                adjust_brightness(reply)
-                        if "contrast" in params:
-                            try:
-                                adjust_contrast(reply, value=params[params.index("contrast") + 1])
-                            except IndexError:
-                                adjust_contrast(reply)
-                        if "colour" in params:
-                            try:
-                                adjust_colour(reply, value=params[params.index("colour") + 1])
-                            except IndexError:
-                                adjust_contrast(reply)
-                        if "mirror" in params:
-                            mirror_image(reply)
-                        if "flip" in params:
-                            flip_image(reply)
-                        if "transparent" in params:
-                            make_transparent_image(reply)
-                        if "negative" in params:
-                            make_negative_image(reply)
-                        if "sepia" in params:
-                            make_sepia_image(reply)
-                        if "blur" in params:
-                            blur_image(reply)
-                        if "blurred" in params:
-                            blur_edges(reply)
-                        if "border" in params:
-                            add_border(reply)
-                        if "png" in params:
-                            convert_image_to_png(reply)
-                        if "detect" in params:
-                            detect_objects(reply)
-                        if "bmp" in params:
-                            convert_image_to_bmp(reply)
-                        if "watermark" in params:
-                            try:
-                                add_watermarks(reply,
-                                               wm_text=params[params.index("watermark") + 1])
-                            except IndexError:
-                                reply_message += "No watermark specified"
-                        if settings.ROTATE_COMMAND in params:
-                            try:
-                                rotate_image(reply,
-                                             rotate_by_degrees=params[params.index(settings.ROTATE_COMMAND) + 1],
-                                             rotation_type=params[params.index(settings.ROTATE_COMMAND) + 2])
-                            except IndexError:
-                                rotate_image(reply,
-                                             rotate_by_degrees=params[params.index(settings.ROTATE_COMMAND) + 1])
+                        while params:
+                            if params[0] == 'decolourise' or params[0] == 'decolorize':
+                                decolourise_image(reply)
+                                params = params[1:]
+                            if params[0] == "text":
+                                reply_message += get_text_from_image(reply)
+                                params = params[1:]
+                            if params[0] == "about":
+                                reply_message += get_information_about_image(reply)
+                                params = params[1:]
+                            if params[0] == "preserve":
+                                display_colour_channel(reply, params[params.index("preserve") + 1])
+                                params = params[1:]
+                            if params[0] == "histogram":
+                                show_image_histogram(reply)
+                                params = params[1:]
+                            if params[0] == "border":
+                                create_border(reply)
+                                params = params[1:]
+                            if params[0] == "crop":
+                                try:
+                                    reply_message += crop_image(reply,
+                                                                left=params[1],
+                                                                right=params[2],
+                                                                top=params[3],
+                                                                bottom=params[4])
+                                    params = params[5:]
+                                except IndexError:
+                                    reply_message += "\nCrop failed!"
+                                    params = params[1:]
+                            if params[0] == "enhance":
+                                enhance_image(reply)
+                                params = params[1:]
+                            if params[0] == "brightness":
+                                try:
+                                    adjust_brightness(reply, value=params[1])
+                                    params = params[2:]
+                                except IndexError:
+                                    adjust_brightness(reply)
+                                    params = params[1:]
+                            if params[0] == "contrast":
+                                try:
+                                    adjust_contrast(reply, value=params[1])
+                                    params = params[2:]
+                                except IndexError:
+                                    adjust_contrast(reply)
+                                    params = params[1:]
+                            if params[0] == "colour":
+                                try:
+                                    adjust_colour(reply, value=params[1])
+                                    params = params[1:]
+                                except IndexError:
+                                    adjust_contrast(reply)
+                                    params = params[2:]
+                            if params[0] == "mirror":
+                                mirror_image(reply)
+                                params = params[1:]
+                            if params[0] == "flip":
+                                flip_image(reply)
+                                params = params[1:]
+                            if params[0] == "transparent":
+                                make_transparent_image(reply)
+                                params = params[1:]
+                            if params[0] == "negative":
+                                make_negative_image(reply)
+                                params = params[1:]
+                            if params[0] == "sepia":
+                                make_sepia_image(reply)
+                                params = params[1:]
+                            if params[0] == "blur":
+                                blur_image(reply)
+                                params = params[1:]
+                            if params[0] == "blurred":
+                                blur_edges(reply)
+                                params = params[1:]
+                            if params[0] == "border":
+                                add_border(reply)
+                                params = params[1:]
+                            if params[0] == "png":
+                                convert_image_to_png(reply)
+                                params = params[1:]
+                            if params[0] == "detect":
+                                detect_objects(reply)
+                                params = params[1:]
+                            if params[0] == "bmp":
+                                convert_image_to_bmp(reply)
+                                params = params[1:]
+                            if params[0] == "watermark":
+                                try:
+                                    add_watermarks(reply,
+                                                   wm_text=params[1])
+                                    params = params[2:]
+                                except IndexError:
+                                    reply_message += "\nNo watermark specified"
+                            if params[0] == "rotate":
+                                try:
+                                    if params[2] == "simple":
+                                        rotate_image(reply,
+                                                     rotate_by_degrees=params[1],
+                                                     rotation_type=params[2])
+                                        params = params[3:]
+                                    else:
+                                        rotate_image(reply,
+                                                     rotate_by_degrees=params[1])
+                                        params = params[2:]
+                                except IndexError:
+                                    reply_message += "\nYou didn't specify how many degrees you wanted it rotated " \
+                                                     "by "
+                            else:
+                                reply_message += settings.INVALID_COMMAND.format(params[0])
+                                params = params[1:]
                         reply_to_toot(reply.status_id, message="\n" + str(reply_message), account_name=account_name)
             mastodon.notifications_clear()
             status_notifications.clear()
@@ -349,7 +388,7 @@ def crop_image(reply, left, top, right, bottom):
             right = int(right)
             bottom = int(bottom)
         except ValueError:
-            status_message += "Please supply integers in the format crop <int> <int> <int> <int>"
+            return "Please supply integers in the format crop <int> <int> <int> <int>"
 
         if top > height or top < 0:
             status_message += settings.CROP_OUT_OF_RANGE.format("top", height)
