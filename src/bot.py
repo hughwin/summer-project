@@ -1,23 +1,25 @@
 import datetime
 import os
+import re
 import shutil
 import threading
 import time
 import urllib.request
-import pytesseract
-import html_stripper
-import requests
-import schedule
-import settings
+from pathlib import Path
+
 import cv2
 import imutils
-import re
-from dotenv import load_dotenv
-from matplotlib import pyplot as plt
-from pathlib import Path
+import pytesseract
+import requests
+import schedule
 from PIL import Image, ImageEnhance, ImageOps, ImageFilter, ImageDraw, ImageFont
-from mastodon import Mastodon
+from dotenv import load_dotenv
 from imageai.Detection import ObjectDetection
+from mastodon import Mastodon
+from matplotlib import pyplot as plt
+
+import html_stripper
+import settings
 
 load_dotenv()  # Important variables such as my secret key are stored in a .env file.
 
@@ -148,7 +150,7 @@ def listen_to_request(spam_defender):
                     print("help")
                     reply_to_toot(status_id, message="\n" + settings.HELP_MESSAGE, account_name=account_name)
                 if not spam_defender.allow_account_to_make_request(account_id):
-                    reply_to_toot(status_id, message=settings.TOO_MANY_REQUESTS_MESSAGE)
+                    reply_to_toot(status_id, message=settings.TOO_MANY_REQUESTS_MESSAGE, account_name=account_name)
                     print("Denied!")
                 else:
                     for m in media:
@@ -264,7 +266,7 @@ def listen_to_request(spam_defender):
                                     reply_message += "\nNo watermark specified"
                             if params[0] == "rotate":
                                 try:
-                                    if params[2] == "simple":
+                                    if len(params) > 3 and params[2] == "simple":
                                         rotate_image(reply,
                                                      rotate_by_degrees=params[1],
                                                      rotation_type=params[2])
@@ -276,6 +278,7 @@ def listen_to_request(spam_defender):
                                 except IndexError:
                                     reply_message += "\nYou didn't specify how many degrees you wanted it rotated " \
                                                      "by "
+                                    params = params[1:]
                             else:
                                 reply_message += settings.INVALID_COMMAND.format(params[0])
                                 params = params[1:]
