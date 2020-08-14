@@ -48,12 +48,12 @@ def reply_to_toot(post_id, account_name, message=None, meta=None):
             media_ids.append(image_dict["id"])
     if message is not None:
         parts = []
-        total_len = str(len(message) // 500 + 1)
+        total_len = str(len(message) // settings.MAX_MESSAGE_LENGTH)
         count = 1
         split_lines = message.splitlines(True)
         while split_lines:
             message_part = "@" + account_name + " {}/".format(count) + total_len + "\n\n"
-            while split_lines != [] and len(message_part) + len(split_lines[0]) < 500:
+            while split_lines != [] and len(message_part) + len(split_lines[0]) < settings.MAX_MESSAGE_LENGTH:
                 message_part += split_lines[0]
                 split_lines = split_lines[1:]
             parts.append(message_part)
@@ -149,9 +149,6 @@ def listen_to_request(spam_defender):
                 print(params)
                 user = UserNotification(account_id, account_name, status_id, content, params)
                 media = n["status"]["media_attachments"]
-                if "help" in params:
-                    print("help")
-                    reply_to_toot(status_id, message="\n" + settings.HELP_MESSAGE, account_name=account_name)
                 if not spam_defender.allow_account_to_make_request(account_id):
                     reply_to_toot(status_id, message=settings.TOO_MANY_REQUESTS_MESSAGE, account_name=account_name)
                     print("Denied!")
@@ -170,29 +167,32 @@ def listen_to_request(spam_defender):
                 count = 0
                 num_files = os.listdir(str(settings.INPUT_FOLDER))
                 reply_message = ""
-                if len(num_files) != 0:
+                if len(num_files) != 0 or "help" in params:
                     for reply in status_notifications:
                         print(reply.params)
                         while params:
-                            if params[0] == 'decolourise' or params[0] == 'decolorize':
+                            if params[0] == "help":
+                                reply_message += settings.HELP_MESSAGE
+                                params = params[1:]
+                            if params and params[0] == 'decolourise' or params[0] == 'decolorize':
                                 decolourise_image(reply)
                                 params = params[1:]
-                            if params[0] == "text":
+                            if params and params[0] == "text":
                                 reply_message += get_text_from_image(reply)
                                 params = params[1:]
-                            if params[0] == "about":
+                            if params and params[0] == "about":
                                 reply_message += get_information_about_image(reply)
                                 params = params[1:]
-                            if params[0] == "preserve":
+                            if params and params[0] == "preserve":
                                 display_colour_channel(reply, params[params.index("preserve") + 1])
                                 params = params[1:]
-                            if params[0] == "histogram":
+                            if params and params[0] == "histogram":
                                 show_image_histogram(reply)
                                 params = params[1:]
-                            if params[0] == "border":
+                            if params and params[0] == "border":
                                 create_border(reply)
                                 params = params[1:]
-                            if params[0] == "crop":
+                            if params and params[0] == "crop":
                                 try:
                                     reply_message += crop_image(reply,
                                                                 left=params[1],
@@ -203,73 +203,73 @@ def listen_to_request(spam_defender):
                                 except IndexError:
                                     reply_message += "\nCrop failed!"
                                     params = params[1:]
-                            if params[0] == "enhance":
+                            if params and params[0] == "enhance":
                                 enhance_image(reply)
                                 params = params[1:]
-                            if params[0] == "brightness":
+                            if params and params[0] == "brightness":
                                 try:
                                     adjust_brightness(reply, value=params[1])
                                     params = params[2:]
                                 except IndexError:
                                     adjust_brightness(reply)
                                     params = params[1:]
-                            if params[0] == "contrast":
+                            if params and params[0] == "contrast":
                                 try:
                                     adjust_contrast(reply, value=params[1])
                                     params = params[2:]
                                 except IndexError:
                                     adjust_contrast(reply)
                                     params = params[1:]
-                            if params[0] == "colour":
+                            if params and params[0] == "colour":
                                 try:
                                     adjust_colour(reply, value=params[1])
                                     params = params[1:]
                                 except IndexError:
                                     adjust_contrast(reply)
                                     params = params[2:]
-                            if params[0] == "mirror":
+                            if params and params[0] == "mirror":
                                 mirror_image(reply)
                                 params = params[1:]
-                            if params[0] == "flip":
+                            if params and params[0] == "flip":
                                 flip_image(reply)
                                 params = params[1:]
-                            if params[0] == "transparent":
+                            if params and params[0] == "transparent":
                                 make_transparent_image(reply)
                                 params = params[1:]
-                            if params[0] == "negative":
+                            if params and params[0] == "negative":
                                 make_negative_image(reply)
                                 params = params[1:]
-                            if params[0] == "sepia":
+                            if params and params[0] == "sepia":
                                 make_sepia_image(reply)
                                 params = params[1:]
-                            if params[0] == "blur":
+                            if params and params[0] == "blur":
                                 blur_image(reply)
                                 params = params[1:]
-                            if params[0] == "blurred":
+                            if params and params[0] == "blurred":
                                 blur_edges(reply)
                                 params = params[1:]
-                            if params[0] == "border":
+                            if params and params[0] == "border":
                                 add_border(reply)
                                 params = params[1:]
-                            if params[0] == "png":
+                            if params and params[0] == "png":
                                 convert_image_to_png(reply)
                                 params = params[1:]
-                            if params[0] == "detect":
+                            if params and params[0] == "detect":
                                 detect_objects(reply)
                                 params = params[1:]
-                            if params[0] == "bmp":
+                            if params and params[0] == "bmp":
                                 convert_image_to_bmp(reply)
                                 params = params[1:]
-                            if params[0] == "watermark":
+                            if params and params[0] == "watermark":
                                 try:
                                     add_watermarks(reply,
                                                    wm_text=params[1])
                                     params = params[2:]
                                 except IndexError:
                                     reply_message += "\nNo watermark specified"
-                            if params[0] == "rotate":
+                            if params and params[0] == "rotate":
                                 try:
-                                    if len(params) > 3 and params[2] == "simple":
+                                    if len(params) > 3 and params[2] == "simple" and params != []:
                                         rotate_image(reply,
                                                      rotate_by_degrees=params[1],
                                                      rotation_type=params[2])
@@ -282,7 +282,7 @@ def listen_to_request(spam_defender):
                                     reply_message += "\nYou didn't specify how many degrees you wanted it rotated " \
                                                      "by "
                                     params = params[1:]
-                            else:
+                            elif params:
                                 reply_message += settings.INVALID_COMMAND.format(params[0])
                                 params = params[1:]
                         reply_to_toot(reply.status_id, message="\n" + str(reply_message), account_name=account_name)
@@ -625,7 +625,7 @@ def bot_delete_files_in_directory(path):
             elif os.path.isdir(file_path):
                 shutil.rmtree(file_path)
         except Exception as e:
-            print('Failed to delete %s. Reason: %s' % (file_path, e))
+            print("Failed to delete {}. Reason: {}".format(filename, e))
 
 
 def clear_notifications():

@@ -18,7 +18,7 @@ ROTATE_SIMPLE = "simple"
 BASE_DIRECTORY = Path.cwd()
 INPUT_FOLDER = BASE_DIRECTORY / "input"
 RESOURCES_FOLDER = BASE_DIRECTORY / "resources"
-DAILY_IMAGE = str(BASE_DIRECTORY / "output" / "image.jpeg")
+DAILY_IMAGE = str(BASE_DIRECTORY / "daily" / "image.jpeg")
 HISTOGRAM_JPEG = (str(INPUT_FOLDER / "histogram-{}.jpeg"))
 JPEG_INPUT = str(INPUT_FOLDER / "{}.jpeg")
 PNG_OUTPUT = str(INPUT_FOLDER / "{}.png")
@@ -53,4 +53,3 @@ HELP_MESSAGE = "Welcome to my image processing bot!" \
                "\nBorder - add a border to your image" \
                "\nPNG - convert your image(s) to PNG format" \
                "\nBMP - convert your images to BMP format"
-
