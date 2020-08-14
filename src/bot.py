@@ -283,7 +283,7 @@ def listen_to_request(spam_defender):
                                                      "by "
                                     params = params[1:]
                             elif params:
-                                if params not in settings.SET_OF_COMMANDS:
+                                if params[0] not in settings.SET_OF_COMMANDS:
                                     reply_message += settings.INVALID_COMMAND.format(params[0])
                                     params = params[1:]
                         reply_to_toot(reply.status_id, message="\n" + str(reply_message), account_name=account_name)
