@@ -53,3 +53,6 @@ HELP_MESSAGE = "Welcome to my image processing bot!" \
                "\nBorder - add a border to your image" \
                "\nPNG - convert your image(s) to PNG format" \
                "\nBMP - convert your images to BMP format"
+SET_OF_COMMANDS = {"help", "about", "decolourise", "preserve", "histogram", "rotate", "enhance", "border", "crop",
+                   "brightness", "contrast", "colour", "mirror", "flip", "transparent", "negative", "sepia", "blur",
+                   "blurred", "border", "png,", "bmp"}
