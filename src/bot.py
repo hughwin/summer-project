@@ -50,10 +50,13 @@ def reply_to_toot(post_id, account_name, message=None, meta=None):
         parts = []
         total_len = str(len(message) // 500 + 1)
         count = 1
-        while len(message) > 0:
-            message = "@" + account_name + " {}/".format(count) + total_len + "\n\n" + message
-            parts.append(message[:settings.MAX_MESSAGE_LENGTH])
-            message = message[settings.MAX_MESSAGE_LENGTH:]
+        split_lines = message.splitlines(True)
+        while split_lines:
+            message_part = "@" + account_name + " {}/".format(count) + total_len + "\n\n"
+            while split_lines != [] and len(message_part) + len(split_lines[0]) < 500:
+                message_part += split_lines[0]
+                split_lines = split_lines[1:]
+            parts.append(message_part)
             count += 1
         for part in parts:
             print(part)
@@ -139,7 +142,7 @@ def listen_to_request(spam_defender):
                 account_name = n["account"]["acct"]
                 status_id = n["status"]["id"]
                 content = n["status"]["content"]
-                pattern = re.compile('[\W_]+')
+                pattern = re.compile('[^a-zA-Z]')
                 content = strip_tags(content).replace("@hughwin ", "").lower()
                 pattern.sub("", content)
                 params = content.split(" ")
