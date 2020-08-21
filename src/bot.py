@@ -174,7 +174,7 @@ def listen_to_request(spam_defender):
                             if params[0] == "help":
                                 reply_message += settings.HELP_MESSAGE
                                 params = params[1:]
-                            if params and params[0] == 'decolourise' or params[0] == 'decolorize':
+                            if params and params[0] == 'decolourise' or params and params[0] == 'decolorize':
                                 decolourise_image(reply)
                                 params = params[1:]
                             if params and params[0] == "text":
