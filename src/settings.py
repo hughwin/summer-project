@@ -5,6 +5,7 @@ from pathlib import Path
 # CLIENT_SECRET = os.environ["CLIENT_SECRET"]
 # NASA = os.environ["NASA"]
 BASE_ADDRESS = "https://botsin.space/"
+USERNAME = "@botbot "
 NASA_ADDRESS_IMAGES = "https://api.nasa.gov/planetary/apod?api_key=%s"
 TOO_MANY_REQUESTS_MESSAGE = "You're making too many requests!"
 JSON_ERROR_MESSAGE = "Decoding JSON has failed"

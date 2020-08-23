@@ -143,7 +143,7 @@ def listen_to_request(spam_defender):
                 status_id = n["status"]["id"]
                 content = n["status"]["content"]
                 pattern = re.compile('[^a-zA-Z]')
-                content = strip_tags(content).replace("@hughwin ", "").lower()
+                content = strip_tags(content).replace(settings.USERNAME, "").lower()
                 pattern.sub("", content)
                 params = content.split(" ")
                 print(params)
