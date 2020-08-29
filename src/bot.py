@@ -304,7 +304,8 @@ def listen_to_request(spam_defender):
                                 if params[0] not in settings.SET_OF_COMMANDS:
                                     reply_message += settings.INVALID_COMMAND.format(params[0])
                                     params = params[1:]
-                        reply_to_toot(reply.status_id, message="\n" + str(reply_message), account_name=account_name)
+                        reply_to_toot(reply.status_id, message="\n" + str(reply_message),
+                                      account_name=account_name, meta=user.meta)
             mastodon.notifications_clear()
             status_notifications.clear()
             bot_delete_files_in_directory(settings.INPUT_FOLDER)
