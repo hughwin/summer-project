@@ -175,7 +175,7 @@ def listen_to_request(spam_defender):
                                 params = params[1:]
                             if params and params[0] == 'decolourise' or params and params[0] == 'decolorize':
                                 for image in range(len(reply.media)):
-                                    get_text_from_image(settings.JPEG_INPUT.format(image))
+                                    decolourise_image(settings.JPEG_INPUT.format(image))
                                 params = params[1:]
                             if params and params[0] == "text":
                                 for image in range(len(reply.media)):
