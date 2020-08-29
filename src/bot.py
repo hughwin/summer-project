@@ -174,111 +174,132 @@ def listen_to_request(spam_defender):
                                 reply_message += settings.HELP_MESSAGE
                                 params = params[1:]
                             if params and params[0] == 'decolourise' or params and params[0] == 'decolorize':
-                                decolourise_image(reply)
+                                for image in range(len(reply.media)):
+                                    get_text_from_image(settings.JPEG_INPUT.format(image))
                                 params = params[1:]
                             if params and params[0] == "text":
-                                reply_message += get_text_from_image(reply)
+                                for image in range(len(reply.media)):
+                                    reply_message += get_text_from_image(settings.JPEG_INPUT.format(image))
                                 params = params[1:]
                             if params and params[0] == "about":
                                 for image in range(len(reply.media)):
                                     reply_message += get_information_about_image(settings.JPEG_INPUT.format(image))
                                 params = params[1:]
                             if params and params[0] == "preserve":
-                                display_colour_channel(reply, params[params.index("preserve") + 1])
+                                for image in range(len(reply.media)):
+                                    display_colour_channel(settings.JPEG_INPUT.format(image),
+                                                           params[params.index("preserve") + 1])
                                 params = params[1:]
                             if params and params[0] == "histogram":
-                                show_image_histogram(reply)
+                                for image in range(len(reply.media)):
+                                    show_image_histogram(settings.JPEG_INPUT.format(image))
                                 params = params[1:]
                             if params and params[0] == "border":
-                                create_border(reply)
+                                for image in range(len(reply.media)):
+                                    create_border(settings.JPEG_INPUT.format(image))
                                 params = params[1:]
                             if params and params[0] == "crop":
-                                try:
-                                    reply_message += crop_image(reply,
-                                                                left=params[1],
-                                                                right=params[2],
-                                                                top=params[3],
-                                                                bottom=params[4])
-                                    params = params[5:]
-                                except IndexError:
-                                    reply_message += "\nCrop failed!"
-                                    params = params[1:]
+                                for image in range(len(reply.media)):
+                                    try:
+                                        reply_message += crop_image(settings.JPEG_INPUT.format(image),
+                                                                    left=params[1],
+                                                                    right=params[2],
+                                                                    top=params[3],
+                                                                    bottom=params[4])
+                                        params = params[5:]
+                                    except IndexError:
+                                        reply_message += "\nCrop failed!"
+                                        params = params[1:]
                             if params and params[0] == "enhance":
-                                enhance_image(reply)
+                                for image in range(len(reply.media)):
+                                    enhance_image(settings.JPEG_INPUT.format(image))
                                 params = params[1:]
                             if params and params[0] == "brightness":
-                                try:
-                                    adjust_brightness(reply, value=params[1])
-                                    params = params[2:]
-                                except IndexError:
-                                    adjust_brightness(reply)
-                                    params = params[1:]
+                                for image in range(len(reply.media)):
+                                    try:
+                                        adjust_brightness(settings.JPEG_INPUT.format(image), value=params[1])
+                                        params = params[2:]
+                                    except IndexError:
+                                        adjust_brightness(reply)
+                                        params = params[1:]
                             if params and params[0] == "contrast":
                                 try:
-                                    adjust_contrast(reply, value=params[1])
+                                    adjust_contrast(settings.JPEG_INPUT.format(image), value=params[1])
                                     params = params[2:]
                                 except IndexError:
-                                    adjust_contrast(reply)
+                                    adjust_contrast(settings.JPEG_INPUT.format(image))
                                     params = params[1:]
                             if params and params[0] == "colour":
                                 try:
-                                    adjust_colour(reply, value=params[1])
+                                    adjust_colour(settings.JPEG_INPUT.format(image), value=params[1])
                                     params = params[1:]
                                 except IndexError:
-                                    adjust_contrast(reply)
+                                    adjust_contrast(settings.JPEG_INPUT.format(image))
                                     params = params[2:]
                             if params and params[0] == "mirror":
-                                mirror_image(reply)
+                                for image in range(len(reply.media)):
+                                    mirror_image(settings.JPEG_INPUT.format(image))
                                 params = params[1:]
                             if params and params[0] == "flip":
-                                flip_image(reply)
+                                for image in range(len(reply.media)):
+                                    flip_image(reply)
                                 params = params[1:]
                             if params and params[0] == "transparent":
-                                make_transparent_image(reply)
+                                for image in range(len(reply.media)):
+                                    make_transparent_image(settings.JPEG_INPUT.format(image))
                                 params = params[1:]
                             if params and params[0] == "negative":
-                                make_negative_image(reply)
+                                for image in range(len(reply.media)):
+                                    make_negative_image(settings.JPEG_INPUT.format(image))
                                 params = params[1:]
                             if params and params[0] == "sepia":
-                                make_sepia_image(reply)
+                                for image in range(len(reply.media)):
+                                    make_sepia_image(settings.JPEG_INPUT.format(image))
                                 params = params[1:]
                             if params and params[0] == "blur":
-                                blur_image(reply)
+                                for image in range(len(reply.media)):
+                                    blur_image(settings.JPEG_INPUT.format(image))
                                 params = params[1:]
                             if params and params[0] == "blurred":
-                                blur_edges(reply)
+                                for image in range(len(reply.media)):
+                                    blur_edges(settings.JPEG_INPUT.format(image))
                                 params = params[1:]
                             if params and params[0] == "border":
-                                add_border(reply)
+                                for image in range(len(reply.media)):
+                                    add_border(settings.JPEG_INPUT.format(image))
                                 params = params[1:]
                             if params and params[0] == "png":
-                                convert_image_to_png(reply)
+                                for image in range(len(reply.media)):
+                                    convert_image_to_png(settings.JPEG_INPUT.format(image))
                                 params = params[1:]
                             if params and params[0] == "bmp":
-                                convert_image_to_bmp(reply)
+                                for image in range(len(reply.media)):
+                                    convert_image_to_bmp(settings.JPEG_INPUT.format(image))
                                 params = params[1:]
                             if params and params[0] == "watermark":
-                                try:
-                                    add_watermarks(reply,
-                                                   wm_text=params[1])
-                                    params = params[2:]
-                                except IndexError:
-                                    reply_message += "\nNo watermark specified"
-                            if params and params[0] == "rotate":
-                                try:
-                                    if len(params) > 3 and params[2] == "simple" and params != []:
-                                        rotate_image(reply,
-                                                     rotate_by_degrees=params[1],
-                                                     rotation_type=params[2])
-                                        params = params[3:]
-                                    else:
-                                        rotate_image(reply,
-                                                     rotate_by_degrees=params[1])
+                                for image in range(len(reply.media)):
+                                    try:
+                                        add_watermarks(settings.JPEG_INPUT.format(image),
+                                                       wm_text=params[1])
                                         params = params[2:]
-                                except IndexError:
-                                    reply_message += "\nYou didn't specify how many degrees you wanted it rotated " \
-                                                     "by "
-                                    params = params[1:]
+                                    except IndexError:
+                                        reply_message += "\nNo watermark specified"
+                            if params and params[0] == "rotate":
+                                for image in range(len(reply.media)):
+                                    try:
+                                        if len(params) > 3 and params[2] == "simple" and params != []:
+                                            rotate_image(settings.JPEG_INPUT.format(image),
+                                                         rotate_by_degrees=params[1],
+                                                         rotation_type=params[2])
+                                            params = params[3:]
+                                        else:
+                                            rotate_image(settings.JPEG_INPUT.format(image),
+                                                         rotate_by_degrees=params[1])
+                                            params = params[2:]
+                                    except IndexError:
+                                        reply_message += "\nYou didn't specify how many degrees you wanted it rotated " \
+                                                         "by "
+                                        params = params[1:]
                             elif params:
                                 if params[0] not in settings.SET_OF_COMMANDS:
                                     reply_message += settings.INVALID_COMMAND.format(params[0])
@@ -299,35 +320,32 @@ def get_information_about_image(input_image):
     return message
 
 
-def decolourise_image(reply):
-    for image in range(len(reply.media)):
-        img_open = cv2.imread(settings.JPEG_INPUT.format(image))
-        gray = cv2.cvtColor(img_open, cv2.COLOR_BGR2GRAY)
-        cv2.imwrite(settings.JPEG_INPUT.format(image), gray)
+def decolourise_image(input_image):
+    img_open = cv2.imread(input_image)
+    gray = cv2.cvtColor(img_open, cv2.COLOR_BGR2GRAY)
+    cv2.imwrite(input_image, gray)
 
 
-def display_colour_channel(reply, colour):
+def display_colour_channel(input_image, colour):
     colour = colour()
-    for image in range(len(reply.media)):
-        image_open = cv2.imread(settings.JPEG_INPUT.format(image))
-        temp_image = image_open.copy()
-        if colour == "red":
-            temp_image[:, :, 0] = 0
-            temp_image[:, :, 1] = 0
-        if colour == "green":
-            temp_image[:, :, 0] = 0
-            temp_image[:, :, 2] = 0
-        if colour == "blue":
-            temp_image[:, :, 1] = 0
-            temp_image[:, :, 2] = 0
-        cv2.imwrite(settings.JPEG_INPUT.format(image), temp_image)
+    image_open = cv2.imread(input_image)
+    temp_image = image_open.copy()
+    if colour == "red":
+        temp_image[:, :, 0] = 0
+        temp_image[:, :, 1] = 0
+    if colour == "green":
+        temp_image[:, :, 0] = 0
+        temp_image[:, :, 2] = 0
+    if colour == "blue":
+        temp_image[:, :, 1] = 0
+        temp_image[:, :, 2] = 0
+    cv2.imwrite(input_image, temp_image)
 
 
-def get_text_from_image(reply):
-    for image in range(len(reply.media)):
-        img = cv2.imread(settings.JPEG_INPUT.format(image))
-        text = pytesseract.image_to_string(img)
-        return text
+def get_text_from_image(input_image):
+    img = cv2.imread(input_image)
+    text = pytesseract.image_to_string(img)
+    return text
 
 
 def check_image_type(filepath):
@@ -340,14 +358,13 @@ def check_image_type(filepath):
         os.renames(str(filepath), filepath_with_jpeg)
 
 
-def rotate_image(reply, rotate_by_degrees=None, rotation_type=None):
-    for image in range(len(reply.media)):
-        image_open = cv2.imread(settings.JPEG_INPUT.format(image))
-        if str(rotation_type) == settings.ROTATE_SIMPLE:
-            rotated = imutils.rotate(image_open, int(rotate_by_degrees))
-        else:
-            rotated = imutils.rotate_bound(image_open, int(rotate_by_degrees))
-        cv2.imwrite(settings.JPEG_INPUT.format(image), rotated)
+def rotate_image(input_image, rotate_by_degrees=None, rotation_type=None):
+    image_open = cv2.imread(input_image)
+    if str(rotation_type) == settings.ROTATE_SIMPLE:
+        rotated = imutils.rotate(image_open, int(rotate_by_degrees))
+    else:
+        rotated = imutils.rotate_bound(image_open, int(rotate_by_degrees))
+    cv2.imwrite(input_image, rotated)
 
 
 def combine_image(filepath1, filepath2=None):
@@ -360,200 +377,182 @@ def combine_image(filepath1, filepath2=None):
     combined_image.save(filepath1)
 
 
-def show_image_histogram(reply):
-    for image in range(len(reply.media)):
-        input_image = cv2.imread(settings.JPEG_INPUT.format(image))
-        color = ('b', 'g', 'r')
-        for i, col in enumerate(color):
-            histogram = cv2.calcHist([input_image], [i], None, [256], [0, 256])
-            plt.plot(histogram, color=col)
-            plt.xlim([0, 256])
-        plt.draw()
-        plt.savefig(settings.HISTOGRAM_JPEG.format(image), bbox_inches='tight')
+def show_image_histogram(input_image):
+    img = cv2.imread(input_image)
+    color = ('b', 'g', 'r')
+    for i, col in enumerate(color):
+        histogram = cv2.calcHist([img], [i], None, [256], [0, 256])
+        plt.plot(histogram, color=col)
+        plt.xlim([0, 256])
+    plt.draw()
+    plt.savefig(input_image, bbox_inches='tight')
 
 
-def create_border(reply):
-    for image in range(len(reply.media)):
-        input_image = cv2.imread(settings.JPEG_INPUT.format(image))
-        input_image = cv2.copyMakeBorder(input_image, 10, 10, 10, 10, cv2.BORDER_REFLECT)
-        cv2.imwrite(settings.JPEG_INPUT.format(image), input_image)
+def create_border(input_image):
+    img = cv2.imread(input_image)
+    img = cv2.copyMakeBorder(img, 10, 10, 10, 10, cv2.BORDER_REFLECT)
+    cv2.imwrite(input_image, img)
 
 
-def crop_image(reply, left, top, right, bottom):
-    for image in range(len(reply.media)):
-        img = Image.open(settings.JPEG_INPUT.format(image))
-        width, height = img.size
-        status_message = ""
-        try:
-            left = int(left)
-            top = int(top)
-            right = int(right)
-            bottom = int(bottom)
-        except ValueError:
-            return "Please supply integers in the format crop <int> <int> <int> <int>"
+def crop_image(input_image, left, top, right, bottom):
+    img = Image.open(input_image)
+    width, height = img.size
+    status_message = ""
+    try:
+        left = int(left)
+        top = int(top)
+        right = int(right)
+        bottom = int(bottom)
+    except ValueError:
+        return "Please supply integers in the format crop <int> <int> <int> <int>"
 
-        if top > height or top < 0:
-            status_message += settings.CROP_OUT_OF_RANGE.format("top", height)
-        if left > width or left < 0:
-            status_message += settings.CROP_OUT_OF_RANGE.format("left", width)
-        if right > width or right < 0:
-            status_message += settings.CROP_OUT_OF_RANGE.format("right", width)
-        if bottom > height or bottom < 0:
-            status_message += settings.CROP_OUT_OF_RANGE.format("bottom", width)
+    if top > height or top < 0:
+        status_message += settings.CROP_OUT_OF_RANGE.format("top", height)
+    if left > width or left < 0:
+        status_message += settings.CROP_OUT_OF_RANGE.format("left", width)
+    if right > width or right < 0:
+        status_message += settings.CROP_OUT_OF_RANGE.format("right", width)
+    if bottom > height or bottom < 0:
+        status_message += settings.CROP_OUT_OF_RANGE.format("bottom", width)
 
-        if status_message != "":
-            return status_message
+    if status_message != "":
+        return status_message
 
-        cropped_img = ImageOps.crop(img, (left, top, right, bottom))
-        cropped_img.save(settings.JPEG_INPUT.format(image))
-
-
-def enhance_image(reply):
-    for image in range(len(reply.media)):
-        img = Image.open(settings.JPEG_INPUT.format(image))
-        enhancer = ImageEnhance.Sharpness(img)
-        img_enhanced = enhancer.enhance(10.0)
-        img_enhanced.save(settings.JPEG_INPUT.format(image))
+    cropped_img = ImageOps.crop(img, (left, top, right, bottom))
+    cropped_img.save(input_image)
 
 
-def adjust_brightness(reply, value=1.5):
+def enhance_image(input_image):
+    img = Image.open(input_image)
+    enhancer = ImageEnhance.Sharpness(img)
+    img_enhanced = enhancer.enhance(10.0)
+    img_enhanced.save(input_image)
+
+
+def adjust_brightness(input_image, value=1.5):
     value = float(value)
-    for image in range(len(reply.media)):
-        img = Image.open(settings.JPEG_INPUT.format(image))
-        enhancer = ImageEnhance.Brightness(img)
-        img_enhanced = enhancer.enhance(value)
-        img_enhanced.save(settings.JPEG_INPUT.format(image))
+    img = Image.open(input_image)
+    enhancer = ImageEnhance.Brightness(img)
+    img_enhanced = enhancer.enhance(value)
+    img_enhanced.save(input_image)
 
 
-def adjust_contrast(reply, value=1.5):
+def adjust_contrast(input_image, value=1.5):
     value = float(value)
-    for image in range(len(reply.media)):
-        img = Image.open(settings.JPEG_INPUT.format(image))
-        enhancer = ImageEnhance.Contrast(img)
-        img_enhanced = enhancer.enhance(value)
-        img_enhanced.save(settings.JPEG_INPUT.format(image))
+    img = Image.open(input_image)
+    enhancer = ImageEnhance.Contrast(img)
+    img_enhanced = enhancer.enhance(value)
+    img_enhanced.save(input_image)
 
 
-def adjust_colour(reply, value=1.5):
+def adjust_colour(input_image, value=1.5):
     value = float(value)
-    for image in range(len(reply.media)):
-        img = Image.open(settings.JPEG_INPUT.format(image))
-        enhancer = ImageEnhance.Color(img)
-        img_enhanced = enhancer.enhance(value)
-        img_enhanced.save(settings.JPEG_INPUT.format(image))
+    img = Image.open(input_image)
+    enhancer = ImageEnhance.Color(img)
+    img_enhanced = enhancer.enhance(value)
+    img_enhanced.save(input_image)
 
 
-def flip_image(reply):
-    for image in range(len(reply.media)):
-        img = Image.open(settings.JPEG_INPUT.format(image))
-        img_flipped = ImageOps.flip(img)
-        img_flipped.save(settings.JPEG_INPUT.format(image))
+def flip_image(input_image):
+    img = Image.open(input_image)
+    img_flipped = ImageOps.flip(img)
+    img_flipped.save(input_image)
 
 
-def mirror_image(reply):
-    for image in range(len(reply.media)):
-        img = Image.open(settings.JPEG_INPUT.format(image))
-        img_mirrored = ImageOps.mirror(img)
-        img_mirrored.save(settings.JPEG_INPUT.format(image))
+def mirror_image(input_image):
+    img = Image.open(input_image)
+    img_mirrored = ImageOps.mirror(img)
+    img_mirrored.save(input_image)
 
 
-def make_transparent_image(reply):
-    for image in range(len(reply.media)):
-        img_transparent = Image.open(settings.JPEG_INPUT.format(image))
-        img_transparent.putalpha(128)
-        img_transparent.save(settings.PNG_OUTPUT.format(image))
+def make_transparent_image(input_image):
+    img_transparent = Image.open(input_image)
+    img_transparent.putalpha(128)
+    img_transparent.save(input_image)
 
 
-def make_negative_image(reply):
-    for image in range(len(reply.media)):
-        img = Image.open(settings.JPEG_INPUT.format(image))
-        negative_img = Image.new('RGB', img.size)
-        for x in range(img.size[0]):
-            for y in range(img.size[1]):
-                r, g, b = img.getpixel((x, y))
-                negative_img.putpixel((x, y), (255 - r, 255 - g, 255 - b))
-        negative_img.save(settings.JPEG_INPUT.format(image))
+def make_negative_image(input_image):
+    img = Image.open(input_image)
+    negative_img = Image.new('RGB', img.size)
+    for x in range(img.size[0]):
+        for y in range(img.size[1]):
+            r, g, b = img.getpixel((x, y))
+            negative_img.putpixel((x, y), (255 - r, 255 - g, 255 - b))
+    negative_img.save(input_image)
 
 
-def make_sepia_image(reply):
-    for image in range(len(reply.media)):
-        img = Image.open(settings.JPEG_INPUT.format(image))
-        sepia_img = Image.new('RGB', img.size)
-        for x in range(img.size[0]):
-            for y in range(img.size[1]):
-                r, g, b = img.getpixel((x, y))
-                red = int(r * 0.393 + g * 0.769 + b * 0.189)
-                green = int(r * 0.349 + g * 0.686 + b * 0.168)
-                blue = int(r * 0.272 + g * 0.534 + b * 0.131)
-                sepia_img.putpixel((x, y), (red, green, blue))
-        sepia_img.save(settings.JPEG_INPUT.format(image))
+def make_sepia_image(input_image):
+    img = Image.open(input_image)
+    sepia_img = Image.new('RGB', img.size)
+    for x in range(img.size[0]):
+        for y in range(img.size[1]):
+            r, g, b = img.getpixel((x, y))
+            red = int(r * 0.393 + g * 0.769 + b * 0.189)
+            green = int(r * 0.349 + g * 0.686 + b * 0.168)
+            blue = int(r * 0.272 + g * 0.534 + b * 0.131)
+            sepia_img.putpixel((x, y), (red, green, blue))
+    sepia_img.save(input_image)
 
 
-def blur_image(reply):
-    for image in range(len(reply.media)):
-        img = Image.open(settings.JPEG_INPUT.format(image))
-        blurred_image = img.filter(ImageFilter.BoxBlur(5))
-        blurred_image.save(settings.JPEG_INPUT.format(image))
+def blur_image(input_image):
+    img = Image.open(input_image)
+    blurred_image = img.filter(ImageFilter.BoxBlur(5))
+    blurred_image.save(input_image)
 
 
-def blur_edges(reply):
+def blur_edges(input_image):
     radius, diameter = 20, 40
-    for image in range(len(reply.media)):
-        img = Image.open(settings.JPEG_INPUT.format(image))  # Paste image on white background
-        background_size = (img.size[0] + diameter, img.size[1] + diameter)
-        background = Image.new('RGB', background_size, (255, 255, 255))
-        background.paste(img, (radius, radius))  # create new images with white and black
-        mask_size = (img.size[0] + diameter, img.size[1] + diameter)
-        mask = Image.new('L', mask_size, 255)
-        black_size = (img.size[0] - diameter, img.size[1] - diameter)
-        black = Image.new('L', black_size, 0)  # create blur mask
-        mask.paste(black, (diameter, diameter))  # Blur image and paste blurred edge according to mask
-        blur = background.filter(ImageFilter.GaussianBlur(radius / 2))
-        background.paste(blur, mask=mask)
-        background.save(settings.JPEG_INPUT.format(image))
+    img = Image.open(input_image)  # Paste image on white background
+    background_size = (img.size[0] + diameter, img.size[1] + diameter)
+    background = Image.new('RGB', background_size, (255, 255, 255))
+    background.paste(img, (radius, radius))  # create new images with white and black
+    mask_size = (img.size[0] + diameter, img.size[1] + diameter)
+    mask = Image.new('L', mask_size, 255)
+    black_size = (img.size[0] - diameter, img.size[1] - diameter)
+    black = Image.new('L', black_size, 0)  # create blur mask
+    mask.paste(black, (diameter, diameter))  # Blur image and paste blurred edge according to mask
+    blur = background.filter(ImageFilter.GaussianBlur(radius / 2))
+    background.paste(blur, mask=mask)
+    background.save(input_image)
 
 
 # TODO: Change this so user can chnage colour
-def add_border(reply):
-    for image in range(len(reply.media)):
-        img = Image.open(settings.JPEG_INPUT.format(image))
-        colour = "white"
-        border = (20, 10, 20, 10)
-        bordered_img = ImageOps.expand(img, border=border, fill=colour)
-        bordered_img.save(settings.JPEG_INPUT.format(image))
+def add_border(input_image):
+    img = Image.open(input_image)
+    colour = "white"
+    border = (20, 10, 20, 10)
+    bordered_img = ImageOps.expand(img, border=border, fill=colour)
+    bordered_img.save(input_image)
 
 
-def add_watermarks(reply, wm_text):
-    for image in range(len(reply.media)):
-        img = Image.open(settings.JPEG_INPUT.format(image))  # open image to apply watermark to
-        img.convert("RGB")  # get image size
-        img_width, img_height = img.size  # 5 by 4 water mark grid
-        wm_size = (int(img_width * 0.20), int(img_height * 0.25))
-        wm_txt = Image.new("RGBA", wm_size, (255, 255, 255, 0))  # set text size, 1:40 of the image width
-        font_size = int(img_width / 40)  # load font e.g. gotham-bold.ttf
-        font = ImageFont.truetype(str(settings.BASE_DIRECTORY / "resources" / "Gotham-Bold.ttf"), font_size)
-        d = ImageDraw.Draw(wm_txt)
-        left = (wm_size[0] - font.getsize(wm_text)[0]) / 2
-        top = (wm_size[1] - font.getsize(wm_text)[1]) / 2  # RGBA(0, 0, 0, alpha) is black
-        # alpha channel specifies the opacity for a colour
-        alpha = 75  # write text on blank wm_text image
-        d.text((left, top), wm_text, fill=(0, 0, 0, alpha), font=font)  # uncomment to rotate watermark text
-        wm_txt = wm_txt.rotate(15, expand=1)
-        wm_txt = wm_txt.resize(wm_size, Image.ANTIALIAS)
-        for i in range(0, img_width, wm_txt.size[0]):
-            for j in range(0, img_height, wm_txt.size[1]):
-                img.paste(wm_txt, (i, j), wm_txt)  # save image with watermark
-        img.save(settings.JPEG_INPUT.format(image))  # show image with watermark in preview
+def add_watermarks(input_image, wm_text):
+    img = Image.open(input_image)  # open image to apply watermark to
+    img.convert("RGB")  # get image size
+    img_width, img_height = img.size  # 5 by 4 water mark grid
+    wm_size = (int(img_width * 0.20), int(img_height * 0.25))
+    wm_txt = Image.new("RGBA", wm_size, (255, 255, 255, 0))  # set text size, 1:40 of the image width
+    font_size = int(img_width / 40)  # load font e.g. gotham-bold.ttf
+    font = ImageFont.truetype(str(settings.BASE_DIRECTORY / "resources" / "Gotham-Bold.ttf"), font_size)
+    d = ImageDraw.Draw(wm_txt)
+    left = (wm_size[0] - font.getsize(wm_text)[0]) / 2
+    top = (wm_size[1] - font.getsize(wm_text)[1]) / 2  # RGBA(0, 0, 0, alpha) is black
+    # alpha channel specifies the opacity for a colour
+    alpha = 75  # write text on blank wm_text image
+    d.text((left, top), wm_text, fill=(0, 0, 0, alpha), font=font)  # uncomment to rotate watermark text
+    wm_txt = wm_txt.rotate(15, expand=1)
+    wm_txt = wm_txt.resize(wm_size, Image.ANTIALIAS)
+    for i in range(0, img_width, wm_txt.size[0]):
+        for j in range(0, img_height, wm_txt.size[1]):
+            img.paste(wm_txt, (i, j), wm_txt)  # save image with watermark
+    img.save(input_image)  # show image with watermark in preview
 
 
-def convert_image_to_png(reply):
-    for image in range(len(reply.media)):
-        Image.open(settings.JPEG_INPUT.format(image)).save(settings.PNG_OUTPUT.format(image))
+def convert_image_to_png(input_image):
+    Image.open(input_image).save(input_image)
 
 
-def convert_image_to_bmp(reply):
-    for image in range(len(reply.media)):
-        Image.open(settings.JPEG_INPUT.format(image)).save(settings.PNG_OUTPUT.format(image))
+def convert_image_to_bmp(input_image):
+    Image.open(input_image).save(input_image)
 
 
 def is_jpg(filepath):
