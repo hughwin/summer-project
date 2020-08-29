@@ -14,7 +14,6 @@ import requests
 import schedule
 from PIL import Image, ImageEnhance, ImageOps, ImageFilter, ImageDraw, ImageFont
 from dotenv import load_dotenv
-from imageai.Detection import ObjectDetection
 from mastodon import Mastodon
 from matplotlib import pyplot as plt
 
@@ -181,7 +180,8 @@ def listen_to_request(spam_defender):
                                 reply_message += get_text_from_image(reply)
                                 params = params[1:]
                             if params and params[0] == "about":
-                                reply_message += get_information_about_image(reply)
+                                for image in range(len(reply.media)):
+                                    reply_message += get_information_about_image(settings.JPEG_INPUT.format(image))
                                 params = params[1:]
                             if params and params[0] == "preserve":
                                 display_colour_channel(reply, params[params.index("preserve") + 1])
@@ -254,9 +254,6 @@ def listen_to_request(spam_defender):
                             if params and params[0] == "png":
                                 convert_image_to_png(reply)
                                 params = params[1:]
-                            if params and params[0] == "detect":
-                                detect_objects(reply)
-                                params = params[1:]
                             if params and params[0] == "bmp":
                                 convert_image_to_bmp(reply)
                                 params = params[1:]
@@ -294,14 +291,12 @@ def listen_to_request(spam_defender):
         time.sleep(1)
 
 
-def get_information_about_image(reply):
-    for image in range(len(reply.media)):
-        input_image = settings.JPEG_INPUT.format(image)
-        img_open = cv2.imread(input_image)
-        message = "Image properties: " \
-                  "\n- Number of Pixels: " + str(img_open.size) \
-                  + "\n- Shape/Dimensions: " + str(img_open.shape)
-        return message
+def get_information_about_image(input_image):
+    img_open = cv2.imread(input_image)
+    message = "Image properties: " \
+              "\n- Number of Pixels: " + str(img_open.size) \
+              + "\n- Shape/Dimensions: " + str(img_open.shape)
+    return message
 
 
 def decolourise_image(reply):
@@ -526,20 +521,6 @@ def add_border(reply):
         border = (20, 10, 20, 10)
         bordered_img = ImageOps.expand(img, border=border, fill=colour)
         bordered_img.save(settings.JPEG_INPUT.format(image))
-
-
-# TODO: Delete this
-def detect_objects(reply):
-    for image in range(len(reply.media)):
-        detector = ObjectDetection()
-        detector.setModelTypeAsRetinaNet()
-        detector.setModelPath(settings.RESOURCES_FOLDER / "model.h5")
-        detector.loadModel()
-
-        detections = detector.detectObjectsFromImage(input_image=(settings.JPEG_INPUT.format(image)),
-                                                     output_image_path=(settings.JPEG_INPUT.format(image)))
-        for eachObject in detections:
-            print(eachObject["name"], " : ", eachObject["percentage_probability"])
 
 
 def add_watermarks(reply, wm_text):
