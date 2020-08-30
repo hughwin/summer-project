@@ -1,6 +1,6 @@
 import shutil
-import tempfile
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 import cv2
@@ -51,17 +51,17 @@ class TestBot(TestCase):
                                                             "test_resources" / "sample_text.jpeg"))
 
     def test_decolourise_image(self):
-        temp = tempfile.mkdtemp()
-        fibo = str(Path(temp + "/fibo.jpeg"))
-        source = str(Path.cwd() / "test_resources" / "fibo.jpeg")
-        shutil.copy(source, fibo)
+        with TemporaryDirectory() as temp:
+            fibo = str(Path(temp + "/fibo.jpeg"))
+            source = str(Path.cwd() / "test_resources" / "fibo.jpeg")
+            shutil.copy(source, fibo)
 
-        example_decolourised_image = cv2.imread(str(Path.cwd() / "test_resources" / "fiboDecolourised.jpeg"))
-        bot.decolourise_image(fibo)
-        decolourised_image = cv2.imread(fibo)
+            example_decolourised_image = cv2.imread(str(Path.cwd() / "test_resources" / "fiboDecolourised.jpeg"))
+            bot.decolourise_image(fibo)
+            decolourised_image = cv2.imread(fibo)
 
-        assert example_decolourised_image.shape == decolourised_image.shape and not (np.bitwise_xor(
-            example_decolourised_image, decolourised_image).any())
+            assert example_decolourised_image.shape == decolourised_image.shape and not (np.bitwise_xor(
+                example_decolourised_image, decolourised_image).any())
 
 # class TestMastodon(TestCase):
 #
