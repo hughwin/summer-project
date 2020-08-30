@@ -322,7 +322,7 @@ def listen_to_request(spam_defender):
                                                          rotation_type=params[2])
                                             params = params[3:]
                                         else:
-                                            rotate_image(input_image[0][0],
+                                            rotate_image(input_image[0],
                                                          rotate_by_degrees=params[1])
                                             params = params[2:]
                                 except IndexError:
