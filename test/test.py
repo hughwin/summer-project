@@ -135,6 +135,19 @@ class TestBot(TestCase):
             assert example_enhanced.shape == enhanced_image.shape and not (np.bitwise_xor(
                 example_enhanced, enhanced_image).any())
 
+    def test_adjust_brightness(self):
+        with TemporaryDirectory() as temp:
+            fibo = generate_temp_image(temp)
+            # fibo_in = cv2.imread(fibo)
+            example_brightness = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_brightness.jpeg"))
+            # assert example_brightness.shape == fibo_in.shape and not (np.bitwise_xor(
+            #     example_brightness, fibo_in).any())
+            bot.adjust_brightness(fibo)
+            brighter_image = cv2.imread(fibo)
+
+            assert example_brightness.shape == brighter_image.shape and not (np.bitwise_xor(
+                example_brightness, brighter_image).any())
+
 # class TestMastodon(TestCase):
 #
 #     def test_mastodon_notfications(self):
