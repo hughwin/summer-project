@@ -168,6 +168,16 @@ class TestBot(TestCase):
             assert example_image_flip.shape == flipped_image.shape and not (np.bitwise_xor(
                 example_image_flip, flipped_image).any())
 
+    def test_mirror_image(self):
+        with TemporaryDirectory() as temp:
+            fibo = generate_temp_image(temp)
+            example_mirror_image = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_mirrored.jpeg"))
+            bot.mirror_image(fibo)
+            mirrored_image = cv2.imread(fibo)
+
+            assert example_mirror_image.shape == mirrored_image.shape and not (np.bitwise_xor(
+                example_mirror_image, mirrored_image).any())
+
 # class TestMastodon(TestCase):
 #
 #     def test_mastodon_notfications(self):
