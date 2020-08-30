@@ -296,9 +296,8 @@ def listen_to_request(spam_defender):
                             if params and params[0] == "rotate":
                                 try:
                                     for image in range(len(reply.media)):
-
+                                        command = glob.glob(settings.IMAGE_INPUT.format(image))
                                         if len(params) > 3 and params[2] == "simple" and params != []:
-                                            command = glob.glob(settings.IMAGE_INPUT.format(image))
                                             rotate_image(command[0],
                                                          rotate_by_degrees=params[1],
                                                          rotation_type=params[2])
