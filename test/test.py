@@ -39,6 +39,9 @@ class TestSpamDefender(TestCase):
 
 
 class TestBot(TestCase):
+    def test_check_image_type(self):
+        return
+
     def test_get_information_about_image_test(self):
         number_of_pixels = 1102500
         expected_x = 700

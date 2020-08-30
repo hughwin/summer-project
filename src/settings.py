@@ -4,6 +4,7 @@ from pathlib import Path
 # CLIENT_KEY = os.environ["CLIENT_KEY"]
 # CLIENT_SECRET = os.environ["CLIENT_SECRET"]
 # NASA = os.environ["NASA"]
+SUPPORTED_EXTENSIONS = (".png", ".jpeg")
 BASE_ADDRESS = "https://botsin.space/"
 USERNAME = "@botbot "
 NASA_ADDRESS_IMAGES = "https://api.nasa.gov/planetary/apod?api_key=%s"
@@ -21,7 +22,7 @@ INPUT_FOLDER = BASE_DIRECTORY / "input"
 RESOURCES_FOLDER = BASE_DIRECTORY / "resources"
 DAILY_IMAGE = str(BASE_DIRECTORY / "daily" / "image.jpeg")
 HISTOGRAM_JPEG = (str(INPUT_FOLDER / "histogram-{}.jpeg"))
-JPEG_INPUT = str(INPUT_FOLDER / "{}.jpeg")
+IMAGE_INPUT = str(INPUT_FOLDER / "{}".glob(SUPPORTED_EXTENSIONS))
 PNG_OUTPUT = str(INPUT_FOLDER / "{}.png")
 BMP_OUTPUT = str(INPUT_FOLDER / "{}.bmp")
 HELP_MESSAGE = "Welcome to my image processing bot!" \
