@@ -12,6 +12,13 @@ import bot
 load_dotenv()
 
 
+def generate_temp_image(temp):
+    fibo = str(Path(temp + "/fibo.jpeg"))
+    source = str(Path.cwd() / "test_resources" / "fibo.jpeg")
+    shutil.copy(source, fibo)
+    return fibo
+
+
 class TestSpamDefender(TestCase):
 
     def test_add_user_to_requests_test(self):
@@ -52,10 +59,7 @@ class TestBot(TestCase):
 
     def test_decolourise_image(self):
         with TemporaryDirectory() as temp:
-            fibo = str(Path(temp + "/fibo.jpeg"))
-            source = str(Path.cwd() / "test_resources" / "fibo.jpeg")
-            shutil.copy(source, fibo)
-
+            fibo = generate_temp_image(temp)
             example_decolourised_image = cv2.imread(str(Path.cwd() / "test_resources" / "fiboDecolourised.jpeg"))
             bot.decolourise_image(fibo)
             decolourised_image = cv2.imread(fibo)
