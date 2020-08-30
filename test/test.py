@@ -95,6 +95,16 @@ class TestBot(TestCase):
             assert example_colour_channel.shape == colour_channel.shape and not (np.bitwise_xor(
                 example_colour_channel, colour_channel).any())
 
+    def test_rotate_image(self):
+        with TemporaryDirectory() as temp:
+            fibo = generate_temp_image(temp)
+            example_rotation = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_rotate.jpeg"))
+            bot.rotate_image(fibo, 75)
+            rotated_image = cv2.imread(fibo)
+
+            assert example_rotation.shape == rotated_image.shape and not (np.bitwise_xor(
+                example_rotation, rotated_image).any())
+
 # class TestMastodon(TestCase):
 #
 #     def test_mastodon_notfications(self):
