@@ -202,7 +202,7 @@ def listen_to_request(spam_defender):
                                 params = params[1:]
                             if params and params[0] == "border":
                                 for image in range(len(reply.media)):
-                                    create_border(settings.JPEG_INPUT.format(image))
+                                    create_reflective_border(settings.JPEG_INPUT.format(image))
                                 params = params[1:]
                             if params and params[0] == "crop":
                                 for image in range(len(reply.media)):
@@ -359,13 +359,12 @@ def get_text_from_image(input_image):
 
 
 def check_image_type(filepath):
-    filepath_with_jpeg = str(filepath + ".jpeg")
-    if not is_jpg(filepath):
-        im = Image.open(filepath)
-        rgb_image = im.convert('RGB')
-        rgb_image.save(filepath_with_jpeg)
-    else:
-        os.renames(str(filepath), filepath_with_jpeg)
+    img = Image.open(filepath)
+    img_format = img.format
+    if img_format == "JPEG":
+        os.renames(str(filepath), str(filepath + ".jpeg"))
+    if img_format == "PNG":
+        os.renames(str(filepath), str(filepath + ".png"))
 
 
 def rotate_image(input_image, rotate_by_degrees=None, rotation_type=None):
@@ -398,7 +397,7 @@ def show_image_histogram(input_image):
     plt.savefig(input_image, bbox_inches='tight')
 
 
-def create_border(input_image):
+def create_reflective_border(input_image):
     img = cv2.imread(input_image)
     img = cv2.copyMakeBorder(img, 10, 10, 10, 10, cv2.BORDER_REFLECT)
     cv2.imwrite(input_image, img)
@@ -563,13 +562,6 @@ def convert_image_to_png(input_image):
 
 def convert_image_to_bmp(input_image):
     Image.open(input_image).save(settings.BMP_OUTPUT)
-
-
-def is_jpg(filepath):
-    data = open(filepath, 'rb').read(11)
-    if data[:4] != '\xff\xd8\xff\xe0': return False
-    if data[6:] != 'JFIF\0': return False
-    return True
 
 
 def append_images(images, direction='horizontal',

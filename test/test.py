@@ -109,7 +109,7 @@ class TestBot(TestCase):
         with TemporaryDirectory() as temp:
             fibo = generate_temp_image(temp)
             example_border = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_border.jpeg"))
-            bot.create_border(fibo)
+            bot.create_reflective_border(fibo)
             bordered_image = cv2.imread(fibo)
 
             assert example_border.shape == bordered_image.shape and not (np.bitwise_xor(
