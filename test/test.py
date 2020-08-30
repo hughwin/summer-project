@@ -105,6 +105,36 @@ class TestBot(TestCase):
             assert example_rotation.shape == rotated_image.shape and not (np.bitwise_xor(
                 example_rotation, rotated_image).any())
 
+    def test_rotate_image(self):
+        with TemporaryDirectory() as temp:
+            fibo = generate_temp_image(temp)
+            example_border = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_border.jpeg"))
+            bot.create_border(fibo)
+            bordered_image = cv2.imread(fibo)
+
+            assert example_border.shape == bordered_image.shape and not (np.bitwise_xor(
+                example_border, bordered_image).any())
+
+    def test_crop_image(self):
+        with TemporaryDirectory() as temp:
+            fibo = generate_temp_image(temp)
+            example_crop = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_crop.jpeg"))
+            bot.crop_image(fibo, "50", "50", "50", "50")
+            cropped_image = cv2.imread(fibo)
+
+            assert example_crop.shape == cropped_image.shape and not (np.bitwise_xor(
+                example_crop, cropped_image).any())
+
+    def test_enhance_image(self):
+        with TemporaryDirectory() as temp:
+            fibo = generate_temp_image(temp)
+            example_enhanced = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_enhance.jpeg"))
+            bot.enhance_image(fibo)
+            enhanced_image = cv2.imread(fibo)
+
+            assert example_enhanced.shape == enhanced_image.shape and not (np.bitwise_xor(
+                example_enhanced, enhanced_image).any())
+
 # class TestMastodon(TestCase):
 #
 #     def test_mastodon_notfications(self):
