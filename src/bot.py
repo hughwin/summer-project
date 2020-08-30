@@ -186,9 +186,15 @@ def listen_to_request(spam_defender):
                                     reply_message += get_information_about_image(settings.JPEG_INPUT.format(image))
                                 params = params[1:]
                             if params and params[0] == "preserve":
-                                for image in range(len(reply.media)):
-                                    display_colour_channel(settings.JPEG_INPUT.format(image),
-                                                           params[params.index("preserve") + 1])
+                                try:
+                                    if params[params.index("preserve") + 1] not in settings.SET_OF_COLOURS:
+                                        reply_message += "\nColour channel error: Invalid colour!"
+                                    else:
+                                        for image in range(len(reply.media)):
+                                            display_colour_channel(settings.JPEG_INPUT.format(image),
+                                                                   params[params.index("preserve") + 1])
+                                except IndexError:
+                                    reply_message += "\nYou didn't specify a colour for your colour channel"
                                 params = params[1:]
                             if params and params[0] == "histogram":
                                 for image in range(len(reply.media)):
@@ -215,17 +221,18 @@ def listen_to_request(spam_defender):
                                     enhance_image(settings.JPEG_INPUT.format(image))
                                 params = params[1:]
                             if params and params[0] == "brightness":
-                                for image in range(len(reply.media)):
-                                    try:
+                                try:
+                                    for image in range(len(reply.media)):
                                         adjust_brightness(settings.JPEG_INPUT.format(image), value=params[1])
                                         params = params[2:]
-                                    except IndexError:
-                                        adjust_brightness(reply)
-                                        params = params[1:]
+                                except IndexError:
+                                    adjust_brightness(reply)
+                                    params = params[1:]
                             if params and params[0] == "contrast":
                                 try:
-                                    adjust_contrast(settings.JPEG_INPUT.format(image), value=params[1])
-                                    params = params[2:]
+                                    for image in range(len(reply.media)):
+                                        adjust_contrast(settings.JPEG_INPUT.format(image), value=params[1])
+                                        params = params[2:]
                                 except IndexError:
                                     adjust_contrast(settings.JPEG_INPUT.format(image))
                                     params = params[1:]
@@ -277,16 +284,17 @@ def listen_to_request(spam_defender):
                                     convert_image_to_bmp(settings.JPEG_INPUT.format(image))
                                 params = params[1:]
                             if params and params[0] == "watermark":
-                                for image in range(len(reply.media)):
-                                    try:
+                                try:
+                                    for image in range(len(reply.media)):
                                         add_watermarks(settings.JPEG_INPUT.format(image),
                                                        wm_text=params[1])
                                         params = params[2:]
-                                    except IndexError:
-                                        reply_message += "\nNo watermark specified"
+                                except IndexError:
+                                    reply_message += "\nNo watermark specified"
                             if params and params[0] == "rotate":
-                                for image in range(len(reply.media)):
-                                    try:
+                                try:
+                                    for image in range(len(reply.media)):
+
                                         if len(params) > 3 and params[2] == "simple" and params != []:
                                             rotate_image(settings.JPEG_INPUT.format(image),
                                                          rotate_by_degrees=params[1],
@@ -296,10 +304,10 @@ def listen_to_request(spam_defender):
                                             rotate_image(settings.JPEG_INPUT.format(image),
                                                          rotate_by_degrees=params[1])
                                             params = params[2:]
-                                    except IndexError:
-                                        reply_message += "\nYou didn't specify how many degrees you wanted it rotated " \
-                                                         "by "
-                                        params = params[1:]
+                                except IndexError:
+                                    reply_message += "\nYou didn't specify how many degrees you wanted it rotated " \
+                                                     "by "
+                                    params = params[1:]
                             elif params:
                                 if params[0] not in settings.SET_OF_COMMANDS:
                                     reply_message += settings.INVALID_COMMAND.format(params[0])
@@ -328,7 +336,7 @@ def decolourise_image(input_image):
 
 
 def display_colour_channel(input_image, colour):
-    colour = colour()
+    colour = colour
     image_open = cv2.imread(input_image)
     temp_image = image_open.copy()
     if colour == "red":

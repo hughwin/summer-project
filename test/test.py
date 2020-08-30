@@ -60,12 +60,40 @@ class TestBot(TestCase):
     def test_decolourise_image(self):
         with TemporaryDirectory() as temp:
             fibo = generate_temp_image(temp)
-            example_decolourised_image = cv2.imread(str(Path.cwd() / "test_resources" / "fiboDecolourised.jpeg"))
+            example_decolourised_image = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_decolourised.jpeg"))
             bot.decolourise_image(fibo)
             decolourised_image = cv2.imread(fibo)
 
             assert example_decolourised_image.shape == decolourised_image.shape and not (np.bitwise_xor(
                 example_decolourised_image, decolourised_image).any())
+
+    def test_display_colour_channel(self):
+        with TemporaryDirectory() as temp:
+            fibo = generate_temp_image(temp)
+            example_colour_channel = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_red.jpeg"))
+            bot.display_colour_channel(fibo, "red")
+            colour_channel = cv2.imread(fibo)
+
+            assert example_colour_channel.shape == colour_channel.shape and not (np.bitwise_xor(
+                example_colour_channel, colour_channel).any())
+
+        with TemporaryDirectory() as temp:
+            fibo = generate_temp_image(temp)
+            example_colour_channel = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_blue.jpeg"))
+            bot.display_colour_channel(fibo, "blue")
+            colour_channel = cv2.imread(fibo)
+
+            assert example_colour_channel.shape == colour_channel.shape and not (np.bitwise_xor(
+                example_colour_channel, colour_channel).any())
+
+        with TemporaryDirectory() as temp:
+            fibo = generate_temp_image(temp)
+            example_colour_channel = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_green.jpeg"))
+            bot.display_colour_channel(fibo, "green")
+            colour_channel = cv2.imread(fibo)
+
+            assert example_colour_channel.shape == colour_channel.shape and not (np.bitwise_xor(
+                example_colour_channel, colour_channel).any())
 
 # class TestMastodon(TestCase):
 #
