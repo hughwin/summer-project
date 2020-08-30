@@ -105,7 +105,7 @@ class TestBot(TestCase):
             assert example_rotation.shape == rotated_image.shape and not (np.bitwise_xor(
                 example_rotation, rotated_image).any())
 
-    def test_rotate_image(self):
+    def test_create_border(self):
         with TemporaryDirectory() as temp:
             fibo = generate_temp_image(temp)
             example_border = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_border.jpeg"))
@@ -177,6 +177,16 @@ class TestBot(TestCase):
 
             assert example_mirror_image.shape == mirrored_image.shape and not (np.bitwise_xor(
                 example_mirror_image, mirrored_image).any())
+
+    # def test_make_transparent_image(self):
+    #     with TemporaryDirectory() as temp:
+    #         fibo = generate_temp_image(temp)
+    #         example_transparent_image = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_transparent.jpeg"))
+    #         bot.mirror_image(fibo)
+    #         transparent_image = cv2.imread(fibo)
+    #
+    #         assert example_transparent_image.shape == transparent_image.shape and not (np.bitwise_xor(
+    #             example_transparent_image, transparent_image).any())
 
 # class TestMastodon(TestCase):
 #

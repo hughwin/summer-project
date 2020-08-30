@@ -229,20 +229,21 @@ def listen_to_request(spam_defender):
                                     adjust_brightness(reply)
                                     params = params[1:]
                             if params and params[0] == "contrast":
-                                try:
-                                    for image in range(len(reply.media)):
+                                for image in range(len(reply.media)):
+                                    try:
                                         adjust_contrast(settings.JPEG_INPUT.format(image), value=params[1])
                                         params = params[2:]
-                                except IndexError:
-                                    adjust_contrast(settings.JPEG_INPUT.format(image))
-                                    params = params[1:]
+                                    except IndexError:
+                                        adjust_contrast(settings.JPEG_INPUT.format(image))
+                                        params = params[1:]
                             if params and params[0] == "colour":
-                                try:
-                                    adjust_colour(settings.JPEG_INPUT.format(image), value=params[1])
-                                    params = params[1:]
-                                except IndexError:
-                                    adjust_contrast(settings.JPEG_INPUT.format(image))
-                                    params = params[2:]
+                                for image in range(len(reply.media)):
+                                    try:
+                                        adjust_colour(settings.JPEG_INPUT.format(image), value=params[1])
+                                        params = params[2:]
+                                    except IndexError:
+                                        adjust_contrast(settings.JPEG_INPUT.format(image))
+                                        params = params[1:]
                             if params and params[0] == "mirror":
                                 for image in range(len(reply.media)):
                                     mirror_image(settings.JPEG_INPUT.format(image))
@@ -477,7 +478,7 @@ def mirror_image(input_image):
 def make_transparent_image(input_image):
     img_transparent = Image.open(input_image)
     img_transparent.putalpha(128)
-    img_transparent.save(input_image)
+    img_transparent.save(settings.PNG_OUTPUT)
 
 
 def make_negative_image(input_image):
@@ -557,11 +558,11 @@ def add_watermarks(input_image, wm_text):
 
 
 def convert_image_to_png(input_image):
-    Image.open(input_image).save(input_image)
+    Image.open(input_image).save(settings.PNG_OUTPUT)
 
 
 def convert_image_to_bmp(input_image):
-    Image.open(input_image).save(input_image)
+    Image.open(input_image).save(settings.BMP_OUTPUT)
 
 
 def is_jpg(filepath):
