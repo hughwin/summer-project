@@ -1,4 +1,5 @@
 import datetime
+import glob
 import os
 import re
 import shutil
@@ -297,12 +298,13 @@ def listen_to_request(spam_defender):
                                     for image in range(len(reply.media)):
 
                                         if len(params) > 3 and params[2] == "simple" and params != []:
-                                            rotate_image(settings.IMAGE_INPUT.format(image),
+                                            command = glob.glob(settings.IMAGE_INPUT.format(image))
+                                            rotate_image(command[0],
                                                          rotate_by_degrees=params[1],
                                                          rotation_type=params[2])
                                             params = params[3:]
                                         else:
-                                            rotate_image(settings.IMAGE_INPUT.format(image),
+                                            rotate_image(command[0],
                                                          rotate_by_degrees=params[1])
                                             params = params[2:]
                                 except IndexError:
