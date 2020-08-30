@@ -148,6 +148,26 @@ class TestBot(TestCase):
             assert example_brightness.shape == brighter_image.shape and not (np.bitwise_xor(
                 example_brightness, brighter_image).any())
 
+    def test_adjust_colour(self):
+        with TemporaryDirectory() as temp:
+            fibo = generate_temp_image(temp)
+            example_colour_adjust = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_adjusted_colour.jpeg"))
+            bot.adjust_colour(fibo)
+            colour_adjusted_image = cv2.imread(fibo)
+
+            assert example_colour_adjust.shape == colour_adjusted_image.shape and not (np.bitwise_xor(
+                example_colour_adjust, colour_adjusted_image).any())
+
+    def test_flip_image(self):
+        with TemporaryDirectory() as temp:
+            fibo = generate_temp_image(temp)
+            example_image_flip = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_flipped.jpeg"))
+            bot.flip_image(fibo)
+            flipped_image = cv2.imread(fibo)
+
+            assert example_image_flip.shape == flipped_image.shape and not (np.bitwise_xor(
+                example_image_flip, flipped_image).any())
+
 # class TestMastodon(TestCase):
 #
 #     def test_mastodon_notfications(self):
