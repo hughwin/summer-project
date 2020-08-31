@@ -218,9 +218,8 @@ def listen_to_request(spam_defender):
                                 params = params[1:]
 
                             if params and params[0] == "crop":
-
+                                remove_params = 0
                                 for image in image_glob:
-                                    remove_params = 0
                                     try:
                                         reply_message += crop_image(image,
                                                                     left=params[1],
@@ -332,8 +331,8 @@ def listen_to_request(spam_defender):
 
                             if params and params[0] == "rotate":
                                 try:
+                                    remove_params = 0
                                     for image in image_glob:
-                                        remove_params = 0
                                         if len(params) >= 3 and params[2] == "simple" and params != []:
                                             rotate_image(image,
                                                          rotate_by_degrees=params[1],
