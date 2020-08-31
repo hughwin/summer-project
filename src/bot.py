@@ -162,6 +162,7 @@ def listen_to_request(spam_defender):
                             media_path = "{}".format(count)
                             urllib.request.urlretrieve(media_url, (str(settings.INPUT_FOLDER / media_path)))
                             reply_message += check_image_type(str(settings.INPUT_FOLDER / media_path))
+                            print(reply_message)
                             user.media.append(media)
                             user.alt_text = m["text_url"]
                             print("alt_text:\n")
@@ -430,6 +431,7 @@ def check_image_type(filepath):
         os.renames(str(filepath), str(filepath + ".bmp"))
     if img_format == "TIFF":  # Mastodon does not currently support TIFF
         os.renames(str(filepath), str(filepath + ".tiff"))
+    print(user_message)
     return user_message
 
 
