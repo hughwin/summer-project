@@ -45,7 +45,7 @@ def reply_to_toot(post_id, account_name, message=None, status_notifications=None
         if fn.endswith(('.jpeg', '.png')):
             print(Path(fn))
             image_dict = mastodon.media_post(str(settings.INPUT_FOLDER / fn))
-            print(status_notifications[count].meta)
+            print(status_notifications[count].)
             print(image_dict["meta"])
             image_dict["meta"] = status_notifications[count].meta
             count += 1
@@ -98,7 +98,7 @@ class UserNotification:
         self.content = content
         self.params = params
         self.media = []
-        self.meta = []
+        self.alt_text = []
 
 
 class SpamDefender(threading.Thread):
@@ -163,7 +163,8 @@ def listen_to_request(spam_defender):
                             urllib.request.urlretrieve(media_url, (str(settings.INPUT_FOLDER / media_path)))
                             reply_message += check_image_type(str(settings.INPUT_FOLDER / media_path))
                             user.media.append(media)
-                            user.meta = ["meta"]
+                            user.alt_text = ["text_url"]
+                            print("alt_text:\n")
                             count += 1
                     status_notifications.append(user)
                     spam_defender.add_user_to_requests(user.account_id)
