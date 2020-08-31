@@ -8,6 +8,7 @@ from pathlib import Path
 BASE_ADDRESS = "https://botsin.space/"
 USERNAME = "@botbot "
 NASA_ADDRESS_IMAGES = "https://api.nasa.gov/planetary/apod?api_key=%s"
+MAX_REQUESTS_PER_HOUR = 30
 TOO_MANY_REQUESTS_MESSAGE = "You're making too many requests!"
 JSON_ERROR_MESSAGE = "Decoding JSON has failed"
 INVALID_COMMAND = "{} not recognised as a command. Type \"@botbot help\" for a list of commands"
@@ -55,6 +56,8 @@ HELP_MESSAGE = "Welcome to my image processing bot!" \
                "\nBorder - add a border to your image" \
                "\nPNG - convert your image(s) to PNG format" \
                "\nBMP - convert your images to BMP format"
+SUPPORTED_FORMATS_MESSAGE = "Currently supported file upload formats: \n" \
+                            "- JPEG\n- PNG\n- TIFF\n- BMP"
 SET_OF_COMMANDS = {"help", "about", "decolourise", "preserve", "histogram", "rotate", "enhance", "border", "crop",
                    "brightness", "contrast", "colour", "mirror", "flip", "transparent", "negative", "sepia", "blur",
                    "blurred", "border", "png,", "bmp"}

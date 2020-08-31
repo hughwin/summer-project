@@ -121,7 +121,7 @@ class SpamDefender(threading.Thread):
     def allow_account_to_make_request(self, account_id):
         if account_id not in self.users_who_have_made_requests:
             return True
-        if self.users_who_have_made_requests[account_id] >= 4:
+        if self.users_who_have_made_requests[account_id] >= settings.MAX_REQUESTS_PER_HOUR:
             return False
         else:
             return True
@@ -167,12 +167,15 @@ def listen_to_request(spam_defender):
                 count = 0
                 num_files = os.listdir(str(settings.INPUT_FOLDER))
                 reply_message = ""
-                if len(num_files) != 0 or "help" in params:
+                if len(num_files) != 0 or "help" or "formats" in params:
                     for reply in status_notifications:
                         print(reply.params)
                         while params:
                             if params[0] == "help":
                                 reply_message += settings.HELP_MESSAGE
+                                params = params[1:]
+                            if params[0] == "formats":
+                                reply_message += settings.SUPPORTED_FORMATS_MESSAGE
                                 params = params[1:]
                             if params and params[0] == 'decolourise' or params and params[0] == 'decolorize':
                                 for image in range(len(reply.media)):
@@ -388,6 +391,10 @@ def check_image_type(filepath):
         os.renames(str(filepath), str(filepath + ".jpeg"))
     if img_format == "PNG":
         os.renames(str(filepath), str(filepath + ".png"))
+    if img_format == "BMP":
+        os.renames(str(filepath), str(filepath + ".bmp"))
+    if img_format == "TIFF":
+        os.renames(str(filepath), str(filepath + ".tiff"))
 
 
 def rotate_image(input_image, rotate_by_degrees=None, rotation_type=None):
