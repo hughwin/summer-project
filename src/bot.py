@@ -473,10 +473,10 @@ def crop_image(input_image, left, top, right, bottom):
     if bottom > height or bottom < 0:
         status_message += settings.CROP_OUT_OF_RANGE.format("bottom", width)
 
-    return status_message
-
     cropped_img = ImageOps.crop(img, (left, top, right, bottom))
     cropped_img.save(input_image)
+
+    return status_message
 
 
 def enhance_image(input_image):
