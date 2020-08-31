@@ -10,7 +10,8 @@ USERNAME = "@botbot "
 NASA_ADDRESS_IMAGES = "https://api.nasa.gov/planetary/apod?api_key=%s"
 MAX_REQUESTS_PER_HOUR = 30
 TOO_MANY_REQUESTS_MESSAGE = "You're making too many requests!"
-GIF_MESSAGE = "This bot does not support GIF format files. Sorry! Your GIF file was deleted.\n\n"
+GIF_MESSAGE = "This bot does not support GIF format files. You have either supplied a GIF or another incompatible file." \
+              " Your file was deleted. Type \"formats\" to get a list of supported formats.\n\n"
 JSON_ERROR_MESSAGE = "Decoding JSON has failed"
 INVALID_COMMAND = "{} not recognised as a command. Type \"@botbot help\" for a list of commands"
 CROP_OUT_OF_RANGE = "\nYour {0} value is out of range; {1} is the maximum value, and must be > 0"

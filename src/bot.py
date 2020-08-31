@@ -157,17 +157,16 @@ def listen_to_request(spam_defender):
                     print("Denied!")
                 else:
                     for m in media:
-                        print(m["type"])
-                        if m["type"] == "image" or m["type"] == "gifv":
+                        if m["type"] == "image":
                             media_url = m["url"]
                             media_path = "{}".format(count)
                             urllib.request.urlretrieve(media_url, (str(settings.INPUT_FOLDER / media_path)))
                             reply_message += check_image_type(str(settings.INPUT_FOLDER / media_path))
-                            print(reply_message)
                             user.media.append(media)
                             user.alt_text = m["text_url"]
-                            print("alt_text:\n")
                             count += 1
+                        else:
+                            reply_message += settings.GIF_MESSAGE
                     status_notifications.append(user)
                     spam_defender.add_user_to_requests(user.account_id)
                 count = 0
@@ -422,11 +421,8 @@ def check_image_type(filepath):
     img_format = img.format
     user_message = ""
     if img_format == "GIF":
-        print("Deleting")
-        print(settings.GIF_MESSAGE)
-        os.remove(filepath)  # Deletes the gif
+        os.remove(filepath)  # Mastodon uses MP4 for gifs, but in case one slips through.
         user_message += settings.GIF_MESSAGE  # Informs the user.
-        print(user_message)
     if img_format == "JPEG":  # If the file is JPEG, give it a JPEG extension.
         os.renames(str(filepath), str(filepath + ".jpeg"))
     if img_format == "PNG":  # If the file is PNG, give it a PNG extension.
@@ -435,7 +431,6 @@ def check_image_type(filepath):
         os.renames(str(filepath), str(filepath + ".bmp"))
     if img_format == "TIFF":  # Mastodon does not currently support TIFF
         os.renames(str(filepath), str(filepath + ".tiff"))
-    print(user_message)
     return user_message
 
 
