@@ -178,7 +178,6 @@ def listen_to_request(spam_defender):
                             if params and params[0] == "help":
                                 reply_message += settings.HELP_MESSAGE
                                 params = params[1:]
-                                break
 
                             if params and params[0] == "formats":
                                 reply_message += settings.SUPPORTED_FORMATS_MESSAGE
