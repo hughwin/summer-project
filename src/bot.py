@@ -45,6 +45,8 @@ def reply_to_toot(post_id, account_name, message=None, status_notifications=None
         if fn.endswith(('.jpeg', '.png')):
             print(Path(fn))
             image_dict = mastodon.media_post(str(settings.INPUT_FOLDER / fn))
+            print(status_notifications[count].meta)
+            print(image_dict["meta"])
             image_dict["meta"] = status_notifications[count].meta
             count += 1
             media_ids.append(image_dict["id"])
