@@ -157,7 +157,7 @@ def listen_to_request(spam_defender):
                     print("Denied!")
                 else:
                     for m in media:
-                        if m["type"] == "image":
+                        if m["type"] == "image" or m["type"] == "gifv":
                             media_url = m["url"]
                             media_path = "{}".format(count)
                             urllib.request.urlretrieve(media_url, (str(settings.INPUT_FOLDER / media_path)))
