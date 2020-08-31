@@ -138,6 +138,7 @@ def listen_to_request(spam_defender):
     while True:
         print("Checking notifications!")
         notifications = mastodon.notifications(mentions_only=True)
+        reply_message = ""
         for n in notifications:
             if n["type"] == "mention":
                 account_id = n["account"]["id"]
@@ -151,7 +152,6 @@ def listen_to_request(spam_defender):
                 print(params)
                 user = UserNotification(account_id, account_name, status_id, content, params)
                 media = n["status"]["media_attachments"]
-                reply_message = ""
                 if not spam_defender.allow_account_to_make_request(account_id):
                     reply_to_toot(status_id, message=settings.TOO_MANY_REQUESTS_MESSAGE, account_name=account_name)
                     print("Denied!")
@@ -375,6 +375,7 @@ def listen_to_request(spam_defender):
             mastodon.notifications_clear()
             status_notifications.clear()
             bot_delete_files_in_directory(settings.INPUT_FOLDER)
+            reply_message = ""
         schedule.run_pending()
         time.sleep(1)
 
