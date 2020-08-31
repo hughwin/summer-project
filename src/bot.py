@@ -156,7 +156,7 @@ def listen_to_request(spam_defender):
                             media_url = m["url"]
                             media_path = "{}".format(count)
                             urllib.request.urlretrieve(media_url, (str(settings.INPUT_FOLDER / media_path)))
-                            check_image_type(str(settings.INPUT_FOLDER / media_path))
+                            reply_message += check_image_type(str(settings.INPUT_FOLDER / media_path))
                             user.media.append(media)
                             user.meta = ["meta"]
                             count += 1
@@ -169,22 +169,27 @@ def listen_to_request(spam_defender):
                     for reply in status_notifications:
                         print(reply.params)
                         while params:
+
                             if params[0] == "help":
                                 reply_message += settings.HELP_MESSAGE
                                 params = params[1:]
+
                             if params[0] == "formats":
                                 reply_message += settings.SUPPORTED_FORMATS_MESSAGE
                                 params = params[1:]
+
                             if params and params[0] == 'decolourise' or params and params[0] == 'decolorize':
                                 for image in range(len(reply.media)):
                                     input_image = glob.glob(settings.IMAGE_INPUT.format(image))
                                     decolourise_image(input_image[0])
                                 params = params[1:]
+
                             if params and params[0] == "text":
                                 for image in range(len(reply.media)):
                                     input_image = glob.glob(settings.IMAGE_INPUT.format(image))
                                     reply_message += get_text_from_image(input_image[0])
                                 params = params[1:]
+
                             if params and params[0] == "about":
                                 count = 1
                                 for image in range(len(reply.media)):
@@ -192,6 +197,7 @@ def listen_to_request(spam_defender):
                                     reply_message += get_information_about_image(input_image[0], count)
                                     count += 1
                                 params = params[1:]
+
                             if params and params[0] == "preserve":
                                 try:
                                     if params[params.index("preserve") + 1] not in settings.SET_OF_COLOURS:
@@ -205,11 +211,13 @@ def listen_to_request(spam_defender):
                                 except IndexError:
                                     reply_message += "\nYou didn't specify a colour for your colour channel"
                                     params = params[1:]
+
                             if params and params[0] == "histogram":
                                 for image in range(len(reply.media)):
                                     input_image = glob.glob(settings.IMAGE_INPUT.format(image))
                                     show_image_histogram(input_image[0])
                                 params = params[1:]
+
                             if params and params[0] == "crop":
                                 for image in range(len(reply.media)):
                                     input_image = glob.glob(settings.IMAGE_INPUT.format(image))
@@ -223,11 +231,13 @@ def listen_to_request(spam_defender):
                                     except IndexError:
                                         reply_message += "\nCrop failed!"
                                         params = params[1:]
+
                             if params and params[0] == "enhance":
                                 for image in range(len(reply.media)):
                                     input_image = glob.glob(settings.IMAGE_INPUT.format(image))
                                     enhance_image(input_image[0])
                                 params = params[1:]
+
                             if params and params[0] == "brightness":
                                 try:
                                     for image in range(len(reply.media)):
@@ -236,6 +246,7 @@ def listen_to_request(spam_defender):
                                 except IndexError:
                                     adjust_brightness(reply)
                                     params = params[1:]
+
                             if params and params[0] == "contrast":
                                 for image in range(len(reply.media)):
                                     input_image = glob.glob(settings.IMAGE_INPUT.format(image))
@@ -245,6 +256,7 @@ def listen_to_request(spam_defender):
                                     except IndexError:
                                         adjust_contrast(input_image[0])
                                         params = params[1:]
+
                             if params and params[0] == "colour":
                                 for image in range(len(reply.media)):
                                     try:
@@ -253,61 +265,73 @@ def listen_to_request(spam_defender):
                                     except IndexError:
                                         adjust_contrast(settings.IMAGE_INPUT.format(image))
                                         params = params[1:]
+
                             if params and params[0] == "mirror":
                                 for image in range(len(reply.media)):
-                                    input_image[0] = glob.glob(settings.IMAGE_INPUT.format(image))
-                                    mirror_image(settings.IMAGE_INPUT.format(image))
+                                    input_image = glob.glob(settings.IMAGE_INPUT.format(image))
+                                    mirror_image(input_image[0])
                                 params = params[1:]
+
                             if params and params[0] == "flip":
                                 for image in range(len(reply.media)):
-                                    input_image[0] = glob.glob(settings.IMAGE_INPUT.format(image))
+                                    input_image = glob.glob(settings.IMAGE_INPUT.format(image))
                                     flip_image(input_image[0])
                                 params = params[1:]
+
                             if params and params[0] == "transparent":
                                 for image in range(len(reply.media)):
-                                    input_image[0] = glob.glob(settings.IMAGE_INPUT.format(image))
+                                    input_image = glob.glob(settings.IMAGE_INPUT.format(image))
                                     make_transparent_image(input_image[0])
                                 params = params[1:]
+
                             if params and params[0] == "negative":
                                 for image in range(len(reply.media)):
-                                    input_image[0] = glob.glob(settings.IMAGE_INPUT.format(image))
+                                    input_image = glob.glob(settings.IMAGE_INPUT.format(image))
                                     make_negative_image(input_image[0])
                                 params = params[1:]
+
                             if params and params[0] == "sepia":
                                 for image in range(len(reply.media)):
-                                    input_image[0] = glob.glob(settings.IMAGE_INPUT.format(image))
+                                    input_image = glob.glob(settings.IMAGE_INPUT.format(image))
                                     make_sepia_image(input_image[0])
                                 params = params[1:]
+
                             if params and params[0] == "blur":
                                 for image in range(len(reply.media)):
-                                    input_image[0] = glob.glob(settings.IMAGE_INPUT.format(image))
+                                    input_image = glob.glob(settings.IMAGE_INPUT.format(image))
                                     blur_image(input_image[0])
                                 params = params[1:]
+
                             if params and params[0] == "blurred":
                                 for image in range(len(reply.media)):
                                     input_image = glob.glob(settings.IMAGE_INPUT.format(image))
                                     blur_edges(input_image[0])
                                 params = params[1:]
+
                             if params and params[0] == "border":
                                 for image in range(len(reply.media)):
                                     input_image = glob.glob(settings.IMAGE_INPUT.format(image))
                                     add_border(input_image[0])
                                 params = params[1:]
+
                             if params and params[0] == "reflective" and params[1] == "border":
                                 for image in range(len(reply.media)):
                                     input_image = glob.glob(settings.IMAGE_INPUT.format(image))
                                     create_reflective_border(input_image[0])
                                 params = params[2:]
+
                             if params and params[0] == "png":
                                 for image in range(len(reply.media)):
                                     input_image = glob.glob(settings.IMAGE_INPUT.format(image))
                                     convert_image_to_png(input_image[0])
                                 params = params[1:]
+
                             if params and params[0] == "bmp":
                                 for image in range(len(reply.media)):
                                     input_image = glob.glob(settings.IMAGE_INPUT.format(image))
                                     convert_image_to_bmp(input_image[0])
                                 params = params[1:]
+
                             if params and params[0] == "watermark":
                                 try:
                                     for image in range(len(reply.media)):
@@ -317,6 +341,7 @@ def listen_to_request(spam_defender):
                                         params = params[2:]
                                 except IndexError:
                                     reply_message += "\nNo watermark specified"
+
                             if params and params[0] == "rotate":
                                 try:
                                     for image in range(len(reply.media)):
@@ -334,10 +359,12 @@ def listen_to_request(spam_defender):
                                     reply_message += "\nYou didn't specify how many degrees you wanted it rotated " \
                                                      "by "
                                     params = params[1:]
+
                             elif params:
                                 if params[0] not in settings.SET_OF_COMMANDS:
                                     reply_message += settings.INVALID_COMMAND.format(params[0])
                                     params = params[1:]
+                                    
                         reply_to_toot(reply.status_id, message="\n" + str(reply_message),
                                       account_name=account_name, meta=user.meta)
             mastodon.notifications_clear()
@@ -385,6 +412,9 @@ def get_text_from_image(input_image):
 def check_image_type(filepath):
     img = Image.open(filepath)
     img_format = img.format
+    if img_format == "GIF":
+        os.remove(filepath)  # Deletes the gif
+        return settings.GIF_MESSAGE  # Informs the user.
     if img_format == "JPEG":  # If the file is JPEG, give it a JPEG extension.
         os.renames(str(filepath), str(filepath + ".jpeg"))
     if img_format == "PNG":  # If the file is PNG, give it a PNG extension.
