@@ -421,6 +421,8 @@ def check_image_type(filepath):
     img_format = img.format
     user_message = ""
     if img_format == "GIF":
+        print("Deleting")
+        print(settings.GIF_MESSAGE)
         os.remove(filepath)  # Deletes the gif
         user_message += settings.GIF_MESSAGE  # Informs the user.
         print(user_message)
