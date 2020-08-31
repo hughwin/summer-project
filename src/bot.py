@@ -185,9 +185,11 @@ def listen_to_request(spam_defender):
                                     reply_message += get_text_from_image(input_image[0])
                                 params = params[1:]
                             if params and params[0] == "about":
+                                count = 1
                                 for image in range(len(reply.media)):
                                     input_image = glob.glob(settings.IMAGE_INPUT.format(image))
-                                    reply_message += get_information_about_image(input_image[0])
+                                    reply_message += get_information_about_image(input_image[0], count)
+                                    count += 1
                                 params = params[1:]
                             if params and params[0] == "preserve":
                                 try:
@@ -195,7 +197,8 @@ def listen_to_request(spam_defender):
                                         reply_message += "\nColour channel error: Invalid colour!"
                                     else:
                                         for image in range(len(reply.media)):
-                                            display_colour_channel(settings.IMAGE_INPUT.format(image),
+                                            input_image = glob.glob(settings.IMAGE_INPUT.format(image))
+                                            display_colour_channel(input_image[0],
                                                                    params[params.index("preserve") + 1])
                                 except IndexError:
                                     reply_message += "\nYou didn't specify a colour for your colour channel"
@@ -342,11 +345,11 @@ def listen_to_request(spam_defender):
         time.sleep(1)
 
 
-def get_information_about_image(input_image):
+def get_information_about_image(input_image, count):
     img_open = cv2.imread(input_image)
-    message = "Image properties: " \
+    message = "\n\nImage {} properties: " \
               "\n- Number of Pixels: " + str(img_open.size) \
-              + "\n- Shape/Dimensions: " + str(img_open.shape)
+              + "\n- Shape/Dimensions: " + str(img_open.shape).format(count)
     return message
 
 
@@ -357,9 +360,8 @@ def decolourise_image(input_image):
 
 
 def display_colour_channel(input_image, colour):
-    colour = colour
-    image_open = cv2.imread(input_image)
-    temp_image = image_open.copy()
+    img = cv2.imread(input_image)
+    temp_image = img.copy()
     if colour == "red":
         temp_image[:, :, 0] = 0
         temp_image[:, :, 1] = 0
