@@ -247,11 +247,8 @@ def listen_to_request(spam_defender):
                                         try:
                                             adjust_brightness(input_image[0], value=params[1])
                                             params = params[2:]
-                                        except IndexError:
-                                            adjust_brightness(input_image[0])
-                                            params = params[1:]
-                                        except ValueError:
-                                            adjust_brightness(input_image[0])
+                                        except (IndexError, ValueError):
+                                            adjust_contrast(input_image[0])
                                             params = params[1:]
 
                             if params and params[0] == "contrast":
@@ -260,7 +257,7 @@ def listen_to_request(spam_defender):
                                     try:
                                         adjust_contrast(input_image[0], value=params[1])
                                         params = params[2:]
-                                    except IndexError:
+                                    except (IndexError, ValueError):
                                         adjust_contrast(input_image[0])
                                         params = params[1:]
 
@@ -269,7 +266,7 @@ def listen_to_request(spam_defender):
                                     try:
                                         adjust_colour(settings.IMAGE_INPUT.format(image), value=params[1])
                                         params = params[2:]
-                                    except IndexError:
+                                    except (IndexError, ValueError):
                                         adjust_contrast(settings.IMAGE_INPUT.format(image))
                                         params = params[1:]
 
