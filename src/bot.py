@@ -245,10 +245,10 @@ def listen_to_request(spam_defender):
                                     for image in range(len(reply.media)):
                                         input_image = glob.glob(settings.IMAGE_INPUT.format(image))
                                         try:
-                                            adjust_brightness(input_image, value=params[1])
+                                            adjust_brightness(input_image[0], value=params[1])
                                             params = params[2:]
                                         except IndexError:
-                                            adjust_brightness(input_image)
+                                            adjust_brightness(input_image[0])
                                             params = params[1:]
 
                             if params and params[0] == "contrast":
