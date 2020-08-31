@@ -169,6 +169,7 @@ def listen_to_request(spam_defender):
                     for reply in status_notifications:
                         image_glob = glob.glob(str(settings.INPUT_FOLDER).format("*.png")) \
                                      + glob.glob(str(settings.INPUT_FOLDER).format("*.jpeg"))
+                        print(image_glob)
                         print(reply.params)
                         while params:
 
