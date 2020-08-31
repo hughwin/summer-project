@@ -127,8 +127,6 @@ class SpamDefender(threading.Thread):
             return True
 
 
-# TODO: Just change image dictionary.
-
 def listen_to_request(spam_defender):
     count = 0
     status_notifications = []
@@ -211,11 +209,6 @@ def listen_to_request(spam_defender):
                                 for image in range(len(reply.media)):
                                     input_image = glob.glob(settings.IMAGE_INPUT.format(image))
                                     show_image_histogram(input_image[0])
-                                params = params[1:]
-                            if params and params[0] == "border":
-                                for image in range(len(reply.media)):
-                                    input_image = glob.glob(settings.IMAGE_INPUT.format(image))
-                                    create_reflective_border(input_image[0])
                                 params = params[1:]
                             if params and params[0] == "crop":
                                 for image in range(len(reply.media)):
@@ -300,6 +293,11 @@ def listen_to_request(spam_defender):
                                     input_image = glob.glob(settings.IMAGE_INPUT.format(image))
                                     add_border(input_image[0])
                                 params = params[1:]
+                            if params and params[0] == "reflective" and params[1] == "border":
+                                for image in range(len(reply.media)):
+                                    input_image = glob.glob(settings.IMAGE_INPUT.format(image))
+                                    create_reflective_border(input_image[0])
+                                params = params[2:]
                             if params and params[0] == "png":
                                 for image in range(len(reply.media)):
                                     input_image = glob.glob(settings.IMAGE_INPUT.format(image))
@@ -387,13 +385,13 @@ def get_text_from_image(input_image):
 def check_image_type(filepath):
     img = Image.open(filepath)
     img_format = img.format
-    if img_format == "JPEG":
+    if img_format == "JPEG":  # If the file is JPEG, give it a JPEG extension.
         os.renames(str(filepath), str(filepath + ".jpeg"))
-    if img_format == "PNG":
+    if img_format == "PNG":  # If the file is PNG, give it a PNG extension.
         os.renames(str(filepath), str(filepath + ".png"))
-    if img_format == "BMP":
+    if img_format == "BMP":  # Mastodon does not currently support TIFF
         os.renames(str(filepath), str(filepath + ".bmp"))
-    if img_format == "TIFF":
+    if img_format == "TIFF":  # Mastodon does not currently support TIFF
         os.renames(str(filepath), str(filepath + ".tiff"))
 
 
