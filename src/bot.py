@@ -167,8 +167,8 @@ def listen_to_request(spam_defender):
                 num_files = os.listdir(str(settings.INPUT_FOLDER))
                 if len(num_files) != 0 or "help" or "formats" in params:
                     for reply in status_notifications:
-                        image_glob = glob.glob(settings.INPUT_FOLDER.format("*.png")) \
-                                     + glob.glob(settings.INPUT_FOLDER.format("*.jpeg"))
+                        image_glob = glob.glob(str(settings.INPUT_FOLDER).format("*.png")) \
+                                     + glob.glob(str(settings.INPUT_FOLDER).format("*.jpeg"))
                         print(reply.params)
                         while params:
 
