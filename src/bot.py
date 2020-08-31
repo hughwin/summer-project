@@ -422,7 +422,8 @@ def check_image_type(filepath):
     user_message = ""
     if img_format == "GIF":
         os.remove(filepath)  # Deletes the gif
-        user_message = settings.GIF_MESSAGE  # Informs the user.
+        user_message += settings.GIF_MESSAGE  # Informs the user.
+        print(user_message)
     if img_format == "JPEG":  # If the file is JPEG, give it a JPEG extension.
         os.renames(str(filepath), str(filepath + ".jpeg"))
     if img_format == "PNG":  # If the file is PNG, give it a PNG extension.
