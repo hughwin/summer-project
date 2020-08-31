@@ -157,6 +157,7 @@ def listen_to_request(spam_defender):
                     print("Denied!")
                 else:
                     for m in media:
+                        print(m["type"])
                         if m["type"] == "image" or m["type"] == "gifv":
                             media_url = m["url"]
                             media_path = "{}".format(count)
