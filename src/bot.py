@@ -200,9 +200,10 @@ def listen_to_request(spam_defender):
                                             input_image = glob.glob(settings.IMAGE_INPUT.format(image))
                                             display_colour_channel(input_image[0],
                                                                    params[params.index("preserve") + 1])
+                                            params = params[2:]
                                 except IndexError:
                                     reply_message += "\nYou didn't specify a colour for your colour channel"
-                                params = params[1:]
+                                    params = params[1:]
                             if params and params[0] == "histogram":
                                 for image in range(len(reply.media)):
                                     input_image = glob.glob(settings.IMAGE_INPUT.format(image))
