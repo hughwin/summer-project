@@ -218,20 +218,20 @@ def listen_to_request(spam_defender):
                                 params = params[1:]
 
                             if params and params[0] == "crop":
+
                                 for image in image_glob:
+                                    remove_params = 0
                                     try:
                                         reply_message += crop_image(image,
                                                                     left=params[1],
                                                                     right=params[2],
                                                                     top=params[3],
                                                                     bottom=params[4])
-                                        params = params[5:]
-                                    except IndexError:
+                                        remove_params = 5
+                                    except (IndexError, ValueError):
                                         reply_message += "\nCrop failed!"
-                                        params = params[1:]
-                                    except TypeError:
-                                        reply_message += "\nCrop failed!"
-                                        params = params[1:]
+                                        remove_params = 1
+                                params = params[remove_params:]
 
                             if params and params[0] == "enhance":
                                 for image in range(len(reply.media)):
@@ -250,7 +250,6 @@ def listen_to_request(spam_defender):
 
                             if params and params[0] == "contrast":
                                 for image in range(len(reply.media)):
-                                    input_image = glob.glob(settings.IMAGE_INPUT.format(image))
                                     try:
                                         adjust_contrast(image, value=params[1])
                                         params = params[2:]
