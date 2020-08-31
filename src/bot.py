@@ -40,15 +40,10 @@ def start_bot():
 
 def reply_to_toot(post_id, account_name, message=None, status_notifications=None):
     media_ids = []
-    count = 0
     for fn in os.listdir(str(settings.INPUT_FOLDER)):
         if fn.endswith(('.jpeg', '.png')):
             print(Path(fn))
             image_dict = mastodon.media_post(str(settings.INPUT_FOLDER / fn))
-            print(status_notifications[count].alt_text)
-            print(image_dict["meta"])
-            image_dict["meta"] = status_notifications[count].alt_text
-            count += 1
             media_ids.append(image_dict["id"])
     if message is not None:
         parts = []
@@ -163,7 +158,6 @@ def listen_to_request(spam_defender):
                             urllib.request.urlretrieve(media_url, (str(settings.INPUT_FOLDER / media_path)))
                             reply_message += check_image_type(str(settings.INPUT_FOLDER / media_path))
                             user.media.append(media)
-                            user.alt_text = m["text_url"]
                             count += 1
                         else:
                             reply_message += settings.GIF_MESSAGE
@@ -235,6 +229,9 @@ def listen_to_request(spam_defender):
                                                                     bottom=params[4])
                                         params = params[5:]
                                     except IndexError:
+                                        reply_message += "\nCrop failed!"
+                                        params = params[1:]
+                                    except TypeError:
                                         reply_message += "\nCrop failed!"
                                         params = params[1:]
 
