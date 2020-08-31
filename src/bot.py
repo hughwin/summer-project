@@ -47,7 +47,7 @@ def reply_to_toot(post_id, account_name, message=None, status_notifications=None
             image_dict = mastodon.media_post(str(settings.INPUT_FOLDER / fn))
             print(status_notifications[count].alt_text)
             print(image_dict["meta"])
-            image_dict["meta"] = status_notifications[count].meta
+            image_dict["meta"] = status_notifications[count].alt_text
             count += 1
             media_ids.append(image_dict["id"])
     if message is not None:
@@ -163,7 +163,7 @@ def listen_to_request(spam_defender):
                             urllib.request.urlretrieve(media_url, (str(settings.INPUT_FOLDER / media_path)))
                             reply_message += check_image_type(str(settings.INPUT_FOLDER / media_path))
                             user.media.append(media)
-                            user.alt_text = ["text_url"]
+                            user.alt_text = m["text_url"]
                             print("alt_text:\n")
                             count += 1
                     status_notifications.append(user)
