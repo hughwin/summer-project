@@ -147,6 +147,7 @@ def listen_to_request(spam_defender):
                 print(params)
                 user = UserNotification(account_id, account_name, status_id, content, params)
                 media = n["status"]["media_attachments"]
+                reply_message = ""
                 if not spam_defender.allow_account_to_make_request(account_id):
                     reply_to_toot(status_id, message=settings.TOO_MANY_REQUESTS_MESSAGE, account_name=account_name)
                     print("Denied!")
@@ -164,7 +165,6 @@ def listen_to_request(spam_defender):
                     spam_defender.add_user_to_requests(user.account_id)
                 count = 0
                 num_files = os.listdir(str(settings.INPUT_FOLDER))
-                reply_message = ""
                 if len(num_files) != 0 or "help" or "formats" in params:
                     for reply in status_notifications:
                         print(reply.params)
@@ -364,7 +364,7 @@ def listen_to_request(spam_defender):
                                 if params[0] not in settings.SET_OF_COMMANDS:
                                     reply_message += settings.INVALID_COMMAND.format(params[0])
                                     params = params[1:]
-                                    
+
                         reply_to_toot(reply.status_id, message="\n" + str(reply_message),
                                       account_name=account_name, meta=user.meta)
             mastodon.notifications_clear()
