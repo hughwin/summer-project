@@ -359,7 +359,7 @@ def listen_to_request(spam_defender):
                                             rotate_image(input_image[0],
                                                          rotate_by_degrees=params[1])
                                             remove_params = 2
-                                    params[remove_params:]
+                                    params = params[remove_params:]
                                 except IndexError:
                                     reply_message += "\nYou didn't specify how many degrees you wanted it rotated " \
                                                      "by "
