@@ -348,16 +348,18 @@ def listen_to_request(spam_defender):
                             if params and params[0] == "rotate":
                                 try:
                                     for image in range(len(reply.media)):
+                                        remove_params = 0
                                         input_image = glob.glob(settings.IMAGE_INPUT.format(image))
                                         if len(params) >= 3 and params[2] == "simple" and params != []:
                                             rotate_image(input_image[0],
                                                          rotate_by_degrees=params[1],
                                                          rotation_type=params[2])
-                                            params = params[3:]
+                                            remove_params = 3
                                         else:
                                             rotate_image(input_image[0],
                                                          rotate_by_degrees=params[1])
-                                            params = params[2:]
+                                            remove_params = 2
+                                    params[remove_params:]
                                 except IndexError:
                                     reply_message += "\nYou didn't specify how many degrees you wanted it rotated " \
                                                      "by "
