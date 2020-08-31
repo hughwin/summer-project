@@ -412,9 +412,10 @@ def get_text_from_image(input_image):
 def check_image_type(filepath):
     img = Image.open(filepath)
     img_format = img.format
+    user_message = ""
     if img_format == "GIF":
         os.remove(filepath)  # Deletes the gif
-        return settings.GIF_MESSAGE  # Informs the user.
+        user_message += settings.GIF_MESSAGE  # Informs the user.
     if img_format == "JPEG":  # If the file is JPEG, give it a JPEG extension.
         os.renames(str(filepath), str(filepath + ".jpeg"))
     if img_format == "PNG":  # If the file is PNG, give it a PNG extension.
@@ -423,6 +424,7 @@ def check_image_type(filepath):
         os.renames(str(filepath), str(filepath + ".bmp"))
     if img_format == "TIFF":  # Mastodon does not currently support TIFF
         os.renames(str(filepath), str(filepath + ".tiff"))
+    return user_message
 
 
 def rotate_image(input_image, rotate_by_degrees=None, rotation_type=None):
