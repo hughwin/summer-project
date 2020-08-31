@@ -38,13 +38,15 @@ def start_bot():
     listener.start()
 
 
-def reply_to_toot(post_id, account_name, message=None, meta=None):
+def reply_to_toot(post_id, account_name, message=None, status_notifications=None):
     media_ids = []
+    count = 0
     for fn in os.listdir(str(settings.INPUT_FOLDER)):
         if fn.endswith(('.jpeg', '.png')):
             print(Path(fn))
             image_dict = mastodon.media_post(str(settings.INPUT_FOLDER / fn))
-            image_dict["meta"] = meta
+            image_dict["meta"] = status_notifications[count].meta
+            count += 1
             media_ids.append(image_dict["id"])
     if message is not None:
         parts = []
@@ -366,7 +368,7 @@ def listen_to_request(spam_defender):
                                     params = params[1:]
 
                         reply_to_toot(reply.status_id, message="\n" + str(reply_message),
-                                      account_name=account_name, meta=user.meta)
+                                      account_name=account_name, status_notifications=status_notifications)
             mastodon.notifications_clear()
             status_notifications.clear()
             bot_delete_files_in_directory(settings.INPUT_FOLDER)
