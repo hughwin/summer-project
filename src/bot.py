@@ -184,7 +184,7 @@ def listen_to_request(spam_defender):
 
                             if params and params[0] == 'decolourise' or params and params[0] == 'decolorize':
                                 for image in image_glob:
-                                    decolourise_image(image)
+                                    reply_message += decolourise_image(image)
                                 params = params[1:]
 
                             if params and params[0] == "text":
@@ -205,8 +205,9 @@ def listen_to_request(spam_defender):
                                         reply_message += "\nColour channel error: Invalid colour!"
                                     else:
                                         for image in image_glob:
-                                            display_colour_channel(image,
-                                                                   params[params.index("preserve") + 1])
+                                            reply_message += display_colour_channel(image,
+                                                                                    params[
+                                                                                        params.index("preserve") + 1])
                                             params = params[2:]
                                 except IndexError:
                                     reply_message += "\nYou didn't specify a colour for your colour channel"
@@ -235,96 +236,96 @@ def listen_to_request(spam_defender):
                             if params and params[0] == "enhance":
                                 for image in range(len(reply.media)):
                                     input_image = glob.glob(settings.IMAGE_INPUT.format(image))
-                                    enhance_image(input_image[0])
+                                    reply_message += enhance_image(input_image[0])
                                 params = params[1:]
 
                             if params and params[0] == "brightness":
                                 for image in image_glob:
                                     try:
-                                        adjust_brightness(image, value=params[1])
+                                        reply_message += adjust_brightness(image, value=params[1])
                                         params = params[2:]
                                     except (IndexError, ValueError):
-                                        adjust_contrast(image)
+                                        reply_message += adjust_contrast(image)
                                         params = params[1:]
 
                             if params and params[0] == "contrast":
                                 for image in range(len(reply.media)):
                                     try:
-                                        adjust_contrast(image, value=params[1])
+                                        reply_message += adjust_contrast(image, value=params[1])
                                         params = params[2:]
                                     except (IndexError, ValueError):
-                                        adjust_contrast(image)
+                                        reply_message += adjust_contrast(image)
                                         params = params[1:]
 
                             if params and params[0] == "colour":
                                 for image in image_glob:
                                     try:
-                                        adjust_colour(image, value=params[1])
+                                        reply_message += adjust_colour(image, value=params[1])
                                         params = params[2:]
                                     except (IndexError, ValueError):
-                                        adjust_contrast(image)
+                                        reply_message += adjust_contrast(image)
                                         params = params[1:]
 
                             if params and params[0] == "mirror":
                                 for image in image_glob:
-                                    mirror_image(image)
+                                    reply_message += mirror_image(image)
                                 params = params[1:]
 
                             if params and params[0] == "flip":
                                 for image in image_glob:
-                                    flip_image(image)
+                                    reply_message += flip_image(image)
                                 params = params[1:]
 
                             if params and params[0] == "transparent":
                                 for image in image_glob:
-                                    make_transparent_image(image)
+                                    reply_message += make_transparent_image(image)
                                 params = params[1:]
 
                             if params and params[0] == "negative":
                                 for image in image_glob:
-                                    make_negative_image(image)
+                                    reply_message += make_negative_image(image)
                                 params = params[1:]
 
                             if params and params[0] == "sepia":
                                 for image in image_glob:
-                                    make_sepia_image(image)
+                                    reply_message += make_sepia_image(image)
                                 params = params[1:]
 
                             if params and params[0] == "blur":
                                 for image in image_glob:
-                                    blur_image(image)
+                                    reply_message += blur_image(image)
                                 params = params[1:]
 
                             if params and params[0] == "blurred":
                                 for image in image_glob:
-                                    blur_edges(image)
+                                    reply_message += blur_edges(image)
                                 params = params[1:]
 
                             if params and params[0] == "border":
                                 for image in image_glob:
-                                    add_border(image)
+                                    reply_message += add_border(image)
                                 params = params[1:]
 
                             if params and params[0] == "reflective" and params[1] == "border":
                                 for image in image_glob:
-                                    create_reflective_border(image)
+                                    reply_message += create_reflective_border(image)
                                 params = params[2:]
 
                             if params and params[0] == "png":
                                 for image in image_glob:
-                                    convert_image_to_png(image)
+                                    reply_message += convert_image_to_png(image)
                                 params = params[1:]
 
                             if params and params[0] == "bmp":
                                 for image in image_glob:
-                                    convert_image_to_bmp(image)
+                                    reply_message += convert_image_to_bmp(image)
                                 params = params[1:]
 
                             if params and params[0] == "watermark":
                                 try:
                                     for image in image_glob:
-                                        add_watermarks(image,
-                                                       wm_text=params[1])
+                                        reply_message += add_watermarks(image,
+                                                                        wm_text=params[1])
                                         params = params[2:]
                                 except IndexError:
                                     reply_message += "\nNo watermark specified"
@@ -334,13 +335,13 @@ def listen_to_request(spam_defender):
                                     remove_params = 0
                                     for image in image_glob:
                                         if len(params) >= 3 and params[2] == "simple" and params != []:
-                                            rotate_image(image,
-                                                         rotate_by_degrees=params[1],
-                                                         rotation_type=params[2])
+                                            reply_message += rotate_image(image,
+                                                                          rotate_by_degrees=params[1],
+                                                                          rotation_type=params[2])
                                             remove_params = 3
                                         else:
-                                            rotate_image(image,
-                                                         rotate_by_degrees=params[1])
+                                            reply_message += rotate_image(image,
+                                                                          rotate_by_degrees=params[1])
                                             remove_params = 2
                                     params = params[remove_params:]
                                 except (IndexError, ValueError):
@@ -378,51 +379,67 @@ def decolourise_image(input_image):
 
 
 def display_colour_channel(input_image, colour):
-    img = cv2.imread(input_image)
-    temp_image = img.copy()
-    if colour == "red":
-        temp_image[:, :, 0] = 0
-        temp_image[:, :, 1] = 0
-    if colour == "green":
-        temp_image[:, :, 0] = 0
-        temp_image[:, :, 2] = 0
-    if colour == "blue":
-        temp_image[:, :, 1] = 0
-        temp_image[:, :, 2] = 0
-    cv2.imwrite(input_image, temp_image)
+    try:
+        img = cv2.imread(input_image)
+        temp_image = img.copy()
+        if colour == "red":
+            temp_image[:, :, 0] = 0
+            temp_image[:, :, 1] = 0
+        if colour == "green":
+            temp_image[:, :, 0] = 0
+            temp_image[:, :, 2] = 0
+        if colour == "blue":
+            temp_image[:, :, 1] = 0
+            temp_image[:, :, 2] = 0
+        cv2.imwrite(input_image, temp_image)
+    except cv2.error as e:
+        print(e)
+        return "Something unexpectedly went wrong with preserving a colour channel"
 
 
 def get_text_from_image(input_image):
-    img = cv2.imread(input_image)
-    text = pytesseract.image_to_string(img)
-    return text
+    try:
+        img = cv2.imread(input_image)
+        text = pytesseract.image_to_string(img)
+        return text
+    except (pytesseract.TesseractError, pytesseract.TesseractNotFoundError) as e:
+        print(e)
+        return "Something went wrong with getting the text from the image.\n\n"
 
 
 def check_image_type(filepath):
-    img = Image.open(filepath)
-    img_format = img.format
-    user_message = ""
-    if img_format == "GIF":
-        os.remove(filepath)  # Mastodon uses MP4 for gifs, but in case one slips through.
-        user_message += settings.GIF_MESSAGE  # Informs the user.
-    if img_format == "JPEG":  # If the file is JPEG, give it a JPEG extension.
-        os.renames(str(filepath), str(filepath + ".jpeg"))
-    if img_format == "PNG":  # If the file is PNG, give it a PNG extension.
-        os.renames(str(filepath), str(filepath + ".png"))
-    if img_format == "BMP":  # Mastodon does not currently support TIFF
-        os.renames(str(filepath), str(filepath + ".bmp"))
-    if img_format == "TIFF":  # Mastodon does not currently support TIFF
-        os.renames(str(filepath), str(filepath + ".tiff"))
-    return user_message
+    try:
+        img = Image.open(filepath)
+        img_format = img.format
+        user_message = ""
+        if img_format == "GIF":
+            os.remove(filepath)  # Mastodon uses MP4 for gifs, but in case one slips through.
+            user_message += settings.GIF_MESSAGE  # Informs the user.
+        if img_format == "JPEG":  # If the file is JPEG, give it a JPEG extension.
+            os.renames(str(filepath), str(filepath + ".jpeg"))
+        if img_format == "PNG":  # If the file is PNG, give it a PNG extension.
+            os.renames(str(filepath), str(filepath + ".png"))
+        if img_format == "BMP":  # Mastodon does not currently support TIFF
+            os.renames(str(filepath), str(filepath + ".bmp"))
+        if img_format == "TIFF":  # Mastodon does not currently support TIFF
+            os.renames(str(filepath), str(filepath + ".tiff"))
+        return user_message
+    except OSError as e:
+        print(e)
+        return "Something went wrong with converting the image"
 
 
 def rotate_image(input_image, rotate_by_degrees=None, rotation_type=None):
-    image_open = cv2.imread(input_image)
-    if str(rotation_type) == settings.ROTATE_SIMPLE:
-        rotated = imutils.rotate(image_open, int(rotate_by_degrees))
-    else:
-        rotated = imutils.rotate_bound(image_open, int(rotate_by_degrees))
-    cv2.imwrite(input_image, rotated)
+    try:
+        image_open = cv2.imread(input_image)
+        if str(rotation_type) == settings.ROTATE_SIMPLE:
+            rotated = imutils.rotate(image_open, int(rotate_by_degrees))
+        else:
+            rotated = imutils.rotate_bound(image_open, int(rotate_by_degrees))
+        cv2.imwrite(input_image, rotated)
+    except cv2.error as e:
+        print(e)
+        return settings.MANIPULATION_FAIL_MESSAGE.format("rotating the image")
 
 
 def combine_image(filepath1, filepath2=None):
@@ -447,169 +464,237 @@ def show_image_histogram(input_image):
 
 
 def create_reflective_border(input_image):
-    img = cv2.imread(input_image)
-    img = cv2.copyMakeBorder(img, 10, 10, 10, 10, cv2.BORDER_REFLECT)
-    cv2.imwrite(input_image, img)
+    try:
+        img = cv2.imread(input_image)
+        img = cv2.copyMakeBorder(img, 10, 10, 10, 10, cv2.BORDER_REFLECT)
+        cv2.imwrite(input_image, img)
+    except cv2.error as e:
+        print(e)
+        return settings.MANIPULATION_FAIL_MESSAGE.format("creating a reflective border")
 
 
 def crop_image(input_image, left, top, right, bottom):
-    img = Image.open(input_image)
-    width, height = img.size
-    status_message = ""
     try:
-        left = int(left)
-        top = int(top)
-        right = int(right)
-        bottom = int(bottom)
-    except ValueError:
-        return "Please supply integers in the format crop <int> <int> <int> <int>"
+        img = Image.open(input_image)
+        width, height = img.size
+        status_message = ""
+        try:
+            left = int(left)
+            top = int(top)
+            right = int(right)
+            bottom = int(bottom)
+        except ValueError:
+            return "Please supply integers in the format crop <int> <int> <int> <int>"
 
-    if top > height or top < 0:
-        status_message += settings.CROP_OUT_OF_RANGE.format("top", height)
-    if left > width or left < 0:
-        status_message += settings.CROP_OUT_OF_RANGE.format("left", width)
-    if right > width or right < 0:
-        status_message += settings.CROP_OUT_OF_RANGE.format("right", width)
-    if bottom > height or bottom < 0:
-        status_message += settings.CROP_OUT_OF_RANGE.format("bottom", width)
+        if top > height or top < 0:
+            status_message += settings.CROP_OUT_OF_RANGE.format("top", height)
+        if left > width or left < 0:
+            status_message += settings.CROP_OUT_OF_RANGE.format("left", width)
+        if right > width or right < 0:
+            status_message += settings.CROP_OUT_OF_RANGE.format("right", width)
+        if bottom > height or bottom < 0:
+            status_message += settings.CROP_OUT_OF_RANGE.format("bottom", width)
 
-    cropped_img = ImageOps.crop(img, (left, top, right, bottom))
-    cropped_img.save(input_image)
+        cropped_img = ImageOps.crop(img, (left, top, right, bottom))
+        cropped_img.save(input_image)
 
-    return status_message
+        return status_message
+    except BaseException as e:
+        print(e)
+        return settings.MANIPULATION_FAIL_MESSAGE.format("cropping the image")
 
 
 def enhance_image(input_image):
-    img = Image.open(input_image)
-    enhancer = ImageEnhance.Sharpness(img)
-    img_enhanced = enhancer.enhance(10.0)
-    img_enhanced.save(input_image)
+    try:
+        img = Image.open(input_image)
+        enhancer = ImageEnhance.Sharpness(img)
+        img_enhanced = enhancer.enhance(10.0)
+        img_enhanced.save(input_image)
+    except BaseException as e:
+        print(e)
+        return settings.MANIPULATION_FAIL_MESSAGE.format("enhancing the image")
 
 
 def adjust_brightness(input_image, value=1.5):
-    value = float(value)
-    img = Image.open(input_image)
-    enhancer = ImageEnhance.Brightness(img)
-    img_enhanced = enhancer.enhance(value)
-    img_enhanced.save(input_image)
+    try:
+        value = float(value)
+        img = Image.open(input_image)
+        enhancer = ImageEnhance.Brightness(img)
+        img_enhanced = enhancer.enhance(value)
+        img_enhanced.save(input_image)
+    except BaseException as e:
+        print(e)
+        return settings.MANIPULATION_FAIL_MESSAGE.format("adjusting the brightness")
 
 
 def adjust_contrast(input_image, value=1.5):
-    value = float(value)
-    img = Image.open(input_image)
-    enhancer = ImageEnhance.Contrast(img)
-    img_enhanced = enhancer.enhance(value)
-    img_enhanced.save(input_image)
+    try:
+        value = float(value)
+        img = Image.open(input_image)
+        enhancer = ImageEnhance.Contrast(img)
+        img_enhanced = enhancer.enhance(value)
+        img_enhanced.save(input_image)
+    except BaseException as e:
+        print(e)
+        return settings.MANIPULATION_FAIL_MESSAGE.format("adjusting the brightness")
 
 
 def adjust_colour(input_image, value=1.5):
-    value = float(value)
-    img = Image.open(input_image)
-    enhancer = ImageEnhance.Color(img)
-    img_enhanced = enhancer.enhance(value)
-    img_enhanced.save(input_image)
+    try:
+        value = float(value)
+        img = Image.open(input_image)
+        enhancer = ImageEnhance.Color(img)
+        img_enhanced = enhancer.enhance(value)
+        img_enhanced.save(input_image)
+    except BaseException as e:
+        print(e)
+        return settings.MANIPULATION_FAIL_MESSAGE.format("adjusting the colour")
 
 
 def flip_image(input_image):
-    img = Image.open(input_image)
-    img_flipped = ImageOps.flip(img)
-    img_flipped.save(input_image)
+    try:
+        img = Image.open(input_image)
+        img_flipped = ImageOps.flip(img)
+        img_flipped.save(input_image)
+    except BaseException as e:
+        print(e)
+        return settings.MANIPULATION_FAIL_MESSAGE.format("flipping the image")
 
 
 def mirror_image(input_image):
-    img = Image.open(input_image)
-    img_mirrored = ImageOps.mirror(img)
-    img_mirrored.save(input_image)
+    try:
+        img = Image.open(input_image)
+        img_mirrored = ImageOps.mirror(img)
+        img_mirrored.save(input_image)
+    except BaseException as e:
+        print(e)
+        return settings.MANIPULATION_FAIL_MESSAGE.format("mirroring the image")
 
 
 def make_transparent_image(input_image):
-    img_transparent = Image.open(input_image)
-    img_transparent.putalpha(128)
-    img_transparent.save(settings.PNG_OUTPUT)
+    try:
+        img_transparent = Image.open(input_image)
+        img_transparent.putalpha(128)
+        img_transparent.save(settings.PNG_OUTPUT)
+    except BaseException as e:
+        print(e)
+        return settings.MANIPULATION_FAIL_MESSAGE.format("making the image transparent")
 
 
 def make_negative_image(input_image):
-    img = Image.open(input_image)
-    negative_img = Image.new('RGB', img.size)
-    for x in range(img.size[0]):
-        for y in range(img.size[1]):
-            r, g, b = img.getpixel((x, y))
-            negative_img.putpixel((x, y), (255 - r, 255 - g, 255 - b))
-    negative_img.save(input_image)
+    try:
+        img = Image.open(input_image)
+        negative_img = Image.new('RGB', img.size)
+        for x in range(img.size[0]):
+            for y in range(img.size[1]):
+                r, g, b = img.getpixel((x, y))
+                negative_img.putpixel((x, y), (255 - r, 255 - g, 255 - b))
+        negative_img.save(input_image)
+    except BaseException as e:
+        print(e)
+        return settings.MANIPULATION_FAIL_MESSAGE.format("making a negative version of the image")
 
 
 def make_sepia_image(input_image):
-    img = Image.open(input_image)
-    sepia_img = Image.new('RGB', img.size)
-    for x in range(img.size[0]):
-        for y in range(img.size[1]):
-            r, g, b = img.getpixel((x, y))
-            red = int(r * 0.393 + g * 0.769 + b * 0.189)
-            green = int(r * 0.349 + g * 0.686 + b * 0.168)
-            blue = int(r * 0.272 + g * 0.534 + b * 0.131)
-            sepia_img.putpixel((x, y), (red, green, blue))
-    sepia_img.save(input_image)
+    try:
+        img = Image.open(input_image)
+        sepia_img = Image.new('RGB', img.size)
+        for x in range(img.size[0]):
+            for y in range(img.size[1]):
+                r, g, b = img.getpixel((x, y))
+                red = int(r * 0.393 + g * 0.769 + b * 0.189)
+                green = int(r * 0.349 + g * 0.686 + b * 0.168)
+                blue = int(r * 0.272 + g * 0.534 + b * 0.131)
+                sepia_img.putpixel((x, y), (red, green, blue))
+        sepia_img.save(input_image)
+    except BaseException as e:
+        print(e)
+        return settings.MANIPULATION_FAIL_MESSAGE.format("making a sepia version of the image")
 
 
 def blur_image(input_image):
-    img = Image.open(input_image)
-    blurred_image = img.filter(ImageFilter.BoxBlur(5))
-    blurred_image.save(input_image)
+    try:
+        img = Image.open(input_image)
+        blurred_image = img.filter(ImageFilter.BoxBlur(5))
+        blurred_image.save(input_image)
+    except BaseException as e:
+        print(e)
+        return settings.MANIPULATION_FAIL_MESSAGE.format("making a blurred version of the image")
 
 
 def blur_edges(input_image):
-    radius, diameter = 20, 40
-    img = Image.open(input_image)  # Paste image on white background
-    background_size = (img.size[0] + diameter, img.size[1] + diameter)
-    background = Image.new('RGB', background_size, (255, 255, 255))
-    background.paste(img, (radius, radius))  # create new images with white and black
-    mask_size = (img.size[0] + diameter, img.size[1] + diameter)
-    mask = Image.new('L', mask_size, 255)
-    black_size = (img.size[0] - diameter, img.size[1] - diameter)
-    black = Image.new('L', black_size, 0)  # create blur mask
-    mask.paste(black, (diameter, diameter))  # Blur image and paste blurred edge according to mask
-    blur = background.filter(ImageFilter.GaussianBlur(radius / 2))
-    background.paste(blur, mask=mask)
-    background.save(input_image)
+    try:
+        radius, diameter = 20, 40
+        img = Image.open(input_image)  # Paste image on white background
+        background_size = (img.size[0] + diameter, img.size[1] + diameter)
+        background = Image.new('RGB', background_size, (255, 255, 255))
+        background.paste(img, (radius, radius))  # create new images with white and black
+        mask_size = (img.size[0] + diameter, img.size[1] + diameter)
+        mask = Image.new('L', mask_size, 255)
+        black_size = (img.size[0] - diameter, img.size[1] - diameter)
+        black = Image.new('L', black_size, 0)  # create blur mask
+        mask.paste(black, (diameter, diameter))  # Blur image and paste blurred edge according to mask
+        blur = background.filter(ImageFilter.GaussianBlur(radius / 2))
+        background.paste(blur, mask=mask)
+        background.save(input_image)
+    except BaseException as e:
+        print(e)
+        return settings.MANIPULATION_FAIL_MESSAGE.format("making a blurred edges version of the image")
 
 
 # TODO: Change this so user can chnage colour
 def add_border(input_image):
-    img = Image.open(input_image)
-    colour = "white"
-    border = (20, 10, 20, 10)
-    bordered_img = ImageOps.expand(img, border=border, fill=colour)
-    bordered_img.save(input_image)
+    try:
+        img = Image.open(input_image)
+        colour = "white"
+        border = (20, 10, 20, 10)
+        bordered_img = ImageOps.expand(img, border=border, fill=colour)
+        bordered_img.save(input_image)
+    except BaseException as e:
+        print(e)
+        return settings.MANIPULATION_FAIL_MESSAGE.format("adding a border to the image")
 
 
 def add_watermarks(input_image, wm_text):
-    img = Image.open(input_image)  # open image to apply watermark to
-    img.convert("RGB")  # get image size
-    img_width, img_height = img.size  # 5 by 4 water mark grid
-    wm_size = (int(img_width * 0.20), int(img_height * 0.25))
-    wm_txt = Image.new("RGBA", wm_size, (255, 255, 255, 0))  # set text size, 1:40 of the image width
-    font_size = int(img_width / 40)  # load font e.g. gotham-bold.ttf
-    font = ImageFont.truetype(str(settings.BASE_DIRECTORY / "resources" / "Gotham-Bold.ttf"), font_size)
-    d = ImageDraw.Draw(wm_txt)
-    left = (wm_size[0] - font.getsize(wm_text)[0]) / 2
-    top = (wm_size[1] - font.getsize(wm_text)[1]) / 2  # RGBA(0, 0, 0, alpha) is black
-    # alpha channel specifies the opacity for a colour
-    alpha = 75  # write text on blank wm_text image
-    d.text((left, top), wm_text, fill=(0, 0, 0, alpha), font=font)  # uncomment to rotate watermark text
-    wm_txt = wm_txt.rotate(15, expand=1)
-    wm_txt = wm_txt.resize(wm_size, Image.ANTIALIAS)
-    for i in range(0, img_width, wm_txt.size[0]):
-        for j in range(0, img_height, wm_txt.size[1]):
-            img.paste(wm_txt, (i, j), wm_txt)  # save image with watermark
-    img.save(input_image)  # show image with watermark in preview
+    try:
+        img = Image.open(input_image)  # open image to apply watermark to
+        img.convert("RGB")  # get image size
+        img_width, img_height = img.size  # 5 by 4 water mark grid
+        wm_size = (int(img_width * 0.20), int(img_height * 0.25))
+        wm_txt = Image.new("RGBA", wm_size, (255, 255, 255, 0))  # set text size, 1:40 of the image width
+        font_size = int(img_width / 40)  # load font e.g. gotham-bold.ttf
+        font = ImageFont.truetype(str(settings.BASE_DIRECTORY / "resources" / "Gotham-Bold.ttf"), font_size)
+        d = ImageDraw.Draw(wm_txt)
+        left = (wm_size[0] - font.getsize(wm_text)[0]) / 2
+        top = (wm_size[1] - font.getsize(wm_text)[1]) / 2  # RGBA(0, 0, 0, alpha) is black
+        # alpha channel specifies the opacity for a colour
+        alpha = 75  # write text on blank wm_text image
+        d.text((left, top), wm_text, fill=(0, 0, 0, alpha), font=font)  # uncomment to rotate watermark text
+        wm_txt = wm_txt.rotate(15, expand=1)
+        wm_txt = wm_txt.resize(wm_size, Image.ANTIALIAS)
+        for i in range(0, img_width, wm_txt.size[0]):
+            for j in range(0, img_height, wm_txt.size[1]):
+                img.paste(wm_txt, (i, j), wm_txt)  # save image with watermark
+        img.save(input_image)  # show image with watermark in preview
+    except BaseException as e:
+        print(e)
+        return settings.MANIPULATION_FAIL_MESSAGE.format("adding watermarks to the image")
 
 
 def convert_image_to_png(input_image):
-    Image.open(input_image).save(settings.PNG_OUTPUT)
+    try:
+        Image.open(input_image).save(settings.PNG_OUTPUT)
+    except BaseException as e:
+        print(e)
+        return settings.MANIPULATION_FAIL_MESSAGE.format("adding watermarks to the image")
 
 
 def convert_image_to_bmp(input_image):
-    Image.open(input_image).save(settings.BMP_OUTPUT)
+    try:
+        Image.open(input_image).save(settings.BMP_OUTPUT)
+    except BaseException as e:
+        print(e)
+        return settings.MANIPULATION_FAIL_MESSAGE.format("adding watermarks to the image")
 
 
 def append_images(images, direction='horizontal',

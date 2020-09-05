@@ -29,6 +29,7 @@ HISTOGRAM_JPEG = (str(INPUT_FOLDER / "histogram-{}.jpeg"))
 IMAGE_INPUT = str(INPUT_FOLDER / "{}")
 PNG_OUTPUT = str(INPUT_FOLDER / "{}.png")
 BMP_OUTPUT = str(INPUT_FOLDER / "{}.bmp")
+MANIPULATION_FAIL_MESSAGE = "Something unexpectedly went wrong with {}\n\n."
 HELP_MESSAGE = "Welcome to my image processing bot!" \
                "\nThe bot can perform simple (and not so simple) image transformations.\n" \
                "\nCommands:" \
