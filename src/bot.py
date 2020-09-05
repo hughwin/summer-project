@@ -192,13 +192,9 @@ def listen_to_request(spam_defender):
 
                             if params and params[0] == "preserve":
                                 try:
-                                    if params[params.index("preserve") + 1] not in settings.SET_OF_COLOURS:
-                                        reply_message += "\nColour channel error: Invalid colour!"
-                                    else:
-                                        for image in image_glob:
-                                            reply_message += display_colour_channel(image,
-                                                                                    params[
-                                                                                        params.index("preserve") + 1])
+                                    for image in image_glob:
+                                        reply_message += display_colour_channel(image,
+                                                                                params[params.index("preserve") + 1])
                                     params = params[2:]
                                 except IndexError:
                                     reply_message += "\nYou didn't specify a colour for your colour channel"
