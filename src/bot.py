@@ -47,7 +47,7 @@ def reply_to_toot(post_id, account_name, message=None, status_notifications=None
             media_ids.append(image_dict["id"])
     if message is not None:
         parts = []
-        total_len = str(len(message) // settings.MAX_MESSAGE_LENGTH)
+        total_len = str(len(message) // settings.MAX_MESSAGE_LENGTH + 1)
         count = 1
         split_lines = message.splitlines(True)
         while split_lines:
