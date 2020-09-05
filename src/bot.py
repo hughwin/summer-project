@@ -394,7 +394,6 @@ def display_colour_channel(input_image, colour):
 
 def get_text_from_image(input_image):
     img = cv2.imread(input_image)
-    pytesseract.pytesseract.tesseract_cmd = os.getenv("TESSDATA_PREFIX")
     text = pytesseract.image_to_string(img)
     return text
 
