@@ -661,10 +661,10 @@ def blur_edges(input_image):
         blur = background.filter(ImageFilter.GaussianBlur(radius / 2))
         background.paste(blur, mask=mask)
         background.save(input_image)
-        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("blurred edges")
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("blur edges")
     except BaseException as e:
         print(e)
-        return settings.OPERATION_FAILED_MESSAGE.format("blurred edges")
+        return settings.OPERATION_FAILED_MESSAGE.format("blur edges")
 
 
 # TODO: Change this so user can chnage colour
