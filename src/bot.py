@@ -199,7 +199,7 @@ def listen_to_request(spam_defender):
                                             reply_message += display_colour_channel(image,
                                                                                     params[
                                                                                         params.index("preserve") + 1])
-                                            params = params[2:]
+                                    params = params[2:]
                                 except IndexError:
                                     reply_message += "\nYou didn't specify a colour for your colour channel"
                                     params = params[1:]
