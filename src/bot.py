@@ -388,6 +388,8 @@ def decolourise_image(input_image):
 
 def display_colour_channel(input_image, colour):
     try:
+        if colour not in settings.SET_OF_COLOURS:
+            return settings.OPERATION_FAILED_MESSAGE.format("preserve colour") + "colour" + colour + "not recognised \n"
         img = cv2.imread(input_image)
         temp_image = img.copy()
         if colour == "red":
