@@ -413,7 +413,7 @@ def get_text_from_image(input_image):
         return "Text from image \n\n" + text
     except (pytesseract.TesseractError, pytesseract.TesseractNotFoundError) as e:
         print(e)
-        return settings.OPERATION_FAILED_MESSAGE.format("get text from message")
+        return settings.OPERATION_FAILED_MESSAGE.format("get text from message \n\n")
 
 
 def check_image_type(filepath):
