@@ -228,7 +228,7 @@ def listen_to_request(spam_defender):
                             if params and params[0] == "brightness":
                                 for image in image_glob:
                                     try:
-                                        reply_message += adjust_brightness(image, value=params[1])
+                                        reply_message += adjust_brightness(image, value=float(params[1]))
                                         params = params[2:]
                                     except (IndexError, ValueError):
                                         reply_message += adjust_contrast(image)
@@ -237,7 +237,7 @@ def listen_to_request(spam_defender):
                             if params and params[0] == "contrast":
                                 for image in range(len(reply.media)):
                                     try:
-                                        reply_message += adjust_contrast(image, value=params[1])
+                                        reply_message += adjust_contrast(image, value=float(params[1]))
                                         params = params[2:]
                                     except (IndexError, ValueError):
                                         reply_message += adjust_contrast(image)
@@ -246,7 +246,7 @@ def listen_to_request(spam_defender):
                             if params and params[0] == "colour":
                                 for image in image_glob:
                                     try:
-                                        reply_message += adjust_colour(image, value=params[1])
+                                        reply_message += adjust_colour(image, value=float(params[1]))
                                         params = params[2:]
                                     except (IndexError, ValueError):
                                         reply_message += adjust_contrast(image)
@@ -364,7 +364,7 @@ def get_information_about_image(input_image, count):
         img_open = cv2.imread(input_image)
         message = "\n\nImage {} properties: " \
                   "\n- Number of Pixels: " + str(img_open.size) \
-                  + "\n- Shape/Dimensions: " + str(img_open.shape).format(count)
+                  + "\n- Shape/Dimensions: " + str(img_open.shape).format(count) + "\n\n"
         return message
     except cv2.error as e:
         print(e)
