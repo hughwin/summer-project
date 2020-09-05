@@ -551,7 +551,7 @@ def adjust_contrast(input_image, value=1.5):
         return settings.OPERATION_SUCCESSFUL_MESSAGE.format("adjust contrast " + str(value))
     except BaseException as e:
         print(e)
-        return settings.OPERATION_FAILED_MESSAGE.format("adjust brightness")
+        return settings.OPERATION_FAILED_MESSAGE.format("adjust contrast")
 
 
 def adjust_colour(input_image, value=1.5):
