@@ -76,15 +76,6 @@ def toot_image_of_the_day():
     mastodon.status_post(status=message, media_ids=image_dict["id"])
 
 
-def get_trends():
-    try:
-        r = requests.get("%s/api/v1/trends/" % settings.BASE_ADDRESS)
-        trends = r.json()
-        print(trends)
-    except ValueError:
-        print(settings.JSON_ERROR_MESSAGE)
-
-
 class UserNotification:
     def __init__(self, account_id, user_id, status_id, content, params):
         self.account_id = account_id
@@ -364,18 +355,36 @@ def listen_to_request(spam_defender):
         time.sleep(1)
 
 
+def get_trends():
+    try:
+        r = requests.get("%s/api/v1/trends/" % settings.BASE_ADDRESS)
+        trends = r.json()
+        print(trends)
+    except ValueError:
+        print(settings.JSON_ERROR_MESSAGE)
+
+
 def get_information_about_image(input_image, count):
-    img_open = cv2.imread(input_image)
-    message = "\n\nImage {} properties: " \
-              "\n- Number of Pixels: " + str(img_open.size) \
-              + "\n- Shape/Dimensions: " + str(img_open.shape).format(count)
-    return message
+    try:
+        img_open = cv2.imread(input_image)
+        message = "\n\nImage {} properties: " \
+                  "\n- Number of Pixels: " + str(img_open.size) \
+                  + "\n- Shape/Dimensions: " + str(img_open.shape).format(count)
+        return message
+    except cv2.error as e:
+        print(e)
+        return settings.OPERATION_FAILED_MESSAGE.format("getting information about the image")
 
 
 def decolourise_image(input_image):
-    img_open = cv2.imread(input_image)
-    gray = cv2.cvtColor(img_open, cv2.COLOR_BGR2GRAY)
-    cv2.imwrite(input_image, gray)
+    try:
+        img_open = cv2.imread(input_image)
+        gray = cv2.cvtColor(img_open, cv2.COLOR_BGR2GRAY)
+        cv2.imwrite(input_image, gray)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("decolourise")
+    except cv2.error as e:
+        print(e)
+        return settings.OPERATION_FAILED_MESSAGE.format("decolourise")
 
 
 def display_colour_channel(input_image, colour):
@@ -392,19 +401,20 @@ def display_colour_channel(input_image, colour):
             temp_image[:, :, 1] = 0
             temp_image[:, :, 2] = 0
         cv2.imwrite(input_image, temp_image)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("preserve colour " + colour)
     except cv2.error as e:
         print(e)
-        return "Something unexpectedly went wrong with preserving a colour channel"
+        return settings.OPERATION_FAILED_MESSAGE.format("preserve colour " + colour)
 
 
 def get_text_from_image(input_image):
     try:
         img = cv2.imread(input_image)
         text = pytesseract.image_to_string(img)
-        return text
+        return "Text from image \n\n" + text
     except (pytesseract.TesseractError, pytesseract.TesseractNotFoundError) as e:
         print(e)
-        return "Something went wrong with getting the text from the image.\n\n"
+        return settings.OPERATION_FAILED_MESSAGE.format("get text from message")
 
 
 def check_image_type(filepath):
@@ -437,9 +447,11 @@ def rotate_image(input_image, rotate_by_degrees=None, rotation_type=None):
         else:
             rotated = imutils.rotate_bound(image_open, int(rotate_by_degrees))
         cv2.imwrite(input_image, rotated)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("rotate by " + rotate_by_degrees)
+
     except cv2.error as e:
         print(e)
-        return settings.MANIPULATION_FAIL_MESSAGE.format("rotating the image")
+        return settings.OPERATION_FAILED_MESSAGE.format("rotate image")
 
 
 def combine_image(filepath1, filepath2=None):
@@ -468,9 +480,10 @@ def create_reflective_border(input_image):
         img = cv2.imread(input_image)
         img = cv2.copyMakeBorder(img, 10, 10, 10, 10, cv2.BORDER_REFLECT)
         cv2.imwrite(input_image, img)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("reflective border")
     except cv2.error as e:
         print(e)
-        return settings.MANIPULATION_FAIL_MESSAGE.format("creating a reflective border")
+        return settings.OPERATION_FAILED_MESSAGE.format("reflective border")
 
 
 def crop_image(input_image, left, top, right, bottom):
@@ -498,10 +511,12 @@ def crop_image(input_image, left, top, right, bottom):
         cropped_img = ImageOps.crop(img, (left, top, right, bottom))
         cropped_img.save(input_image)
 
-        return status_message
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("rotate by " + str(left) + " " + str(top)
+                                                            + " " + str(right) + " " + str(bottom))
+
     except BaseException as e:
         print(e)
-        return settings.MANIPULATION_FAIL_MESSAGE.format("cropping the image")
+        return settings.OPERATION_FAILED_MESSAGE.format("cropping the image")
 
 
 def enhance_image(input_image):
@@ -510,9 +525,10 @@ def enhance_image(input_image):
         enhancer = ImageEnhance.Sharpness(img)
         img_enhanced = enhancer.enhance(10.0)
         img_enhanced.save(input_image)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("enhance image")
     except BaseException as e:
         print(e)
-        return settings.MANIPULATION_FAIL_MESSAGE.format("enhancing the image")
+        return settings.OPERATION_FAILED_MESSAGE.format("enhance image")
 
 
 def adjust_brightness(input_image, value=1.5):
@@ -522,9 +538,10 @@ def adjust_brightness(input_image, value=1.5):
         enhancer = ImageEnhance.Brightness(img)
         img_enhanced = enhancer.enhance(value)
         img_enhanced.save(input_image)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("adjust brightness " + str(value))
     except BaseException as e:
         print(e)
-        return settings.MANIPULATION_FAIL_MESSAGE.format("adjusting the brightness")
+        return settings.OPERATION_FAILED_MESSAGE.format("adjust brightness")
 
 
 def adjust_contrast(input_image, value=1.5):
@@ -534,9 +551,10 @@ def adjust_contrast(input_image, value=1.5):
         enhancer = ImageEnhance.Contrast(img)
         img_enhanced = enhancer.enhance(value)
         img_enhanced.save(input_image)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("adjust contrast " + str(value))
     except BaseException as e:
         print(e)
-        return settings.MANIPULATION_FAIL_MESSAGE.format("adjusting the brightness")
+        return settings.OPERATION_FAILED_MESSAGE.format("adjust brightness")
 
 
 def adjust_colour(input_image, value=1.5):
@@ -546,9 +564,10 @@ def adjust_colour(input_image, value=1.5):
         enhancer = ImageEnhance.Color(img)
         img_enhanced = enhancer.enhance(value)
         img_enhanced.save(input_image)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("adjust colour " + str(value))
     except BaseException as e:
         print(e)
-        return settings.MANIPULATION_FAIL_MESSAGE.format("adjusting the colour")
+        return settings.OPERATION_FAILED_MESSAGE.format("adjust colour")
 
 
 def flip_image(input_image):
@@ -556,9 +575,10 @@ def flip_image(input_image):
         img = Image.open(input_image)
         img_flipped = ImageOps.flip(img)
         img_flipped.save(input_image)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("flip message")
     except BaseException as e:
         print(e)
-        return settings.MANIPULATION_FAIL_MESSAGE.format("flipping the image")
+        return settings.OPERATION_FAILED_MESSAGE.format("flip message")
 
 
 def mirror_image(input_image):
@@ -566,9 +586,10 @@ def mirror_image(input_image):
         img = Image.open(input_image)
         img_mirrored = ImageOps.mirror(img)
         img_mirrored.save(input_image)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("mirror image")
     except BaseException as e:
         print(e)
-        return settings.MANIPULATION_FAIL_MESSAGE.format("mirroring the image")
+        return settings.OPERATION_FAILED_MESSAGE.format("mirror image")
 
 
 def make_transparent_image(input_image):
@@ -576,9 +597,10 @@ def make_transparent_image(input_image):
         img_transparent = Image.open(input_image)
         img_transparent.putalpha(128)
         img_transparent.save(settings.PNG_OUTPUT)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("transparent image")
     except BaseException as e:
         print(e)
-        return settings.MANIPULATION_FAIL_MESSAGE.format("making the image transparent")
+        return settings.OPERATION_FAILED_MESSAGE.format("transparent image")
 
 
 def make_negative_image(input_image):
@@ -590,9 +612,10 @@ def make_negative_image(input_image):
                 r, g, b = img.getpixel((x, y))
                 negative_img.putpixel((x, y), (255 - r, 255 - g, 255 - b))
         negative_img.save(input_image)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("negative")
     except BaseException as e:
         print(e)
-        return settings.MANIPULATION_FAIL_MESSAGE.format("making a negative version of the image")
+        return settings.OPERATION_FAILED_MESSAGE.format("negative")
 
 
 def make_sepia_image(input_image):
@@ -607,9 +630,10 @@ def make_sepia_image(input_image):
                 blue = int(r * 0.272 + g * 0.534 + b * 0.131)
                 sepia_img.putpixel((x, y), (red, green, blue))
         sepia_img.save(input_image)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("sepia")
     except BaseException as e:
         print(e)
-        return settings.MANIPULATION_FAIL_MESSAGE.format("making a sepia version of the image")
+        return settings.OPERATION_FAILED_MESSAGE.format("sepia")
 
 
 def blur_image(input_image):
@@ -617,9 +641,10 @@ def blur_image(input_image):
         img = Image.open(input_image)
         blurred_image = img.filter(ImageFilter.BoxBlur(5))
         blurred_image.save(input_image)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("blur")
     except BaseException as e:
         print(e)
-        return settings.MANIPULATION_FAIL_MESSAGE.format("making a blurred version of the image")
+        return settings.OPERATION_FAILED_MESSAGE.format("blur")
 
 
 def blur_edges(input_image):
@@ -637,9 +662,10 @@ def blur_edges(input_image):
         blur = background.filter(ImageFilter.GaussianBlur(radius / 2))
         background.paste(blur, mask=mask)
         background.save(input_image)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("blurred edges")
     except BaseException as e:
         print(e)
-        return settings.MANIPULATION_FAIL_MESSAGE.format("making a blurred edges version of the image")
+        return settings.OPERATION_FAILED_MESSAGE.format("blurred edges")
 
 
 # TODO: Change this so user can chnage colour
@@ -650,9 +676,10 @@ def add_border(input_image):
         border = (20, 10, 20, 10)
         bordered_img = ImageOps.expand(img, border=border, fill=colour)
         bordered_img.save(input_image)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE("add border")
     except BaseException as e:
         print(e)
-        return settings.MANIPULATION_FAIL_MESSAGE.format("adding a border to the image")
+        return settings.OPERATION_FAILED_MESSAGE.format("add border")
 
 
 def add_watermarks(input_image, wm_text):
@@ -676,25 +703,28 @@ def add_watermarks(input_image, wm_text):
             for j in range(0, img_height, wm_txt.size[1]):
                 img.paste(wm_txt, (i, j), wm_txt)  # save image with watermark
         img.save(input_image)  # show image with watermark in preview
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("add watermarks")
     except BaseException as e:
         print(e)
-        return settings.MANIPULATION_FAIL_MESSAGE.format("adding watermarks to the image")
+        return settings.OPERATION_FAILED_MESSAGE.format("add watermarks")
 
 
 def convert_image_to_png(input_image):
     try:
         Image.open(input_image).save(settings.PNG_OUTPUT)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("convert to PNG")
     except BaseException as e:
         print(e)
-        return settings.MANIPULATION_FAIL_MESSAGE.format("adding watermarks to the image")
+        return settings.OPERATION_FAILED_MESSAGE.format("convert to PNG")
 
 
 def convert_image_to_bmp(input_image):
     try:
         Image.open(input_image).save(settings.BMP_OUTPUT)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("convert to BMP")
     except BaseException as e:
         print(e)
-        return settings.MANIPULATION_FAIL_MESSAGE.format("adding watermarks to the image")
+        return settings.OPERATION_FAILED_MESSAGE.format("convert to BMP")
 
 
 def append_images(images, direction='horizontal',
