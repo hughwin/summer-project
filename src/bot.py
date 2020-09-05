@@ -225,9 +225,8 @@ def listen_to_request(spam_defender):
                                 params = params[remove_params:]
 
                             if params and params[0] == "enhance":
-                                for image in range(len(reply.media)):
-                                    input_image = glob.glob(settings.IMAGE_INPUT.format(image))
-                                    reply_message += enhance_image(input_image[0])
+                                for image in image_glob:
+                                    reply_message += enhance_image(image)
                                 params = params[1:]
 
                             if params and params[0] == "brightness":
