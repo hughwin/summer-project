@@ -764,8 +764,7 @@ def append_images(images, direction='horizontal',
             img.paste(im, (x, offset))
             offset += im.size[1]
     bot_delete_files_in_directory(settings.INPUT_FOLDER)
-    img.save(settings.IMAGE_INPUT.format(destination_file_name))
-    check_image_type(img.save(settings.IMAGE_INPUT.format(destination_file_name)))
+    img.save(check_image_type(settings.IMAGE_INPUT.format(destination_file_name)))
 
 
 def bot_delete_files_in_directory(path):
