@@ -352,6 +352,9 @@ def listen_to_request(spam_defender):
                                     reply_message_set.add(settings.INVALID_COMMAND.format(params[0]))
                                     params = params[1:]
 
+                        if params and params[0] == "append":
+                            reply_message_set.add(append_images(image_glob))
+
                         reply_to_toot(reply.status_id, message="\n" + "".join(about_list) + "".join(reply_message_set),
                                       account_name=account_name, status_notifications=status_notifications)
             mastodon.notifications_clear()
@@ -460,16 +463,6 @@ def rotate_image(input_image, rotate_by_degrees=None, rotation_type=None):
     except cv2.error as e:
         print(e)
         return settings.OPERATION_FAILED_MESSAGE.format("rotate image")
-
-
-def combine_image(filepath1, filepath2=None):
-    if filepath2 is None:
-        filepath2 = filepath1
-    img1 = Image.open(filepath1)
-    img2 = Image.open(filepath2)
-    images = [img1, img2]
-    combined_image = append_images(images, direction="horizontal")
-    combined_image.save(filepath1)
 
 
 def show_image_histogram(input_image):
@@ -748,6 +741,7 @@ def append_images(images, direction='horizontal',
 
     img = Image.new('RGB', (new_width, new_height), color=bg_color)
 
+    destination_file_name = "appended"
     offset = 0
     for im in images:
         if direction == 'horizontal':
@@ -766,7 +760,9 @@ def append_images(images, direction='horizontal',
                 x = new_width - im.size[0]
             img.paste(im, (x, offset))
             offset += im.size[1]
-    return img
+    bot_delete_files_in_directory(settings.INPUT_FOLDER)
+    img.save(settings.IMAGE_INPUT.format(destination_file_name))
+    check_image_type(img.save(settings.IMAGE_INPUT.format(destination_file_name)))
 
 
 def bot_delete_files_in_directory(path):

@@ -38,7 +38,6 @@ HELP_MESSAGE = "Welcome to my image processing bot!" \
                "\nAbout - get information about your image(s)" \
                "\nDecolourise - returns a decolourised version of your image(s)" \
                "\nPreserve <colour> - preserve a colour channel" \
-               "\nHistogram - generate a histogram of your image(s)" \
                "\nRotate <degrees> <simple> - rotates an image by the specified number of degrees. The optional " \
                "parameter " \
                "\"simple\" will cause the rotation to crop parts of the image." \
