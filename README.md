@@ -13,9 +13,11 @@
 
 ### Environment variables
 
- 
-
 Name | Required | Default | Description
 --- | --- | --- | ---
 ACCESS_TOKEN | Yes | N/A | The access token for the Mastodon account that you want the toots to come from
 NASA_TOKEN | NO | N/A | The bot toots images obtained from NASA's [APOD](https://api.nasa.gov/) API. The main benefit of this is to show users that the bot is still active, and to advertise it to the userbase - it is not strictly required. Without a key, the bot will simply print an exception to the log. 
+
+### Heroku
+
+If you are planning on forking this repo with a view to eventually deploying it to Heroku, I would recommend starting your development on the Heroku branch. 
