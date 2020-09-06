@@ -124,20 +124,27 @@ def listen_to_request(spam_defender):
     while True:
         print("Checking notifications!")
         notifications = mastodon.notifications(mentions_only=True)
-        reply_message_set = set()
+
         for n in notifications:
             if n["type"] == "mention":
+
                 account_id = n["account"]["id"]
                 account_name = n["account"]["acct"]
                 status_id = n["status"]["id"]
+
                 content = n["status"]["content"]
                 pattern = re.compile('[^a-zA-Z]')
                 content = strip_tags(content).replace(settings.USERNAME, "").lower()
                 pattern.sub("", content)
+
                 params = content.split(" ")
-                print(params)
                 user = UserNotification(account_id, account_name, status_id, content, params)
                 media = n["status"]["media_attachments"]
+
+                reply_message_set = set()
+                about_list = []
+                print(params)
+
                 if not spam_defender.allow_account_to_make_request(account_id):
                     reply_to_toot(status_id, message=settings.TOO_MANY_REQUESTS_MESSAGE, account_name=account_name)
                     print("Denied!")
@@ -186,7 +193,7 @@ def listen_to_request(spam_defender):
                             if params and params[0] == "about":
                                 count = 1
                                 for image in image_glob:
-                                    reply_message_set.add(get_information_about_image(image, count))
+                                    about_list.append(get_information_about_image(image, count))
                                     count += 1
                                 params = params[1:]
 
@@ -343,12 +350,11 @@ def listen_to_request(spam_defender):
                                     reply_message_set.add(settings.INVALID_COMMAND.format(params[0]))
                                     params = params[1:]
 
-                        reply_to_toot(reply.status_id, message="\n" + "".join(reply_message_set),
+                        reply_to_toot(reply.status_id, message="\n" + "".join(about_list) + "".join(reply_message_set),
                                       account_name=account_name, status_notifications=status_notifications)
             mastodon.notifications_clear()
             status_notifications.clear()
             bot_delete_files_in_directory(settings.INPUT_FOLDER)
-            reply_message_set.clear()
         schedule.run_pending()
         time.sleep(1)
 
