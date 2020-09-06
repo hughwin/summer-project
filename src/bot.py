@@ -373,9 +373,9 @@ def get_trends():
 def get_information_about_image(input_image, count):
     try:
         img_open = cv2.imread(input_image)
-        message = "\n\nImage {} properties: " \
-                  "\n- Number of Pixels: " + str(img_open.size) \
-                  + "\n- Shape/Dimensions: " + str(img_open.shape).format(count) + "\n\n"
+        message = "\n\nImage {} properties: ".format(count) + \
+                  "\n- Number of Pixels: " + str(img_open.size) + \
+                  "\n- Shape/Dimensions: " + str(img_open.shape) + "\n\n"
         return message
     except cv2.error as e:
         print(e)
