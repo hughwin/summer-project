@@ -731,8 +731,10 @@ def convert_image_to_bmp(input_image):
 def append_images(images, direction='horizontal',
                   bg_color=(255, 255, 255), aligment='center'):
     open_images = []
+    print(images)
     for image in images:
         open_images.append(Image.open(image))
+    print(open_images)
     widths, heights = zip(*(i.size for i in open_images))
 
     if direction == 'horizontal':
