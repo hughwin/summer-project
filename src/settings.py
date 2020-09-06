@@ -28,7 +28,7 @@ DAILY_IMAGE = str(BASE_DIRECTORY / "daily" / "image.jpeg")
 HISTOGRAM_JPEG = (str(INPUT_FOLDER / "histogram-{}.jpeg"))
 IMAGE_INPUT = str(INPUT_FOLDER / "{}")
 PNG_OUTPUT = str(INPUT_FOLDER / "{}.png")
-BMP_OUTPUT = str(INPUT_FOLDER / "{}.bmp")
+JPEG_OUTPUT = str(INPUT_FOLDER / "{}.jpeg")
 OPERATION_SUCCESSFUL_MESSAGE = "{} \U00002705 \n"
 OPERATION_FAILED_MESSAGE = "{} \U0000274C \n"
 HELP_MESSAGE = "Welcome to my image processing bot!" \
@@ -58,8 +58,9 @@ HELP_MESSAGE = "Welcome to my image processing bot!" \
                "\nBlur - create a blurred version of your image(s)" \
                "\nBlurred - blur the borders of your image(s)" \
                "\nBorder - add a border to your image" \
+               "\nAppend - append two or more images together" \
                "\nPNG - convert your image(s) to PNG format" \
-               "\nBMP - convert your images to BMP format\n"
+               "\nJPEG - convert your images to jpeg format\n"
 SUPPORTED_FORMATS_MESSAGE = "Currently supported file upload formats: \n" \
                             "- JPEG\n- PNG\n\n"  # This is Mastodon's doing.
 SET_OF_COMMANDS = {"help", "about", "decolourise", "preserve", "histogram", "rotate", "enhance", "border", "crop",

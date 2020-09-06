@@ -313,9 +313,9 @@ def listen_to_request(spam_defender):
                                     reply_message_set.add(convert_image_to_png(image))
                                 params = params[1:]
 
-                            if params and params[0] == "bmp":
+                            if params and params[0] == "jpeg":
                                 for image in image_glob:
-                                    reply_message_set.add(convert_image_to_bmp(image))
+                                    reply_message_set.add(convert_image_to_jpeg(image))
                                 params = params[1:]
 
                             if params and params[0] == "watermark":
@@ -720,13 +720,13 @@ def convert_image_to_png(input_image):
         return settings.OPERATION_FAILED_MESSAGE.format("convert to PNG")
 
 
-def convert_image_to_bmp(input_image):
+def convert_image_to_jpeg(input_image):
     try:
-        Image.open(input_image).save(settings.BMP_OUTPUT)
-        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("convert to BMP")
+        Image.open(input_image).save(settings.JPEG_OUTPUT)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("convert to jpeg")
     except BaseException as e:
         print(e)
-        return settings.OPERATION_FAILED_MESSAGE.format("convert to BMP")
+        return settings.OPERATION_FAILED_MESSAGE.format("convert to jpeg")
 
 
 def append_images(images, direction='horizontal',
