@@ -347,13 +347,13 @@ def listen_to_request(spam_defender):
                                                             " rotated by\n")
                                     params = params[1:]
 
+                            if params and params[0] == "append":
+                                reply_message_set.add(append_images(image_glob))
+
                             elif params:
                                 if params[0] not in settings.SET_OF_COMMANDS:
                                     reply_message_set.add(settings.INVALID_COMMAND.format(params[0]))
                                     params = params[1:]
-
-                        if params and params[0] == "append":
-                            reply_message_set.add(append_images(image_glob))
 
                         reply_to_toot(reply.status_id, message="\n" + "".join(about_list) + "".join(reply_message_set),
                                       account_name=account_name, status_notifications=status_notifications)
