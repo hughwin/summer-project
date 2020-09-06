@@ -349,6 +349,7 @@ def listen_to_request(spam_defender):
 
                             if params and params[0] == "append":
                                 reply_message_set.add(append_images(image_glob))
+                                params = params[1:]
 
                             elif params:
                                 if params[0] not in settings.SET_OF_COMMANDS:
