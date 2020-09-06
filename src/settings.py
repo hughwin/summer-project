@@ -8,7 +8,11 @@ from pathlib import Path
 BASE_ADDRESS = "https://botsin.space/"
 USERNAME = "@botbot "
 NASA_ADDRESS_IMAGES = "https://api.nasa.gov/planetary/apod?api_key=%s"
+MAX_REQUESTS_PER_HOUR = 30
 TOO_MANY_REQUESTS_MESSAGE = "You're making too many requests!"
+FILE_TYPES = ('*.png', '*.jpeg')
+GIF_MESSAGE = "This bot does not support GIF format files. You have either supplied a GIF or another incompatible file." \
+              " Your file was deleted. Type \"formats\" to get a list of supported formats.\n\n"
 JSON_ERROR_MESSAGE = "Decoding JSON has failed"
 INVALID_COMMAND = "{} not recognised as a command. Type \"@botbot help\" for a list of commands"
 CROP_OUT_OF_RANGE = "\nYour {0} value is out of range; {1} is the maximum value, and must be > 0"
@@ -22,9 +26,11 @@ INPUT_FOLDER = BASE_DIRECTORY / "input"
 RESOURCES_FOLDER = BASE_DIRECTORY / "resources"
 DAILY_IMAGE = str(BASE_DIRECTORY / "daily" / "image.jpeg")
 HISTOGRAM_JPEG = (str(INPUT_FOLDER / "histogram-{}.jpeg"))
-IMAGE_INPUT = str(INPUT_FOLDER / "{}.*")
+IMAGE_INPUT = str(INPUT_FOLDER / "{}")
 PNG_OUTPUT = str(INPUT_FOLDER / "{}.png")
-BMP_OUTPUT = str(INPUT_FOLDER / "{}.bmp")
+JPEG_OUTPUT = str(INPUT_FOLDER / "{}.jpeg")
+OPERATION_SUCCESSFUL_MESSAGE = "{} \U00002705 \n"
+OPERATION_FAILED_MESSAGE = "{} \U0000274C \n"
 HELP_MESSAGE = "Welcome to my image processing bot!" \
                "\nThe bot can perform simple (and not so simple) image transformations.\n" \
                "\nCommands:" \
@@ -32,7 +38,6 @@ HELP_MESSAGE = "Welcome to my image processing bot!" \
                "\nAbout - get information about your image(s)" \
                "\nDecolourise - returns a decolourised version of your image(s)" \
                "\nPreserve <colour> - preserve a colour channel" \
-               "\nHistogram - generate a histogram of your image(s)" \
                "\nRotate <degrees> <simple> - rotates an image by the specified number of degrees. The optional " \
                "parameter " \
                "\"simple\" will cause the rotation to crop parts of the image." \
@@ -53,8 +58,11 @@ HELP_MESSAGE = "Welcome to my image processing bot!" \
                "\nBlur - create a blurred version of your image(s)" \
                "\nBlurred - blur the borders of your image(s)" \
                "\nBorder - add a border to your image" \
+               "\nAppend - append two or more images together" \
                "\nPNG - convert your image(s) to PNG format" \
-               "\nBMP - convert your images to BMP format"
+               "\nJPEG - convert your images to jpeg format\n"
+SUPPORTED_FORMATS_MESSAGE = "Currently supported file upload formats: \n" \
+                            "- JPEG\n- PNG\n\n"  # This is Mastodon's doing.
 SET_OF_COMMANDS = {"help", "about", "decolourise", "preserve", "histogram", "rotate", "enhance", "border", "crop",
                    "brightness", "contrast", "colour", "mirror", "flip", "transparent", "negative", "sepia", "blur",
                    "blurred", "border", "png,", "bmp"}
