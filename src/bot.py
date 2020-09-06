@@ -164,9 +164,8 @@ def listen_to_request(spam_defender):
                 status_id = n["status"]["id"]
 
                 content = n["status"]["content"]
-                pattern = re.compile('[^a-zA-Z0-9]')  # Removes all non-alphanumeric characters
                 content = strip_tags(content).replace(settings.USERNAME, "").lower()
-                pattern.sub(pattern, "", content)
+                re.sub('[^a-zA-Z0-9]', "", content)  # Removes all non-alphanumeric characters
 
                 params = content.split(" ")
                 user = UserNotification(account_id, account_name, status_id, content, params)
