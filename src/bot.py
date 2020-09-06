@@ -455,7 +455,7 @@ def rotate_image(input_image, rotate_by_degrees=None, rotation_type=None):
         else:
             rotated = imutils.rotate_bound(image_open, int(rotate_by_degrees))
         cv2.imwrite(input_image, rotated)
-        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("crop by " + rotate_by_degrees)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("rotate " + rotate_by_degrees)
 
     except cv2.error as e:
         print(e)
