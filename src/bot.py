@@ -730,41 +730,46 @@ def convert_image_to_bmp(input_image):
 
 def append_images(images, direction='horizontal',
                   bg_color=(255, 255, 255), aligment='center'):
-    open_images = []
-    for image in images:
-        open_images.append(Image.open(image))
-    widths, heights = zip(*(i.size for i in open_images))
+    try:
+        open_images = []
+        for image in images:
+            open_images.append(Image.open(image))
+        widths, heights = zip(*(i.size for i in open_images))
 
-    if direction == 'horizontal':
-        new_width = sum(widths)
-        new_height = max(heights)
-    else:
-        new_width = max(widths)
-        new_height = sum(heights)
-
-    img = Image.new('RGB', (new_width, new_height), color=bg_color)
-
-    destination_file_name = "appended.png"
-    offset = 0
-    for im in open_images:
         if direction == 'horizontal':
-            y = 0
-            if aligment == 'center':
-                y = int((new_height - im.size[1]) / 2)
-            elif aligment == 'bottom':
-                y = new_height - im.size[1]
-            img.paste(im, (offset, y))
-            offset += im.size[0]
+            new_width = sum(widths)
+            new_height = max(heights)
         else:
-            x = 0
-            if aligment == 'center':
-                x = int((new_width - im.size[0]) / 2)
-            elif aligment == 'right':
-                x = new_width - im.size[0]
-            img.paste(im, (x, offset))
-            offset += im.size[1]
-    bot_delete_files_in_directory(settings.INPUT_FOLDER)
-    img.save(settings.IMAGE_INPUT.format(destination_file_name))
+            new_width = max(widths)
+            new_height = sum(heights)
+
+        img = Image.new('RGB', (new_width, new_height), color=bg_color)
+
+        destination_file_name = "appended.png"
+        offset = 0
+        for im in open_images:
+            if direction == 'horizontal':
+                y = 0
+                if aligment == 'center':
+                    y = int((new_height - im.size[1]) / 2)
+                elif aligment == 'bottom':
+                    y = new_height - im.size[1]
+                img.paste(im, (offset, y))
+                offset += im.size[0]
+            else:
+                x = 0
+                if aligment == 'center':
+                    x = int((new_width - im.size[0]) / 2)
+                elif aligment == 'right':
+                    x = new_width - im.size[0]
+                img.paste(im, (x, offset))
+                offset += im.size[1]
+        bot_delete_files_in_directory(settings.INPUT_FOLDER)
+        img.save(settings.IMAGE_INPUT.format(destination_file_name))
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("append")
+    except BaseException as e:
+        print(e)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("append")
 
 
 def bot_delete_files_in_directory(path):
