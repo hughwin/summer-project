@@ -67,6 +67,12 @@ def reply_to_toot(post_id, account_name, message=None, status_notifications=None
 
 
 def toot_image_of_the_day():
+    """Method to toot a daily picture of the universe.
+
+    This function exists to toot a picture of the universe to the instance the bot is running on. This is done to
+    advertise the bot and to give users who are using the bot (maybe for the first time) the confidence that the bot
+    is still running.
+    """
     try:
         r = requests.get(settings.NASA_ADDRESS_IMAGES % os.getenv("NASA"))
         json = r.json()
@@ -80,6 +86,13 @@ def toot_image_of_the_day():
 
 
 class UserNotification:
+    """Convenience class to hold requesting user's data.
+
+
+    Whilst this call is not strictly required, as all of the data is collected in notification dictionary
+    returned from Mastodon, this class just collects all the important used parts together in one place.
+    """
+
     def __init__(self, account_id, user_id, status_id, content, params):
         self.account_id = account_id
         self.user_id = user_id
@@ -91,6 +104,14 @@ class UserNotification:
 
 
 class SpamDefender(threading.Thread):
+    """Basic spam protection from users making too many requests to the bot.
+
+
+    This class checks to see how many user requests have been made in the last hour by a particular user.
+    If the number if requests exceeds the number of requests allowed in settings.py (MAX_REQUESTS_PER_HOUR)
+    the bot denies that user from making any more requests.
+    """
+
     def __init__(self):
         threading.Thread.__init__(self)
         self.users_who_have_made_requests = {}
@@ -121,6 +142,13 @@ class SpamDefender(threading.Thread):
 
 
 def listen_to_request(spam_defender):
+    """The main loop of the program.
+
+
+    Infinite loop that constantly checks to see whether requests have been made by users. If they have,
+    it first checks that the user hasn't made too many requests. It then parses the input of the message,
+    and controls the resultant manipulation of the image.
+    """
     file_count = 0
     status_notifications = []
     schedule.every().day.at("10:30").do(toot_image_of_the_day)
@@ -136,7 +164,7 @@ def listen_to_request(spam_defender):
                 status_id = n["status"]["id"]
 
                 content = n["status"]["content"]
-                pattern = re.compile('[^a-zA-Z]')
+                pattern = re.compile('[^a-zA-Z0-9]')  # Removes all non-alphanumeric characters
                 content = strip_tags(content).replace(settings.USERNAME, "").lower()
                 pattern.sub("", content)
 
@@ -378,6 +406,11 @@ def get_trends():
 
 
 def get_information_about_image(input_image, count):
+    """Returns information about the image as a string.
+
+
+    Returns the number of pixels and the shape and dimensions of the image as a string.
+    """
     try:
         img_open = cv2.imread(input_image)
         message = "\n\nImage {} properties: ".format(count) + \
@@ -390,6 +423,7 @@ def get_information_about_image(input_image, count):
 
 
 def decolourise_image(input_image):
+    """Returns a decolourised (greyscale) version of the image."""
     try:
         img_open = cv2.imread(input_image)
         gray = cv2.cvtColor(img_open, cv2.COLOR_BGR2GRAY)
@@ -401,6 +435,7 @@ def decolourise_image(input_image):
 
 
 def display_colour_channel(input_image, colour):
+    """Returns version of the image with only one colour channel (Red, green, or blue)."""
     try:
         if colour not in settings.SET_OF_COLOURS:
             return settings.OPERATION_FAILED_MESSAGE.format("preserve colour") + "colour" + colour + "not recognised \n"
@@ -423,6 +458,7 @@ def display_colour_channel(input_image, colour):
 
 
 def get_text_from_image(input_image):
+    """Uses pytesseract to extract the text from the image and returns this as a string"""
     try:
         img = cv2.imread(input_image)
         text = pytesseract.image_to_string(img)
@@ -433,6 +469,7 @@ def get_text_from_image(input_image):
 
 
 def check_image_type(filepath):
+    """Checks what type of image the image in the toot is, and gives it the correct file extension"""
     try:
         img = Image.open(filepath)
         img_format = img.format
@@ -455,6 +492,12 @@ def check_image_type(filepath):
 
 
 def rotate_image(input_image, rotate_by_degrees=None, rotation_type=None):
+    """Rotates the image by the given number of degrees and saves a copy of the image
+
+
+    There are two rotation types, simple and complex: simple rotates the image without resizing, and (complex)
+    resizes the borders accordingly.
+    """
     try:
         image_open = cv2.imread(input_image)
         if str(rotation_type) == settings.ROTATE_SIMPLE:
@@ -481,6 +524,7 @@ def show_image_histogram(input_image):
 
 
 def create_reflective_border(input_image):
+    """Creates a reflective border around the edge of the image."""
     try:
         img = cv2.imread(input_image)
         img = cv2.copyMakeBorder(img, 10, 10, 10, 10, cv2.BORDER_REFLECT)
@@ -492,6 +536,7 @@ def create_reflective_border(input_image):
 
 
 def crop_image(input_image, left, top, right, bottom):
+    """Crops the image by the input amounts (left, top, right, bottom)"""
     try:
         img = Image.open(input_image)
         width, height = img.size
@@ -525,6 +570,7 @@ def crop_image(input_image, left, top, right, bottom):
 
 
 def enhance_image(input_image):
+    """Creates and saves an enhanced version of the image"""
     try:
         img = Image.open(input_image)
         enhancer = ImageEnhance.Sharpness(img)
@@ -537,6 +583,7 @@ def enhance_image(input_image):
 
 
 def adjust_brightness(input_image, value=1.5):
+    """Creates and saves a brightened / darkened version of the image"""
     try:
         value = float(value)
         img = Image.open(input_image)
@@ -550,6 +597,7 @@ def adjust_brightness(input_image, value=1.5):
 
 
 def adjust_contrast(input_image, value=1.5):
+    """Adjusts the contrast and saves that version of the image"""
     try:
         value = float(value)
         img = Image.open(input_image)
@@ -563,6 +611,7 @@ def adjust_contrast(input_image, value=1.5):
 
 
 def adjust_colour(input_image, value=1.5):
+    """Adjusts the colour in the image and saves that version of the image"""
     try:
         value = float(value)
         img = Image.open(input_image)
@@ -576,6 +625,7 @@ def adjust_colour(input_image, value=1.5):
 
 
 def flip_image(input_image):
+    """Flips the image and saves the flipped version"""
     try:
         img = Image.open(input_image)
         img_flipped = ImageOps.flip(img)
@@ -587,6 +637,7 @@ def flip_image(input_image):
 
 
 def mirror_image(input_image):
+    """Mirrors the image and saves the mirrored version"""
     try:
         img = Image.open(input_image)
         img_mirrored = ImageOps.mirror(img)
@@ -598,6 +649,7 @@ def mirror_image(input_image):
 
 
 def make_transparent_image(input_image):
+    """Creates a transparent (PNG) version of the image and saves it."""
     try:
         img_transparent = Image.open(input_image)
         img_transparent.putalpha(128)
@@ -609,13 +661,15 @@ def make_transparent_image(input_image):
 
 
 def make_negative_image(input_image):
+    """Creates a negative style version of the image and saves it"""
     try:
         img = Image.open(input_image)
-        negative_img = Image.new('RGB', img.size)
+        negative_img = Image.new('RGB', img.size)  # creates new image
         for x in range(img.size[0]):
             for y in range(img.size[1]):
-                r, g, b = img.getpixel((x, y))
-                negative_img.putpixel((x, y), (255 - r, 255 - g, 255 - b))
+                r, g, b = img.getpixel((x, y))  # gets a pixel at x , y coordinates
+                negative_img.putpixel((x, y), (255 - r, 255 - g, 255 - b))  # puts the 'negative' version
+                # of this pixel on the new image
         negative_img.save(input_image)
         return settings.OPERATION_SUCCESSFUL_MESSAGE.format("negative")
     except BaseException as e:
@@ -624,16 +678,17 @@ def make_negative_image(input_image):
 
 
 def make_sepia_image(input_image):
+    """Creates a sepia style version of the image and saves it"""
     try:
         img = Image.open(input_image)
-        sepia_img = Image.new('RGB', img.size)
+        sepia_img = Image.new('RGB', img.size)  # creates new image
         for x in range(img.size[0]):
             for y in range(img.size[1]):
-                r, g, b = img.getpixel((x, y))
-                red = int(r * 0.393 + g * 0.769 + b * 0.189)
+                r, g, b = img.getpixel((x, y))  # gets a pixel at x , y coordinates
+                red = int(r * 0.393 + g * 0.769 + b * 0.189)  # changes the pixel colours accordingly
                 green = int(r * 0.349 + g * 0.686 + b * 0.168)
                 blue = int(r * 0.272 + g * 0.534 + b * 0.131)
-                sepia_img.putpixel((x, y), (red, green, blue))
+                sepia_img.putpixel((x, y), (red, green, blue))  # saves the sepia version of this image
         sepia_img.save(input_image)
         return settings.OPERATION_SUCCESSFUL_MESSAGE.format("sepia")
     except BaseException as e:
@@ -642,6 +697,7 @@ def make_sepia_image(input_image):
 
 
 def blur_image(input_image):
+    """Creates a blurred version of the image and saves it"""
     try:
         img = Image.open(input_image)
         blurred_image = img.filter(ImageFilter.BoxBlur(5))
@@ -673,7 +729,7 @@ def blur_edges(input_image):
         return settings.OPERATION_FAILED_MESSAGE.format("blur edges")
 
 
-# TODO: Change this so user can chnage colour
+# TODO: Change this so user can change colour
 def add_border(input_image):
     try:
         img = Image.open(input_image)
@@ -688,6 +744,7 @@ def add_border(input_image):
 
 
 def add_watermarks(input_image, wm_text):
+    """Creates a version of the image with the users requested water marks added and saves it"""
     try:
         img = Image.open(input_image)  # open image to apply watermark to
         img.convert("RGB")  # get image size
