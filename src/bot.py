@@ -344,7 +344,7 @@ def listen_to_request(spam_defender):
                                 except (IndexError, ValueError):
                                     reply_message_set.add(settings.OPERATION_FAILED_MESSAGE.format("rotate")
                                                           + "You didn't specify how many degrees you wanted it"
-                                                            " rotated by")
+                                                            " rotated by\n")
                                     params = params[1:]
 
                             elif params:
