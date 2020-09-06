@@ -67,13 +67,16 @@ def reply_to_toot(post_id, account_name, message=None, status_notifications=None
 
 
 def toot_image_of_the_day():
-    r = requests.get(settings.NASA_ADDRESS_IMAGES % os.getenv("NASA"))
-    json = r.json()
-    print(json)
-    urllib.request.urlretrieve(json["hdurl"], settings.DAILY_IMAGE)
-    image_dict = mastodon.media_post(settings.DAILY_IMAGE)
-    message = "Here is today's image!"
-    mastodon.status_post(status=message, media_ids=image_dict["id"])
+    try:
+        r = requests.get(settings.NASA_ADDRESS_IMAGES % os.getenv("NASA"))
+        json = r.json()
+        print(json)
+        urllib.request.urlretrieve(json["hdurl"], settings.DAILY_IMAGE)
+        image_dict = mastodon.media_post(settings.DAILY_IMAGE)
+        message = "Here is today's image!"
+        mastodon.status_post(status=message, media_ids=image_dict["id"])
+    except requests.exceptions.RequestException as e:
+        print(e)
 
 
 class UserNotification:
