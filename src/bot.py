@@ -118,7 +118,7 @@ class SpamDefender(threading.Thread):
 
 
 def listen_to_request(spam_defender):
-    count = 0
+    file_count = 0
     status_notifications = []
     schedule.every().day.at("10:30").do(toot_image_of_the_day)
     while True:
@@ -152,16 +152,16 @@ def listen_to_request(spam_defender):
                     for m in media:
                         if m["type"] == "image":
                             media_url = m["url"]
-                            media_path = "{}".format(count)
+                            media_path = "{}".format(file_count)
                             urllib.request.urlretrieve(media_url, (str(settings.INPUT_FOLDER / media_path)))
                             reply_message_set.add(check_image_type(str(settings.INPUT_FOLDER / media_path)))
                             user.media.append(media)
-                            count += 1
+                            file_count += 1
                         else:
                             reply_message_set.add(settings.GIF_MESSAGE)
                     status_notifications.append(user)
                     spam_defender.add_user_to_requests(user.account_id)
-                count = 0
+                file_count = 0
                 num_files = os.listdir(str(settings.INPUT_FOLDER))
                 if len(num_files) != 0 or "help" or "formats" in params:
                     for reply in status_notifications:
@@ -170,6 +170,9 @@ def listen_to_request(spam_defender):
                                      + glob.glob(settings.IMAGE_INPUT.format("*.jpeg"))
                         print(image_glob)
                         print(reply.params)
+
+                        about_count = 1
+
                         while params:
 
                             if params and params[0] == "help":
@@ -191,10 +194,9 @@ def listen_to_request(spam_defender):
                                 params = params[1:]
 
                             if params and params[0] == "about":
-                                count = 1
                                 for image in image_glob:
-                                    about_list.append(get_information_about_image(image, count))
-                                    count += 1
+                                    about_list.append(get_information_about_image(image, about_count))
+                                    about_count += 1
                                 params = params[1:]
 
                             if params and params[0] == "preserve":
