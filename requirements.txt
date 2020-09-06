@@ -1,8 +1,11 @@
+async-timeout==2.0.1
 blurhash==1.1.4
 certifi==2020.6.20
+cffi==1.14.1
 chardet==3.0.4
 cycler==0.10.0
 decorator==4.4.2
+dnspython==1.16.0
 idna==2.10
 imutils==0.5.3
 kiwisolver==1.1.0
@@ -11,6 +14,8 @@ matplotlib==3.0.3
 numpy==1.18.5
 opencv-python==4.4.0.42
 Pillow==7.2.0
+pycparser==2.20
+PyNaCl==1.4.0
 pyparsing==2.4.7
 pytesseract==0.3.6
 python-dateutil==2.8.1
