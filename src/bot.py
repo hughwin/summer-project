@@ -166,7 +166,7 @@ def listen_to_request(spam_defender):
                 content = n["status"]["content"]
                 content = strip_tags(content).replace(settings.USERNAME, "").lower()
                 print(content)
-                content = re.sub('[^a-zA-Z0-9]', "", content)  # Removes all non-alphanumeric characters
+                content = re.sub('[^a-zA-Z0-9]', " ", content)  # Removes all non-alphanumeric characters
                 print(content)
 
                 params = content.split(" ")
