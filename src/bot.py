@@ -124,7 +124,7 @@ def listen_to_request(spam_defender):
     while True:
         print("Checking notifications!")
         notifications = mastodon.notifications(mentions_only=True)
-        reply_message = ""
+        reply_message_set = set()
         for n in notifications:
             if n["type"] == "mention":
                 account_id = n["account"]["id"]
@@ -147,11 +147,11 @@ def listen_to_request(spam_defender):
                             media_url = m["url"]
                             media_path = "{}".format(count)
                             urllib.request.urlretrieve(media_url, (str(settings.INPUT_FOLDER / media_path)))
-                            reply_message += check_image_type(str(settings.INPUT_FOLDER / media_path))
+                            reply_message_set.add(check_image_type(str(settings.INPUT_FOLDER / media_path)))
                             user.media.append(media)
                             count += 1
                         else:
-                            reply_message += settings.GIF_MESSAGE
+                            reply_message_set.add(settings.GIF_MESSAGE)
                     status_notifications.append(user)
                     spam_defender.add_user_to_requests(user.account_id)
                 count = 0
@@ -166,38 +166,40 @@ def listen_to_request(spam_defender):
                         while params:
 
                             if params and params[0] == "help":
-                                reply_message += settings.HELP_MESSAGE
+                                reply_message_set.add(settings.HELP_MESSAGE)
                                 params = params[1:]
 
                             if params and params[0] == "formats":
-                                reply_message += settings.SUPPORTED_FORMATS_MESSAGE
+                                reply_message_set.add(settings.SUPPORTED_FORMATS_MESSAGE)
                                 params = params[1:]
 
                             if params and params[0] == 'decolourise' or params and params[0] == 'decolorize':
                                 for image in image_glob:
-                                    reply_message += decolourise_image(image)
+                                    reply_message_set.add(decolourise_image(image))
                                 params = params[1:]
 
                             if params and params[0] == "text":
                                 for image in image_glob:
-                                    reply_message += get_text_from_image(image)
+                                    reply_message_set.add(get_text_from_image(image))
                                 params = params[1:]
 
                             if params and params[0] == "about":
                                 count = 1
                                 for image in image_glob:
-                                    reply_message += get_information_about_image(image, count)
+                                    reply_message_set.add(get_information_about_image(image, count))
                                     count += 1
                                 params = params[1:]
 
                             if params and params[0] == "preserve":
                                 try:
                                     for image in image_glob:
-                                        reply_message += display_colour_channel(image,
-                                                                                params[params.index("preserve") + 1])
+                                        reply_message_set.add(display_colour_channel(image,
+                                                                                     params[
+                                                                                         params.index("preserve") + 1]))
                                     params = params[2:]
                                 except IndexError:
-                                    reply_message += "\nYou didn't specify a colour for your colour channel"
+                                    reply_message_set.add(settings.OPERATION_FAILED_MESSAGE.format("preserve colour") +
+                                                          "You didn't specify a colour for your colour channel\n")
                                     params = params[1:]
 
                             if params and params[0] == "histogram":
@@ -209,143 +211,144 @@ def listen_to_request(spam_defender):
                                 remove_params = 0
                                 for image in image_glob:
                                     try:
-                                        reply_message += crop_image(image,
-                                                                    left=params[1],
-                                                                    right=params[2],
-                                                                    top=params[3],
-                                                                    bottom=params[4])
+                                        reply_message_set.add(crop_image(image,
+                                                                         left=params[1],
+                                                                         right=params[2],
+                                                                         top=params[3],
+                                                                         bottom=params[4]))
                                         remove_params = 5
                                     except (IndexError, ValueError):
-                                        reply_message += "\nCrop failed!"
+                                        reply_message_set.add(settings.OPERATION_FAILED_MESSAGE.format("crop"))
                                         remove_params = 1
                                 params = params[remove_params:]
 
                             if params and params[0] == "enhance":
                                 for image in image_glob:
-                                    reply_message += enhance_image(image)
+                                    reply_message_set.add(enhance_image(image))
                                 params = params[1:]
 
                             if params and params[0] == "brightness":
                                 for image in image_glob:
                                     try:
-                                        reply_message += adjust_brightness(image, value=float(params[1]))
+                                        reply_message_set.add(adjust_brightness(image, value=float(params[1])))
                                         params = params[2:]
                                     except (IndexError, ValueError):
-                                        reply_message += adjust_contrast(image)
+                                        reply_message_set.add(adjust_contrast(image))
                                         params = params[1:]
 
                             if params and params[0] == "contrast":
                                 for image in range(len(reply.media)):
                                     try:
-                                        reply_message += adjust_contrast(image, value=float(params[1]))
+                                        reply_message_set.add(adjust_contrast(image, value=float(params[1])))
                                         params = params[2:]
                                     except (IndexError, ValueError):
-                                        reply_message += adjust_contrast(image)
+                                        reply_message_set.add(adjust_contrast(image))
                                         params = params[1:]
 
                             if params and params[0] == "colour":
                                 for image in image_glob:
                                     try:
-                                        reply_message += adjust_colour(image, value=float(params[1]))
+                                        reply_message_set.add(adjust_colour(image, value=float(params[1])))
                                         params = params[2:]
                                     except (IndexError, ValueError):
-                                        reply_message += adjust_contrast(image)
+                                        reply_message_set.add(adjust_contrast(image))
                                         params = params[1:]
 
                             if params and params[0] == "mirror":
                                 for image in image_glob:
-                                    reply_message += mirror_image(image)
+                                    reply_message_set.add(mirror_image(image))
                                 params = params[1:]
 
                             if params and params[0] == "flip":
                                 for image in image_glob:
-                                    reply_message += flip_image(image)
+                                    reply_message_set.add(flip_image(image))
                                 params = params[1:]
 
                             if params and params[0] == "transparent":
                                 for image in image_glob:
-                                    reply_message += make_transparent_image(image)
+                                    reply_message_set.add(make_transparent_image(image))
                                 params = params[1:]
 
                             if params and params[0] == "negative":
                                 for image in image_glob:
-                                    reply_message += make_negative_image(image)
+                                    reply_message_set.add(make_negative_image(image))
                                 params = params[1:]
 
                             if params and params[0] == "sepia":
                                 for image in image_glob:
-                                    reply_message += make_sepia_image(image)
+                                    reply_message_set.add(make_sepia_image(image))
                                 params = params[1:]
 
                             if params and params[0] == "blur":
                                 for image in image_glob:
-                                    reply_message += blur_image(image)
+                                    reply_message_set.add(blur_image(image))
                                 params = params[1:]
 
                             if params and params[0] == "blurred":
                                 for image in image_glob:
-                                    reply_message += blur_edges(image)
+                                    reply_message_set.add(blur_edges(image))
                                 params = params[1:]
 
                             if params and params[0] == "border":
                                 for image in image_glob:
-                                    reply_message += add_border(image)
+                                    reply_message_set.add(add_border(image))
                                 params = params[1:]
 
                             if params and params[0] == "reflective" and params[1] == "border":
                                 for image in image_glob:
-                                    reply_message += create_reflective_border(image)
+                                    reply_message_set.add(create_reflective_border(image))
                                 params = params[2:]
 
                             if params and params[0] == "png":
                                 for image in image_glob:
-                                    reply_message += convert_image_to_png(image)
+                                    reply_message_set.add(convert_image_to_png(image))
                                 params = params[1:]
 
                             if params and params[0] == "bmp":
                                 for image in image_glob:
-                                    reply_message += convert_image_to_bmp(image)
+                                    reply_message_set.add(convert_image_to_bmp(image))
                                 params = params[1:]
 
                             if params and params[0] == "watermark":
                                 try:
                                     for image in image_glob:
-                                        reply_message += add_watermarks(image,
-                                                                        wm_text=params[1])
+                                        reply_message_set.add(add_watermarks(image,
+                                                                             wm_text=params[1]))
                                         params = params[2:]
                                 except IndexError:
-                                    reply_message += "\nNo watermark specified"
+                                    reply_message_set.add("\nNo watermark specified")
 
                             if params and params[0] == "rotate":
                                 try:
                                     remove_params = 0
                                     for image in image_glob:
                                         if len(params) >= 3 and params[2] == "simple" and params != []:
-                                            reply_message += rotate_image(image,
-                                                                          rotate_by_degrees=params[1],
-                                                                          rotation_type=params[2])
+                                            reply_message_set.add(rotate_image(image,
+                                                                               rotate_by_degrees=params[1],
+                                                                               rotation_type=params[2]))
                                             remove_params = 3
                                         else:
-                                            reply_message += rotate_image(image,
-                                                                          rotate_by_degrees=params[1])
+                                            reply_message_set.add(rotate_image(image,
+                                                                               rotate_by_degrees=params[1]))
                                             remove_params = 2
                                     params = params[remove_params:]
                                 except (IndexError, ValueError):
-                                    reply_message += "\nYou didn't specify how many degrees you wanted it rotated " \
-                                                     "by "
+                                    reply_message_set.add(settings.OPERATION_FAILED_MESSAGE.format("rotate")
+                                                          + "You didn't specify how many degrees you wanted it"
+                                                            " rotated by")
                                     params = params[1:]
 
                             elif params:
                                 if params[0] not in settings.SET_OF_COMMANDS:
-                                    reply_message += settings.INVALID_COMMAND.format(params[0])
+                                    reply_message_set.add(settings.INVALID_COMMAND.format(params[0]))
                                     params = params[1:]
 
-                        reply_to_toot(reply.status_id, message="\n" + str(reply_message),
+                        reply_to_toot(reply.status_id, message="\n" + "".join(reply_message_set),
                                       account_name=account_name, status_notifications=status_notifications)
             mastodon.notifications_clear()
             status_notifications.clear()
             bot_delete_files_in_directory(settings.INPUT_FOLDER)
-            reply_message = ""
+            reply_message_set.clear()
         schedule.run_pending()
         time.sleep(1)
 
