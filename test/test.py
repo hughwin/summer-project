@@ -102,7 +102,7 @@ class TestBot(TestCase):
         with TemporaryDirectory() as temp:
             fibo = generate_temp_image(temp)
             example_rotation = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_rotate.jpeg"))
-            bot.rotate_image(fibo, 75)
+            bot.rotate_image(fibo, "75")
             rotated_image = cv2.imread(fibo)
 
             assert example_rotation.shape == rotated_image.shape and not (np.bitwise_xor(

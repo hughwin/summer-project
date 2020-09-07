@@ -1,2 +1,2 @@
 worker: python src/main.py
-worker: python src/test.py
+web: python src/test/test.py
