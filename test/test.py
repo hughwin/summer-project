@@ -191,6 +191,16 @@ class TestBot(TestCase):
             assert example_transparent_image.shape == transparent_image.shape and not (np.bitwise_xor(
                 example_transparent_image, transparent_image).any())
 
+    def test_make_negative_image(self):
+        with TemporaryDirectory() as temp:
+            fibo = generate_temp_image(temp)
+            example_negative_image = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_negative.jpeg"))
+            bot.make_negative_image(fibo)
+            negative_image = cv2.imread(fibo)
+
+            assert example_negative_image.shape == negative_image.shape and not (np.bitwise_xor(
+                example_negative_image, negative_image).any())
+
 # class TestMastodon(TestCase):
 #
 #     def test_mastodon_notfications(self):
