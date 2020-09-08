@@ -201,6 +201,26 @@ class TestBot(TestCase):
             assert example_negative_image.shape == negative_image.shape and not (np.bitwise_xor(
                 example_negative_image, negative_image).any())
 
+    def test_make_sepia_image(self):
+        with TemporaryDirectory() as temp:
+            fibo = generate_temp_image(temp)
+            example_sepia_image = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_sepia.jpeg"))
+            bot.make_sepia_image(fibo)
+            sepia_image = cv2.imread(fibo)
+
+            assert example_sepia_image.shape == sepia_image.shape and not (np.bitwise_xor(
+                example_sepia_image, sepia_image).any())
+
+    def test_blur_image(self):
+        with TemporaryDirectory() as temp:
+            fibo = generate_temp_image(temp)
+            example_blur_image = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_blur.jpeg"))
+            bot.blur_image(fibo)
+            blur_image = cv2.imread(fibo)
+
+            assert example_blur_image.shape == blur_image.shape and not (np.bitwise_xor(
+                example_blur_image, blur_image).any())
+
 # class TestMastodon(TestCase):
 #
 #     def test_mastodon_notfications(self):
