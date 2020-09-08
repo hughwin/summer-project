@@ -738,7 +738,7 @@ def add_border(input_image):
         border = (20, 10, 20, 10)
         bordered_img = ImageOps.expand(img, border=border, fill=colour)
         bordered_img.save(input_image)
-        return settings.OPERATION_SUCCESSFUL_MESSAGE("add border")
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("add border")
     except BaseException as e:
         print(e)
         return settings.OPERATION_FAILED_MESSAGE.format("add border")

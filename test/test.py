@@ -111,7 +111,7 @@ class TestBot(TestCase):
     def test_create_border(self):
         with TemporaryDirectory() as temp:
             fibo = generate_temp_image(temp)
-            example_border = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_border.jpeg"))
+            example_border = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_blur_border.jpeg"))
             bot.create_reflective_border(fibo)
             bordered_image = cv2.imread(fibo)
 
@@ -230,6 +230,16 @@ class TestBot(TestCase):
 
             assert example_blur_edges_image.shape == blur_edges_image.shape and not (np.bitwise_xor(
                 example_blur_edges_image, blur_edges_image).any())
+
+    def test_add_border(self):
+        with TemporaryDirectory() as temp:
+            fibo = generate_temp_image(temp)
+            example_bordered_image = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_border.jpeg"))
+            bot.add_border(fibo)
+            blur_edges_image = cv2.imread(fibo)
+
+            assert example_bordered_image.shape == blur_edges_image.shape and not (np.bitwise_xor(
+                example_bordered_image, blur_edges_image).any())
 
 # class TestMastodon(TestCase):
 #
