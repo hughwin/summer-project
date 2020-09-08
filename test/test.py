@@ -221,6 +221,16 @@ class TestBot(TestCase):
             assert example_blur_image.shape == blur_image.shape and not (np.bitwise_xor(
                 example_blur_image, blur_image).any())
 
+    def test_blur_edges(self):
+        with TemporaryDirectory() as temp:
+            fibo = generate_temp_image(temp)
+            example_blur_edges_image = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_blur_edges.jpeg"))
+            bot.blur_edges(fibo)
+            blur_edges_image = cv2.imread(fibo)
+
+            assert example_blur_edges_image.shape == blur_edges_image.shape and not (np.bitwise_xor(
+                example_blur_edges_image, blur_edges_image).any())
+
 # class TestMastodon(TestCase):
 #
 #     def test_mastodon_notfications(self):
