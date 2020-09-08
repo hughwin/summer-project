@@ -47,12 +47,12 @@ class TestBot(TestCase):
         expected_x = 700
         expected_y = 525
 
-        expected_string = ("Image properties: "
+        expected_string = ("\n\nImage 1 properties: "
                            "\n- Number of Pixels: " + "{}"
-                           + "\n- Shape/Dimensions: " + "({}, " + "{}, " + "{})").format(number_of_pixels,
-                                                                                         expected_y, expected_x, 3)
+                           + "\n- Shape/Dimensions: " + "({}, " + "{}, " + "{})\n\n").format(number_of_pixels,
+                                                                                             expected_y, expected_x, 3)
         result_string = bot.get_information_about_image(str(Path.cwd() /
-                                                            "test_resources" / "fibo.jpeg"))
+                                                            "test_resources" / "fibo.jpeg"), "1")
         assert result_string == expected_string
 
     def test_get_text_from_images(self):
@@ -240,6 +240,30 @@ class TestBot(TestCase):
 
             assert example_bordered_image.shape == blur_edges_image.shape and not (np.bitwise_xor(
                 example_bordered_image, blur_edges_image).any())
+
+    def test_add_watermark(self):
+        with TemporaryDirectory() as temp:
+            fibo = generate_temp_image(temp)
+            example_watermarked_image = cv2.imread(str(Path.cwd() / "test_resources" / "fibo_watermark.jpeg"))
+            bot.add_watermarks(fibo, "watermark")
+            watermarked_image = cv2.imread(fibo)
+
+            assert example_watermarked_image.shape == watermarked_image.shape and not (np.bitwise_xor(
+                example_watermarked_image, watermarked_image).any())
+
+    def test_append_images(self):
+        with TemporaryDirectory() as temp:
+            fibo1 = generate_temp_image(temp)
+            fibo2 = generate_temp_image(temp)
+            print(Path(fibo1))
+            images = [fibo1, fibo2]
+
+            example_appended_image = cv2.imread(str(Path.cwd() / "test_resources" / "appended.png"))
+            bot.append_images(images)
+            appended_image = cv2.imread(str(Path(Path.cwd() / "input" / "appended.png")))
+
+            assert example_appended_image.shape == appended_image.shape and not (np.bitwise_xor(
+                example_appended_image, appended_image).any())
 
 # class TestMastodon(TestCase):
 #
