@@ -394,6 +394,7 @@ def listen_to_request(spam_defender):
                         print("starting sentiment...")
                         sentiment_message = str(sentiment_analysis("".join(sentiment)))
                         print("tooting")
+                        print(sentiment_message)
                         reply_to_toot(reply.status_id,
                                       message="\n" + sentiment_message + "\n\n" + "".join(about_list) + "".join(
                                           reply_message_set),
