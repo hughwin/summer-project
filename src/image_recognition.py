@@ -4,6 +4,7 @@ from google.cloud import vision
 
 
 def detect_faces(image):
+    print("faces called")
     vision_client = vision.Client()
 
     with io.open(image, 'rb') as image_file:
@@ -18,6 +19,7 @@ def detect_faces(image):
         return_string += "anger: {}".format(face.emotions.anger) + "\n" + \
                          "joy: {}".format(face.emotions.joy) + "\n" + \
                          "surprise: {}".format(face.emotions.surprise) + "\n"
+        print(return_string)
     return return_string
 
 #
