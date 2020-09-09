@@ -213,7 +213,7 @@ def listen_to_request(spam_defender):
 
                         while params:
 
-                            if params and params[0] == "help" or "hello":
+                            if params and params[0] == "help":
                                 reply_message_set.add(settings.HELP_MESSAGE)
                                 params = params[1:]
 
