@@ -393,7 +393,8 @@ def listen_to_request(spam_defender):
                                     reply_message_set.add(settings.INVALID_COMMAND.format("\"" + params[0] + "\""))
                                     sentiment_list.append(params[0] + " ")
                                     params = params[1:]
-                        sentiment_message = (sentiment_analysis("".join(sentiment_list)) + "\n\n")
+                        sentiment_message = (sentiment_analysis("".join(sentiment_list)) + "\n\n") \
+                            if sentiment_list != [] else ""
                         reply_to_toot(reply.status_id, message="\n" + sentiment_message + "".join(about_list) + "".join(
                             reply_message_set),
                                       account_name=account_name, status_notifications=status_notifications)
