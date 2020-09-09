@@ -498,8 +498,8 @@ def get_text_from_image(input_image):
 def check_image_type(filepath):
     """Checks what type of image the image in the toot is, and gives it the correct file extension"""
     try:
-        img = Image.open(filepath)
-        img_format = img.format
+        with Image.open(filepath) as img:
+            img_format = img.format
         user_message = ""
         if img_format == "GIF":
             os.remove(filepath)  # Mastodon uses MP4 for gifs, but in case one slips through.
