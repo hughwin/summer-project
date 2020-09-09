@@ -206,7 +206,7 @@ def listen_to_request(spam_defender):
                         print(reply.params)
 
                         about_count = 1
-                        sentiment = []
+                        sentiment_list = []
 
                         while params:
 
@@ -389,10 +389,11 @@ def listen_to_request(spam_defender):
                             elif params:
                                 if params[0] not in settings.SET_OF_COMMANDS:
                                     reply_message_set.add(settings.INVALID_COMMAND.format(params[0]))
-                                    sentiment.append(params[0])
+                                    sentiment_list.append(params[0])
                                     params = params[1:]
-                        print("starting sentiment...")
-                        sentiment_message = str(sentiment_analysis("".join(sentiment)))
+                        print("starting sentiment_list...")
+                        sentiment_string = "".join(sentiment_list)
+                        sentiment_message = (sentiment_analysis(sentiment_string))
                         print("tooting")
                         print(sentiment_message)
                         reply_to_toot(reply.status_id,
