@@ -21,6 +21,7 @@ from matplotlib import pyplot as plt
 from textblob import TextBlob
 
 import html_stripper
+import image_recognition
 import settings
 
 load_dotenv()  # Important variables such as my secret key are stored in a .env file.
@@ -386,6 +387,10 @@ def listen_to_request(spam_defender):
 
                             if params and params[0] == "append":
                                 reply_message_set.add(append_images(image_glob))
+                                params = params[1:]
+
+                            if params and params[0] == "faces":
+                                reply_message_set.add(image_recognition.detect_faces(image_glob))
                                 params = params[1:]
 
                             elif params:

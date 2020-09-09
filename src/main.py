@@ -5,8 +5,8 @@ import settings
 
 
 def main():
-    with open(str(settings.BASE_DIRECTORY / os.getenv("google-site-verification")), "w") as file:
-        file.write("google-site-verification:" + os.getenv("google-site-verification"))
+    with open(str(settings.BASE_DIRECTORY / "GCP-CRED.json"), "w") as file:
+        file.write(os.getenv("GCP-CRED"))
     bot.start_bot()
 
 
