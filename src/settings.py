@@ -14,14 +14,14 @@ FILE_TYPES = ('*.png', '*.jpeg')
 GIF_MESSAGE = "This bot does not support GIF format files. You have either supplied a GIF or another incompatible file." \
               " Your file was deleted. Type \"formats\" to get a list of supported formats.\n\n"
 JSON_ERROR_MESSAGE = "Decoding JSON has failed"
-INVALID_COMMAND = "{} not recognised as a command. Type \"@botbot help\" for a list of commands"
+INVALID_COMMAND = "{} not recognised as a command.\n"
 CROP_OUT_OF_RANGE = "\nYour {0} value is out of range; {1} is the maximum value, and must be > 0"
 CROP_FAILURE_MESSAGE = "\nCrop failed. You didn't supply enough parameters!" \
                        "\nPlease supply integers in the format crop <int> <int> <int> <int>"
 MAX_MESSAGE_LENGTH = 500
 ROTATE_COMMAND = "rotate"
 ROTATE_SIMPLE = "simple"
-BASE_DIRECTORY = Path.cwd() / "src"
+BASE_DIRECTORY = Path.cwd()
 INPUT_FOLDER = BASE_DIRECTORY / "input"
 RESOURCES_FOLDER = BASE_DIRECTORY / "resources"
 DAILY_IMAGE = str(BASE_DIRECTORY / "daily" / "image.jpeg")
@@ -31,7 +31,7 @@ PNG_OUTPUT = str(INPUT_FOLDER / "{}.png")
 JPEG_OUTPUT = str(INPUT_FOLDER / "{}.jpeg")
 OPERATION_SUCCESSFUL_MESSAGE = "{} \U00002705 \n"
 OPERATION_FAILED_MESSAGE = "{} \U0000274C \n"
-HELP_MESSAGE = "Welcome to my image processing bot!" \
+HELP_MESSAGE = "Hello! \n\nWelcome to @botbot, the image processing bot for Mastodon!" \
                "\nThe bot can perform simple (and not so simple) image transformations.\n" \
                "\nCommands:" \
                "\nHelp - get help" \

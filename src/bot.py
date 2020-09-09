@@ -197,10 +197,10 @@ def listen_to_request(spam_defender):
                     spam_defender.add_user_to_requests(user.account_id)
                 file_count = 0
                 num_files = os.listdir(str(settings.INPUT_FOLDER))
-                if len(num_files) != 0 or "help" or "formats" in params:
+                if len(num_files) != 0 or "help" or "formats" or "hello" in params:
 
                     sentiment_list = []
-                    
+
                     for reply in status_notifications:
                         os.chdir(str(settings.INPUT_FOLDER))
                         image_glob = glob.glob(settings.IMAGE_INPUT.format("*.png")) \
@@ -212,7 +212,7 @@ def listen_to_request(spam_defender):
 
                         while params:
 
-                            if params and params[0] == "help":
+                            if params and params[0] == "help" or "hello":
                                 reply_message_set.add(settings.HELP_MESSAGE)
                                 params = params[1:]
 
@@ -390,17 +390,12 @@ def listen_to_request(spam_defender):
 
                             elif params:
                                 if params[0] not in settings.SET_OF_COMMANDS:
-                                    reply_message_set.add(settings.INVALID_COMMAND.format(params[0]))
-                                    sentiment_list.append(params[0])
+                                    reply_message_set.add(settings.INVALID_COMMAND.format("\"" + params[0] + "\""))
+                                    sentiment_list.append(params[0] + " ")
                                     params = params[1:]
-                        print("starting sentiment_list...")
-                        sentiment_string = "".join(sentiment_list)
-                        sentiment_message = (sentiment_analysis(sentiment_string))
-                        print("tooting")
-                        print(sentiment_message)
-                        reply_to_toot(reply.status_id,
-                                      message="\n" + sentiment_message + "\n\n" + "".join(about_list) + "".join(
-                                          reply_message_set),
+                        sentiment_message = (sentiment_analysis("".join(sentiment_list)) + "\n\n")
+                        reply_to_toot(reply.status_id, message="\n" + sentiment_message + "".join(about_list) + "".join(
+                            reply_message_set),
                                       account_name=account_name, status_notifications=status_notifications)
             mastodon.notifications_clear()
             status_notifications.clear()
@@ -419,6 +414,7 @@ def get_trends():
 
 
 def sentiment_analysis(text):
+    print(text)
     polarity = TextBlob(text)
     polarity_score = polarity.sentiment.polarity
     print(polarity_score)
