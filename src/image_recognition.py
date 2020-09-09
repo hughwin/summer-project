@@ -5,7 +5,7 @@ from google.cloud import vision
 
 def detect_faces(image):
     print("faces called")
-    vision_client = vision.Client()
+    vision_client = vision.ImageAnnotatorClient()
 
     with io.open(image, 'rb') as image_file:
         content = image_file.read()
