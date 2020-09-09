@@ -391,7 +391,7 @@ def listen_to_request(spam_defender):
                                     reply_message_set.add(settings.INVALID_COMMAND.format(params[0]))
                                     sentiment.append(params[0])
                                     params = params[1:]
-
+                        print("starting sentiment...")
                         sentiment_message = sentiment_analysis("".join(sentiment))
                         reply_to_toot(reply.status_id,
                                       message="\n" + sentiment_message + "\n\n" + "".join(about_list) + "".join(
@@ -416,6 +416,7 @@ def get_trends():
 def sentiment_analysis(text):
     polarity = TextBlob(text)
     polarity_score = polarity.sentiment.polarity
+    print(polarity_score)
     if polarity_score >= .35:
         return random.choice(settings.POSITIVE_RESPONSES)
     if .35 > polarity_score > -.35:
