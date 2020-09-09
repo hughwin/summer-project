@@ -390,8 +390,9 @@ def listen_to_request(spam_defender):
                                 params = params[1:]
 
                             if params and params[0] == "faces":
-                                reply_message_set.add(image_recognition.detect_faces(image))
-                                params = params[1:]
+                                for image in image_glob:
+                                    reply_message_set.add(image_recognition.detect_faces(image))
+                                    params = params[1:]
 
                             elif params:
                                 if params[0] not in settings.SET_OF_COMMANDS:
