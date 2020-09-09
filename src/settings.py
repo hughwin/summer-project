@@ -67,6 +67,6 @@ SET_OF_COMMANDS = {"help", "about", "decolourise", "preserve", "histogram", "rot
                    "brightness", "contrast", "colour", "mirror", "flip", "transparent", "negative", "sepia", "blur",
                    "blurred", "border", "png,", "bmp"}
 SET_OF_COLOURS = {"red", "green", "blue"}
-NEGATIVE_RESPONSES = ["Hey, you're mean!", "Well, if that's how you feel.", "Hold your tongue!"]
+NEGATIVE_RESPONSES = ["Hey, you're mean!", "Well, if that's how you feel...", "Hold your tongue!"]
 POSITIVE_RESPONSES = ["Why thank you!", "Same to you :)!", "Aww, you say such nice things."]
 NEUTRAL_RESPONSES = ["Sure.", "Ok..."]

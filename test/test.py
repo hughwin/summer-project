@@ -8,6 +8,7 @@ import numpy as np
 from dotenv import load_dotenv
 
 import bot
+import settings
 
 load_dotenv()
 
@@ -265,8 +266,11 @@ class TestBot(TestCase):
             assert example_appended_image.shape == appended_image.shape and not (np.bitwise_xor(
                 example_appended_image, appended_image).any())
 
-    # def test_sentiment_analysis(self):
-    #     assert
+    def test_sentiment_analysis(self):
+        print(bot.sentiment_analysis("You're amazing. You're so fun to use"))
+        assert bot.sentiment_analysis("You're amazing. You're so fun to use") in settings.POSITIVE_RESPONSES
+        assert bot.sentiment_analysis("This is average") in settings.NEUTRAL_RESPONSES
+        assert bot.sentiment_analysis("This awful. This bot doesn't work. I hate it") in settings.NEGATIVE_RESPONSES
 
 # class TestMastodon(TestCase):
 #

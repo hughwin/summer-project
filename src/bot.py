@@ -210,8 +210,6 @@ def listen_to_request(spam_defender):
 
                         while params:
 
-                            sentiment = []
-
                             if params and params[0] == "help":
                                 reply_message_set.add(settings.HELP_MESSAGE)
                                 params = params[1:]
@@ -417,10 +415,10 @@ def get_trends():
 
 def sentiment_analysis(text):
     polarity = TextBlob(text)
-    polarity = polarity.sentiment.polarity
-    if polarity >= .5:
+    polarity_score = polarity.sentiment.polarity
+    if polarity_score >= .35:
         return random.choice(settings.POSITIVE_RESPONSES)
-    if .5 > polarity > -.5:
+    if .35 > polarity_score > -.35:
         return random.choice(settings.NEUTRAL_RESPONSES)
     else:
         return random.choice(settings.NEGATIVE_RESPONSES)
