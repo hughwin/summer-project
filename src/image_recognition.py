@@ -15,9 +15,9 @@ def detect_faces(image):
 
     return_string = "Faces: "
     for face in faces:
-        faces += "anger: {}".format(face.emotions.anger) + "\n" + \
-                 "joy: {}".format(face.emotions.joy) + "\n" + \
-                 "surprise: {}".format(face.emotions.surprise) + "\n"
+        return_string += "anger: {}".format(face.emotions.anger) + "\n" + \
+                         "joy: {}".format(face.emotions.joy) + "\n" + \
+                         "surprise: {}".format(face.emotions.surprise) + "\n"
     return return_string
 
 #
