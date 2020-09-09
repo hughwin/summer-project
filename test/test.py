@@ -265,6 +265,9 @@ class TestBot(TestCase):
             assert example_appended_image.shape == appended_image.shape and not (np.bitwise_xor(
                 example_appended_image, appended_image).any())
 
+    # def test_sentiment_analysis(self):
+    #     assert
+
 # class TestMastodon(TestCase):
 #
 #     def test_mastodon_notfications(self):
