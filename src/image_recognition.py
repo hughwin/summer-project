@@ -17,9 +17,10 @@ def detect_faces(input_image):
     with io.open(input_image, 'rb') as image_file:
         content = image_file.read()
 
-    image = vision_client.image(content=content)
+    image = vision.types.Image(content=content)
+    response = vision_client.face_detection(image=image)
 
-    faces = image.detect_faces()
+    faces = response.face_annotations
 
     return_string = "Faces: "
     for face in faces:
