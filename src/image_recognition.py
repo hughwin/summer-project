@@ -7,7 +7,7 @@ from google.oauth2 import service_account
 import settings
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = str(settings.BASE_DIRECTORY / "gcp_cred.json")
-credentials = service_account.Credentials.from_service_account_file()
+credentials = service_account.Credentials.from_service_account_file(os.getenv('GOOGLE_APPLICATION_CREDENTIALS'))
 
 
 def detect_faces(image):
