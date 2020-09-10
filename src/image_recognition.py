@@ -1,11 +1,13 @@
 import io
+import os
 
 from google.cloud import vision
 from google.oauth2 import service_account
 
 import settings
 
-credentials = service_account.Credentials.from_service_account_file(str(settings.BASE_DIRECTORY / "gcp_cred.json"))
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = str(settings.BASE_DIRECTORY / "gcp_cred.json")
+credentials = service_account.Credentials.from_service_account_file()
 
 
 def detect_faces(image):
