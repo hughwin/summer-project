@@ -22,12 +22,16 @@ def detect_faces(input_image):
 
     faces = response.face_annotations
 
-    return_string = "Faces: "
+    likelihood_name = ('UNKNOWN', 'VERY_UNLIKELY', 'UNLIKELY', 'POSSIBLE',
+                       'LIKELY', 'VERY_LIKELY')
+    print('Faces:')
+
+    return_string = ""
     for face in faces:
-        return_string += "anger: {}".format(face.emotions.anger) + "\n" + \
-                         "joy: {}".format(face.emotions.joy) + "\n" + \
-                         "surprise: {}".format(face.emotions.surprise) + "\n"
-        print(return_string)
+        return_string += 'anger: {}'.format(likelihood_name[face.anger_likelihood]) + \
+                         'joy: {}'.format(likelihood_name[face.joy_likelihood]) + \
+                         'surprise: {}'.format(likelihood_name[face.surprise_likelihood]) + "\n\n"
+
     return return_string
 
 #
