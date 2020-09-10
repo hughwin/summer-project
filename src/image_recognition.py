@@ -10,11 +10,11 @@ os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = str(settings.BASE_DIRECTORY / "gc
 credentials = service_account.Credentials.from_service_account_file(os.getenv('GOOGLE_APPLICATION_CREDENTIALS'))
 
 
-def detect_faces(image):
+def detect_faces(input_image):
     print("faces called")
     vision_client = vision.ImageAnnotatorClient()
 
-    with io.open(image, 'rb') as image_file:
+    with io.open(input_image, 'rb') as image_file:
         content = image_file.read()
 
     image = vision_client.image(content=content)
