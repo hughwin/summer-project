@@ -7,7 +7,7 @@ import settings
 
 def main():
     with open(str(settings.BASE_DIRECTORY / "gcp_cred.json"), "w") as file:
-        json.dump(os.getenv("GCP_CRED"), file)
+        os.getenv("GCP_CRED", file)
     with open(str(settings.BASE_DIRECTORY / 'gcp_cred.json'), 'r') as f:
         data = json.load(f)
     print(data)
