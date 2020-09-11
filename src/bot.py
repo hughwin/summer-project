@@ -389,9 +389,19 @@ def listen_to_request(spam_defender):
                                 reply_message_set.add(append_images(image_glob))
                                 params = params[1:]
 
-                            if params and params[0] == "faces":
+                            if params and params[0] == "landmarks":
                                 for image in image_glob:
-                                    reply_message_set.add(image_recognition.detect_faces(image))
+                                    reply_message_set.add(image_recognition.detect_landmarks(image))
+                                    params = params[1:]
+
+                            if params and params[0] == "objects":
+                                for image in image_glob:
+                                    reply_message_set.add(image_recognition.localize_objects(image))
+                                    params = params[1:]
+
+                            if params and params[0] == "properties":
+                                for image in image_glob:
+                                    reply_message_set.add(image_recognition.detect_labels(image))
                                     params = params[1:]
 
                             elif params:
