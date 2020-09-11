@@ -24,6 +24,7 @@ def localize_objects(input_image):
     return_string = ""
     for object_ in objects:
         return_string += "\n{} (confidence: {})".format(object_.name, object_.score)
+    return return_string
 
 
 def detect_landmarks(input_image):
@@ -60,4 +61,4 @@ def detect_labels(input_image):
 
     for label in labels:
         return_string += label.description
-    return return_string
+    return return_string + "\n\n"
