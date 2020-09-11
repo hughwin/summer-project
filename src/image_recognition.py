@@ -8,11 +8,11 @@ import settings
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = str(settings.BASE_DIRECTORY / "gcp_cred.json")
 credentials = service_account.Credentials.from_service_account_file(os.getenv('GOOGLE_APPLICATION_CREDENTIALS'))
+vision_client = vision.ImageAnnotatorClient()
 
 
 def localize_objects(input_image):
     """Detects objects in the image"""
-    vision_client = vision.ImageAnnotatorClient()
 
     with open(input_image, 'rb') as image_file:
         content = image_file.read()
@@ -29,7 +29,6 @@ def localize_objects(input_image):
 
 def detect_landmarks(input_image):
     """Detects landmarks in the file."""
-    vision_client = vision.ImageAnnotatorClient()
 
     with io.open(input_image, 'rb') as image_file:
         content = image_file.read()
@@ -42,13 +41,12 @@ def detect_landmarks(input_image):
     return_string = ""
 
     for landmark in landmarks:
-        return "Looks like the" + landmark.description + "\n\n"
+        return "Looks like the " + landmark.description + "\n\n"
     return return_string
 
 
 def detect_labels(input_image):
     """Detects labels in the file."""
-    vision_client = vision.ImageAnnotatorClient()
 
     with io.open(input_image, 'rb') as image_file:
         content = image_file.read()
@@ -60,5 +58,5 @@ def detect_labels(input_image):
     return_string = ""
 
     for label in labels:
-        return_string += label.description
+        return_string += label.description + "\n"
     return return_string + "\n\n"
