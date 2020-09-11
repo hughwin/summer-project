@@ -16,7 +16,7 @@ def localize_objects(input_image):
 
     with open(input_image, 'rb') as image_file:
         content = image_file.read()
-    image = vision_client.types.Image(content=content)
+    image = vision.types.Image(content=content)
 
     objects = vision_client.object_localization(
         image=image).localized_object_annotations
@@ -33,7 +33,7 @@ def detect_landmarks(input_image):
     with io.open(input_image, 'rb') as image_file:
         content = image_file.read()
 
-    image = vision_client.types.Image(content=content)
+    image = vision.types.Image(content=content)
 
     response = vision_client.landmark_detection(image=image)
     landmarks = response.landmark_annotations
@@ -52,7 +52,7 @@ def detect_labels(input_image):
     with io.open(input_image, 'rb') as image_file:
         content = image_file.read()
 
-    image = vision_client.types.Image(content=content)
+    image = vision.types.Image(content=content)
 
     response = vision_client.label_detection(image=image)
     labels = response.label_annotations
