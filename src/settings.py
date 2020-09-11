@@ -58,6 +58,9 @@ HELP_MESSAGE = "Hello! \n\nWelcome to @botbot, the image processing bot for Mast
                "\nBlur - create a blurred version of your image(s)" \
                "\nBlurred - blur the borders of your image(s)" \
                "\nBorder - add a border to your image" \
+               "\nLandmarks - detects landmarks present in the image" \
+               "\nObjects - detects objects in the image" \
+               "\nLabel - detects labels that can be applied to the image" \
                "\nAppend - append two or more images together" \
                "\nPNG - convert your image(s) to PNG format" \
                "\nJPEG - convert your images to jpeg format\n"
