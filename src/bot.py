@@ -21,8 +21,8 @@ from matplotlib import pyplot as plt
 from textblob import TextBlob
 
 import html_stripper
-import image_recognition
 import settings
+from image_recognition import ImageRecognition
 
 load_dotenv()  # Important variables such as my secret key are stored in a .env file.
 
@@ -154,7 +154,12 @@ def listen_to_request(spam_defender):
     """
     file_count = 0
     status_notifications = []
+
+    image_recognition = ImageRecognition()
+    image_recognition.start()
+
     schedule.every().day.at("10:30").do(toot_image_of_the_day)
+
     while True:
         print("Checking notifications!")
         notifications = mastodon.notifications(mentions_only=True)
