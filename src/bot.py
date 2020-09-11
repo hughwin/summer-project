@@ -436,10 +436,11 @@ def get_trends():
 
 
 def sentiment_analysis(text):
-    print(text)
+    """Reads a string and determines the sentiment of the string."""
+
     polarity = TextBlob(text)
     polarity_score = polarity.sentiment.polarity
-    print(polarity_score)
+
     if polarity_score >= .35:
         return random.choice(settings.POSITIVE_RESPONSES)
     if .35 > polarity_score > -.35:
@@ -752,6 +753,7 @@ def blur_image(input_image):
 
 
 def blur_edges(input_image):
+    """Blurs the borders of a given image."""
     try:
         radius, diameter = 20, 40
         img = Image.open(input_image)  # Paste image on white background
@@ -774,6 +776,7 @@ def blur_edges(input_image):
 
 # TODO: Change this so user can change colour
 def add_border(input_image):
+    """Adds a border to the given image"""
     try:
         img = Image.open(input_image)
         colour = "white"
@@ -815,6 +818,7 @@ def add_watermarks(input_image, wm_text):
 
 
 def convert_image_to_png(input_image):
+    """Converts the image to PNG"""
     try:
         Image.open(input_image).save(settings.PNG_OUTPUT)
         return settings.OPERATION_SUCCESSFUL_MESSAGE.format("convert to PNG")
@@ -824,6 +828,7 @@ def convert_image_to_png(input_image):
 
 
 def convert_image_to_jpeg(input_image):
+    """Converts the image to JPEG"""
     try:
         Image.open(input_image).save(settings.JPEG_OUTPUT)
         return settings.OPERATION_SUCCESSFUL_MESSAGE.format("convert to jpeg")
@@ -877,6 +882,7 @@ def append_images(images, direction='horizontal',
 
 
 def bot_delete_files_in_directory(path):
+    """Deletes all of the files in the given directory"""
     path = str(path)
     for filename in os.listdir(path):
         file_path = os.path.join(path, filename)
