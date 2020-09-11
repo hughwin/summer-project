@@ -15,7 +15,7 @@ class ImageRecognition:
         self.vision_client = None
 
     def start(self):
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = json.load(str(settings.BASE_DIRECTORY / "gcp_cred.json"))
+        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = json.loads(str(settings.BASE_DIRECTORY / "gcp_cred.json").read())
         self.credentials = service_account.Credentials.from_service_account_file \
             (os.getenv('GOOGLE_APPLICATION_CREDENTIALS'))
         self.vision_client = vision.ImageAnnotatorClient()
