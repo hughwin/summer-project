@@ -1,3 +1,4 @@
+import json
 import os
 
 import bot
@@ -6,7 +7,10 @@ import settings
 
 def main():
     with open(str(settings.BASE_DIRECTORY / "gcp_cred.json"), "w") as file:
-        file.write(os.getenv("GCP_CRED"))
+        json.dump(os.getenv("GCP_CRED"), file)
+    with open(str(settings.BASE_DIRECTORY / 'gcp_cred.json'), 'r') as f:
+        data = json.load(f)
+    print(data)
     bot.start_bot()
 
 
