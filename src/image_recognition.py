@@ -60,3 +60,4 @@ def detect_labels(input_image):
 
     for label in labels:
         return_string += label.description
+    return return_string
