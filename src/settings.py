@@ -21,7 +21,8 @@ CROP_FAILURE_MESSAGE = "\nCrop failed. You didn't supply enough parameters!" \
 MAX_MESSAGE_LENGTH = 500
 ROTATE_COMMAND = "rotate"
 ROTATE_SIMPLE = "simple"
-BASE_DIRECTORY = Path.cwd() / "src"
+ROOT = Path(__file__).parent.parent
+BASE_DIRECTORY = ROOT / "src"
 INPUT_FOLDER = BASE_DIRECTORY / "input"
 RESOURCES_FOLDER = BASE_DIRECTORY / "resources"
 DAILY_IMAGE = str(BASE_DIRECTORY / "daily" / "image.jpeg")
@@ -60,7 +61,7 @@ HELP_MESSAGE = "Hello! \n\nWelcome to @botbot, the image processing bot for Mast
                "\nBorder - add a border to your image" \
                "\nLandmarks - detects landmarks present in the image" \
                "\nObjects - detects objects in the image" \
-               "\nLabel - detects labels that can be applied to the image" \
+               "\nProperties - detects labels that can be applied to the image" \
                "\nAppend - append two or more images together" \
                "\nPNG - convert your image(s) to PNG format" \
                "\nJPEG - convert your images to jpeg format\n"
