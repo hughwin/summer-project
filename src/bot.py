@@ -374,14 +374,20 @@ def listen_to_request(spam_defender):
                                 try:
                                     remove_params = 0
                                     for image in image_glob:
-                                        if len(params) >= 3 and params[2] == "simple" and params != []:
+                                        if len(params) >= 3 and params[2] == "left" or "right" and params[
+                                            3] == "simple" and params != []:
                                             reply_message_set.add(rotate_image(image,
                                                                                rotate_by_degrees=params[1],
-                                                                               rotation_type=params[2]))
+                                                                               rotation_direction=params[2],
+                                                                               rotation_type=params[3]))
+                                            remove_params = 4
+                                        elif len(params) >= 3 and params[2] == "left" or "right" and params != []:
+                                            reply_message_set.add(rotate_image(image,
+                                                                               rotate_by_degrees=params[1],
+                                                                               rotation_direction=params[2]))
                                             remove_params = 3
                                         else:
-                                            reply_message_set.add(rotate_image(image,
-                                                                               rotate_by_degrees=params[1]))
+                                            reply_message_set.add(rotate_image(image, rotate_by_degrees=params[1]))
                                             remove_params = 2
                                     params = params[remove_params:]
                                 except (IndexError, ValueError):
