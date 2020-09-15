@@ -542,8 +542,6 @@ def rotate_image(input_image, rotate_by_degrees=None, rotation_direction="right"
     There are two rotation types, simple and complex: simple rotates the image without resizing, and (complex)
     resizes the borders accordingly.
     """
-    rotate_by_degrees = rotate_by_degrees if rotation_direction == "left" else 0 - rotate_by_degrees
-
     try:
         image_open = cv2.imread(input_image)
         if str(rotation_type) == settings.ROTATE_SIMPLE:
