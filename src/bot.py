@@ -535,7 +535,7 @@ def check_image_type(filepath):
         return "Something went wrong with converting the image"
 
 
-def rotate_image(input_image, rotate_by_degrees=None, rotation_direction="right", rotation_type=None):
+def rotate_image(input_image, rotate_by_degrees=None, rotation_type=None):
     """Rotates the image by the given number of degrees and saves a copy of the image
 
 
