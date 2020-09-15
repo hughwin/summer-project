@@ -41,7 +41,7 @@ def start_bot():
     listener.start()
 
 
-def reply_to_toot(post_id, account_name, message=None, status_notifications=None):
+def reply_to_toot(post_id, account_name, message=None):
     media_ids = []
     for fn in os.listdir(str(settings.INPUT_FOLDER)):
         if fn.endswith(('.jpeg', '.png')):
@@ -156,7 +156,7 @@ def listen_to_request(spam_defender):
     status_notifications = []
 
     image_recognition = ImageRecognition()
-    image_recognition.start()
+    image_recognition.setup()
 
     schedule.every().day.at("10:30").do(toot_image_of_the_day)
 
@@ -418,7 +418,7 @@ def listen_to_request(spam_defender):
                             if sentiment_list != [] else ""
                         reply_to_toot(reply.status_id, message="\n" + sentiment_message + "".join(about_list) + "".join(
                             reply_message_set),
-                                      account_name=account_name, status_notifications=status_notifications)
+                                      account_name=account_name)
             mastodon.notifications_clear()
             status_notifications.clear()
             bot_delete_files_in_directory(settings.INPUT_FOLDER)

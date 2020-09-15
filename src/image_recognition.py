@@ -13,7 +13,7 @@ class ImageRecognition:
         self.credentials = None
         self.vision_client = None
 
-    def start(self):
+    def setup(self):
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = str(settings.BASE_DIRECTORY / "gcp_cred.json")
         self.credentials = service_account.Credentials.from_service_account_file \
             (os.getenv('GOOGLE_APPLICATION_CREDENTIALS'))
