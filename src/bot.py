@@ -374,20 +374,14 @@ def listen_to_request(spam_defender):
                                 try:
                                     remove_params = 0
                                     for image in image_glob:
-                                        if len(params) >= 3 and params[2] == "left" or "right" and params[
-                                            3] == "simple" and params != []:
+                                        if len(params) >= 3 and params[2] == "simple" and params != []:
                                             reply_message_set.add(rotate_image(image,
                                                                                rotate_by_degrees=params[1],
-                                                                               rotation_direction=params[2],
-                                                                               rotation_type=params[3]))
-                                            remove_params = 4
-                                        elif len(params) >= 3 and params[2] == "left" or "right" and params != []:
-                                            reply_message_set.add(rotate_image(image,
-                                                                               rotate_by_degrees=params[1],
-                                                                               rotation_direction=params[2]))
+                                                                               rotation_type=params[2]))
                                             remove_params = 3
                                         else:
-                                            reply_message_set.add(rotate_image(image, rotate_by_degrees=params[1]))
+                                            reply_message_set.add(rotate_image(image,
+                                                                               rotate_by_degrees=params[1]))
                                             remove_params = 2
                                     params = params[remove_params:]
                                 except (IndexError, ValueError):
@@ -548,7 +542,7 @@ def rotate_image(input_image, rotate_by_degrees=None, rotation_direction="right"
     There are two rotation types, simple and complex: simple rotates the image without resizing, and (complex)
     resizes the borders accordingly.
     """
-    rotate_by_degrees = rotate_by_degrees if rotation_direction == "right" else 0 - rotate_by_degrees
+    rotate_by_degrees = rotate_by_degrees if rotation_direction == "left" else 0 - rotate_by_degrees
 
     try:
         image_open = cv2.imread(input_image)
