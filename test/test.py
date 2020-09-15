@@ -34,7 +34,9 @@ class TestSpamDefender(unittest.TestCase):
     def test_allow_account_to_make_request(self):
         spam_defender = bot.SpamDefender()
         assert spam_defender.allow_account_to_make_request(1) is True
-        for x in range(settings.MAX_REQUESTS_PER_HOUR + 1):
+        spam_defender.add_user_to_requests(1)
+        assert spam_defender.allow_account_to_make_request(1) is True
+        for x in range(settings.MAX_REQUESTS_PER_HOUR):
             spam_defender.add_user_to_requests(1)
         assert spam_defender.allow_account_to_make_request(1) is False
 
