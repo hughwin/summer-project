@@ -535,14 +535,14 @@ def check_image_type(filepath):
         return "Something went wrong with converting the image"
 
 
-def rotate_image(input_image, rotate_by_degrees=None, rotation_direction="left", rotation_type=None):
+def rotate_image(input_image, rotate_by_degrees=None, rotation_direction="right", rotation_type=None):
     """Rotates the image by the given number of degrees and saves a copy of the image
 
 
     There are two rotation types, simple and complex: simple rotates the image without resizing, and (complex)
     resizes the borders accordingly.
     """
-    rotate_by_degrees = rotate_by_degrees if rotation_direction != "left" else 0 - rotate_by_degrees
+    rotate_by_degrees = rotate_by_degrees if rotation_direction == "right" else 0 - rotate_by_degrees
 
     try:
         image_open = cv2.imread(input_image)
