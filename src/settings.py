@@ -69,7 +69,7 @@ SUPPORTED_FORMATS_MESSAGE = "Currently supported file upload formats: \n" \
                             "- JPEG\n- PNG\n\n"  # This is Mastodon's doing.
 SET_OF_COMMANDS = {"help", "about", "decolourise", "preserve", "histogram", "rotate", "enhance", "border", "crop",
                    "brightness", "contrast", "colour", "mirror", "flip", "transparent", "negative", "sepia", "blur",
-                   "blurred", "border", "png,", "bmp"}
+                   "blurred", "border", "png,", "bmp", "landmarks", "objects", "properties", "append"}
 SET_OF_COLOURS = {"red", "green", "blue"}
 NEGATIVE_RESPONSES = ["Hey, you're mean!", "Well, if that's how you feel...", "Hold your tongue!"]
 POSITIVE_RESPONSES = ["Why thank you!", "Same to you :)!", "Aww, you say such nice things."]
