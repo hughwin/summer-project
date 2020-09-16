@@ -46,7 +46,7 @@ def reply_to_toot(post_id, account_name, message=None):
     for fn in os.listdir(str(settings.INPUT_FOLDER)):
         if fn.endswith(('.jpeg', '.png')):
             print(Path(fn))
-            image_dict = mastodon.media_post(str(settings.INPUT_FOLDER / fn))
+            image_dict = mastodon.media_post(str(settings.INPUT_FOLDER / fn), description="Requested modified image")
             media_ids.append(image_dict["id"])
     if message is not None:
         parts = []
@@ -79,11 +79,12 @@ def toot_image_of_the_day():
     try:
         r = requests.get(settings.NASA_ADDRESS_IMAGES % os.getenv("NASA"))
         json = r.json()
-        print(json)
         urllib.request.urlretrieve(json["hdurl"], settings.DAILY_IMAGE)
-        image_dict = mastodon.media_post(settings.DAILY_IMAGE)
-        message = "Here is today's image!"
-        mastodon.status_post(status=message, media_ids=image_dict["id"])
+        description = json["title"]
+        image_dict = mastodon.media_post(settings.DAILY_IMAGE, description=description)
+        print(image_dict)
+        message = "Here is today's image! " + description
+        mastodon.status_post(status=message, media_ids=image_dict)
     except requests.exceptions.RequestException as e:
         print(e)
 
@@ -154,7 +155,7 @@ def listen_to_request(spam_defender):
     """
     file_count = 0
     status_notifications = []
-
+    #
     image_recognition = ImageRecognition()
     image_recognition.setup()
 
@@ -173,9 +174,7 @@ def listen_to_request(spam_defender):
 
                 content = n["status"]["content"]
                 content = strip_tags(content).replace(settings.USERNAME, "").lower()
-                print(content)
                 content = re.sub('[^a-zA-Z0-9]', " ", content)  # Removes all non-alphanumeric characters
-                print(content)
 
                 params = content.split(" ")
                 user = UserNotification(account_id, account_name, status_id, content, params)
@@ -183,7 +182,6 @@ def listen_to_request(spam_defender):
 
                 reply_message_set = set()
                 about_list = []
-                print(params)
 
                 if not spam_defender.allow_account_to_make_request(account_id):
                     reply_to_toot(status_id, message=settings.TOO_MANY_REQUESTS_MESSAGE, account_name=account_name)
@@ -212,13 +210,12 @@ def listen_to_request(spam_defender):
                         image_glob = glob.glob(settings.IMAGE_INPUT.format("*.png")) \
                                      + glob.glob(settings.IMAGE_INPUT.format("*.jpeg"))
                         print(image_glob)
-                        print(reply.params)
 
                         about_count = 1
 
                         while params:
 
-                            if params and params[0] == "help" or "hello":
+                            if params and params[0] == "help" or params and params[0] == "hello":
                                 reply_message_set.add(settings.HELP_MESSAGE)
                                 params = params[1:]
 
@@ -374,21 +371,26 @@ def listen_to_request(spam_defender):
                                 try:
                                     remove_params = 0
                                     for image in image_glob:
-                                        if len(params) >= 3 and params[2] == "simple" and params != []:
+                                        if len(params) >= 4 and params[2] == "left" or params[2] == "right" and \
+                                                params[3] == "simple" and params != []:
                                             reply_message_set.add(rotate_image(image,
                                                                                rotate_by_degrees=params[1],
-                                                                               rotation_type=params[2]))
-                                            remove_params = 3
-                                        else:
+                                                                               rotation_direction=params[2],
+                                                                               rotation_type=params[3]))
+                                            remove_params = 4
+                                        elif len(params) >= 3 and params[2] == "left" or "right" and params != []:
                                             reply_message_set.add(rotate_image(image,
-                                                                               rotate_by_degrees=params[1]))
+                                                                               rotate_by_degrees=params[1],
+                                                                               rotation_direction=params[2]))
+                                            remove_params = 3
+                                        elif params:
+                                            reply_message_set.add(rotate_image(image, rotate_by_degrees=params[1]))
                                             remove_params = 2
                                     params = params[remove_params:]
                                 except (IndexError, ValueError):
                                     reply_message_set.add(settings.OPERATION_FAILED_MESSAGE.format("rotate")
                                                           + "You didn't specify how many degrees you wanted it"
                                                             " rotated by\n")
-                                    params = params[1:]
 
                             if params and params[0] == "append":
                                 reply_message_set.add(append_images(image_glob))
@@ -535,13 +537,14 @@ def check_image_type(filepath):
         return "Something went wrong with converting the image"
 
 
-def rotate_image(input_image, rotate_by_degrees=None, rotation_type=None):
+def rotate_image(input_image, rotate_by_degrees=None, rotation_direction="right", rotation_type=None):
     """Rotates the image by the given number of degrees and saves a copy of the image
-
-
     There are two rotation types, simple and complex: simple rotates the image without resizing, and (complex)
     resizes the borders accordingly.
     """
+    rotate_by_degrees = rotate_by_degrees if rotation_direction == "right" \
+        else str(0 - int(rotate_by_degrees))
+
     try:
         image_open = cv2.imread(input_image)
         if str(rotation_type) == settings.ROTATE_SIMPLE:
