@@ -596,7 +596,7 @@ def rotate_image(input_image, rotate_by_degrees=None, rotation_direction="right"
     :param rotation_type: str simple/complex. Simple rotates the image without adjusting the size of the original image.
     :return: str with text of image if operation successful. Error message if not.
     """
-    rotate_by_degrees = rotate_by_degrees if rotation_direction == "right" \
+    rotate_by_degrees = rotate_by_degrees if rotation_direction == "left" \
         else str(0 - int(rotate_by_degrees))
 
     try:
