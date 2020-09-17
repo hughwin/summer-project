@@ -149,9 +149,11 @@ def listen_to_request(spam_defender):
     """The main loop of the program.
 
 
-    Infinite loop that constantly checks to see whether requests have been made by users. If they have,
+    Intentional infinite loop that constantly checks to see whether requests have been made by users. If they have,
     it first checks that the user hasn't made too many requests. It then parses the input of the message,
-    and controls the resultant manipulation of the image.
+    and controls the resultant manipulation of the image. Before returning the manipulated image to the user.
+
+    Also controls the tooting of images from the NASA API.
     """
     file_count = 0
     status_notifications = []
@@ -393,8 +395,13 @@ def listen_to_request(spam_defender):
                                                             " rotated by\n")
 
                             if params and params[0] == "append":
-                                reply_message_set.add(append_images(image_glob))
-                                params = params[1:]
+
+                                if params[1] == "vertical" or params[1] == "horizontal":
+                                    reply_message_set.add(append_images(image_glob), direction=params[1])
+                                    params = params[1:]
+                                else:
+                                    reply_message_set.add(append_images(image_glob))
+                                    params = params[2:]
 
                             if params and params[0] == "landmarks":
                                 for image in image_glob:
@@ -560,6 +567,8 @@ def rotate_image(input_image, rotate_by_degrees=None, rotation_direction="right"
 
 
 def show_image_histogram(input_image):
+    """ Currently unused method to produce histograms of the images sent to the bot.
+    """
     img = cv2.imread(input_image)
     color = ('b', 'g', 'r')
     for i, col in enumerate(color):
