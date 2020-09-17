@@ -184,7 +184,7 @@ def listen_to_request(spam_defender):
     """
     file_count = 0
     status_notifications = []
-    #
+
     image_recognition = ImageRecognition()
     image_recognition.setup()
 
@@ -401,18 +401,20 @@ def listen_to_request(spam_defender):
                                 try:
                                     remove_params = 0
                                     for image in image_glob:
-                                        if len(params) >= 4 and params[2] == "left" or params[2] == "right" and \
-                                                params[3] == "simple" and params != []:
-                                            reply_message_set.add(rotate_image(image,
-                                                                               rotate_by_degrees=params[1],
-                                                                               rotation_direction=params[2],
-                                                                               rotation_type=params[3]))
+                                        if len(params) >= 4:
+                                            if params[2] == "left" or params[2] == "right" and \
+                                                    params[3] == "simple" and params != []:
+                                                reply_message_set.add(rotate_image(image,
+                                                                                   rotate_by_degrees=params[1],
+                                                                                   rotation_direction=params[2],
+                                                                                   rotation_type=params[3]))
                                             remove_params = 4
-                                        elif len(params) >= 3 and params[2] == "left" or "right" and params != []:
-                                            reply_message_set.add(rotate_image(image,
-                                                                               rotate_by_degrees=params[1],
-                                                                               rotation_direction=params[2]))
-                                            remove_params = 3
+                                        elif len(params) >= 3:
+                                            if params[2] == "left" or params[2] == "left":
+                                                reply_message_set.add(rotate_image(image,
+                                                                                   rotate_by_degrees=params[1],
+                                                                                   rotation_direction=params[2]))
+                                                remove_params = 3
                                         elif params:
                                             reply_message_set.add(rotate_image(image, rotate_by_degrees=params[1]))
                                             remove_params = 2
@@ -582,7 +584,7 @@ def check_image_type(input_image):
         return user_message
     except OSError as e:
         print(e)
-        return "Something went wrong with converting the image"
+        return "Something went wrong with converting the image\n"
 
 
 def rotate_image(input_image, rotate_by_degrees=None, rotation_direction="right", rotation_type=None):
@@ -596,7 +598,7 @@ def rotate_image(input_image, rotate_by_degrees=None, rotation_direction="right"
     :param rotation_type: str simple/complex. Simple rotates the image without adjusting the size of the original image.
     :return: str with text of image if operation successful. Error message if not.
     """
-    rotate_by_degrees = rotate_by_degrees if rotation_direction == "left" \
+    rotate_by_degrees = rotate_by_degrees if rotation_direction == "right" \
         else str(0 - int(rotate_by_degrees))
 
     try:
@@ -672,7 +674,7 @@ def crop_image(input_image, left, top, right, bottom):
         cropped_img = ImageOps.crop(img, (left, top, right, bottom))
         cropped_img.save(input_image)
 
-        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("rotate by " + str(left) + " " + str(top)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("Cropped by " + str(left) + " " + str(top)
                                                             + " " + str(right) + " " + str(bottom))
 
     except BaseException as e:
