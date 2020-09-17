@@ -422,10 +422,10 @@ def listen_to_request(spam_defender):
                                                             " rotated by\n")
 
                             if params and params[0] == "append":
-
-                                if len(params) >= 2 and params[1] == "vertical" or params[1] == "horizontal":
-                                    reply_message_set.add(append_images(image_glob, direction=params[1]))
-                                    params = params[2:]
+                                if len(params) >= 2:
+                                    if params[1] == "vertical" or params[1] == "horizontal":
+                                        reply_message_set.add(append_images(image_glob, direction=params[1]))
+                                        params = params[2:]
                                 else:
                                     reply_message_set.add(append_images(image_glob))
                                     params = params[1:]
