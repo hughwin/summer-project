@@ -424,7 +424,7 @@ def listen_to_request(spam_defender):
                             if params and params[0] == "append":
 
                                 if params[1] == "vertical" or params[1] == "horizontal":
-                                    reply_message_set.add(append_images(image_glob), direction=params[1])
+                                    reply_message_set.add(append_images(image_glob, direction=params[1]))
                                     params = params[1:]
                                 else:
                                     reply_message_set.add(append_images(image_glob))
