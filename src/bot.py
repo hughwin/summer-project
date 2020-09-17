@@ -425,10 +425,10 @@ def listen_to_request(spam_defender):
 
                                 if params[1] == "vertical" or params[1] == "horizontal":
                                     reply_message_set.add(append_images(image_glob, direction=params[1]))
-                                    params = params[1:]
+                                    params = params[2:]
                                 else:
                                     reply_message_set.add(append_images(image_glob))
-                                    params = params[2:]
+                                    params = params[1:]
 
                             if params and params[0] == "landmarks":
                                 for image in image_glob:
