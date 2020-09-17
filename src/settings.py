@@ -14,14 +14,15 @@ FILE_TYPES = ('*.png', '*.jpeg')
 GIF_MESSAGE = "This bot does not support GIF format files. You have either supplied a GIF or another incompatible file." \
               " Your file was deleted. Type \"formats\" to get a list of supported formats.\n\n"
 JSON_ERROR_MESSAGE = "Decoding JSON has failed"
-INVALID_COMMAND = "{} not recognised as a command. Type \"@botbot help\" for a list of commands"
+INVALID_COMMAND = "{} not recognised as a command.\n"
 CROP_OUT_OF_RANGE = "\nYour {0} value is out of range; {1} is the maximum value, and must be > 0"
 CROP_FAILURE_MESSAGE = "\nCrop failed. You didn't supply enough parameters!" \
                        "\nPlease supply integers in the format crop <int> <int> <int> <int>"
 MAX_MESSAGE_LENGTH = 500
 ROTATE_COMMAND = "rotate"
 ROTATE_SIMPLE = "simple"
-BASE_DIRECTORY = Path.cwd() / "src"
+ROOT = Path(__file__).parent.parent
+BASE_DIRECTORY = ROOT / "src"
 INPUT_FOLDER = BASE_DIRECTORY / "input"
 RESOURCES_FOLDER = BASE_DIRECTORY / "resources"
 DAILY_IMAGE = str(BASE_DIRECTORY / "daily" / "image.jpeg")
@@ -31,7 +32,7 @@ PNG_OUTPUT = str(INPUT_FOLDER / "{}.png")
 JPEG_OUTPUT = str(INPUT_FOLDER / "{}.jpeg")
 OPERATION_SUCCESSFUL_MESSAGE = "{} \U00002705 \n"
 OPERATION_FAILED_MESSAGE = "{} \U0000274C \n"
-HELP_MESSAGE = "Welcome to my image processing bot!" \
+HELP_MESSAGE = "Hello! \n\nWelcome to @botbot, the image processing bot for Mastodon!" \
                "\nThe bot can perform simple (and not so simple) image transformations.\n" \
                "\nCommands:" \
                "\nHelp - get help" \
@@ -58,6 +59,9 @@ HELP_MESSAGE = "Welcome to my image processing bot!" \
                "\nBlur - create a blurred version of your image(s)" \
                "\nBlurred - blur the borders of your image(s)" \
                "\nBorder - add a border to your image" \
+               "\nLandmarks - detects landmarks present in the image" \
+               "\nObjects - detects objects in the image" \
+               "\nProperties - detects labels that can be applied to the image" \
                "\nAppend - append two or more images together" \
                "\nPNG - convert your image(s) to PNG format" \
                "\nJPEG - convert your images to jpeg format\n"
@@ -65,5 +69,8 @@ SUPPORTED_FORMATS_MESSAGE = "Currently supported file upload formats: \n" \
                             "- JPEG\n- PNG\n\n"  # This is Mastodon's doing.
 SET_OF_COMMANDS = {"help", "about", "decolourise", "preserve", "histogram", "rotate", "enhance", "border", "crop",
                    "brightness", "contrast", "colour", "mirror", "flip", "transparent", "negative", "sepia", "blur",
-                   "blurred", "border", "png,", "bmp"}
+                   "blurred", "border", "png,", "bmp", "landmarks", "objects", "properties", "append"}
 SET_OF_COLOURS = {"red", "green", "blue"}
+NEGATIVE_RESPONSES = ["Hey, you're mean!", "Well, if that's how you feel...", "Hold your tongue!"]
+POSITIVE_RESPONSES = ["Why thank you!", "Same to you :)!", "Aww, you say such nice things."]
+NEUTRAL_RESPONSES = ["Sure.", "Ok..."]

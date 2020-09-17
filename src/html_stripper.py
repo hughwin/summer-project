@@ -1,6 +1,8 @@
-from io import StringIO
 from html.parser import HTMLParser
+from io import StringIO
 
+
+# Class responsible for stripping out the HTML from Mastodon messages
 
 class MLStripper(HTMLParser):
     def error(self, message):

@@ -1,6 +1,7 @@
 import datetime
 import glob
 import os
+import random
 import re
 import shutil
 import threading
@@ -17,9 +18,11 @@ from PIL import Image, ImageEnhance, ImageOps, ImageFilter, ImageDraw, ImageFont
 from dotenv import load_dotenv
 from mastodon import Mastodon
 from matplotlib import pyplot as plt
+from textblob import TextBlob
 
 import html_stripper
 import settings
+from image_recognition import ImageRecognition
 
 load_dotenv()  # Important variables such as my secret key are stored in a .env file.
 
@@ -38,12 +41,12 @@ def start_bot():
     listener.start()
 
 
-def reply_to_toot(post_id, account_name, message=None, status_notifications=None):
+def reply_to_toot(post_id, account_name, message=None):
     media_ids = []
     for fn in os.listdir(str(settings.INPUT_FOLDER)):
         if fn.endswith(('.jpeg', '.png')):
             print(Path(fn))
-            image_dict = mastodon.media_post(str(settings.INPUT_FOLDER / fn))
+            image_dict = mastodon.media_post(str(settings.INPUT_FOLDER / fn), description="Requested modified image")
             media_ids.append(image_dict["id"])
     if message is not None:
         parts = []
@@ -76,11 +79,12 @@ def toot_image_of_the_day():
     try:
         r = requests.get(settings.NASA_ADDRESS_IMAGES % os.getenv("NASA"))
         json = r.json()
-        print(json)
         urllib.request.urlretrieve(json["hdurl"], settings.DAILY_IMAGE)
-        image_dict = mastodon.media_post(settings.DAILY_IMAGE)
-        message = "Here is today's image!"
-        mastodon.status_post(status=message, media_ids=image_dict["id"])
+        description = json["title"]
+        image_dict = mastodon.media_post(settings.DAILY_IMAGE, description=description)
+        print(image_dict)
+        message = "Here is today's image! " + description
+        mastodon.status_post(status=message, media_ids=image_dict)
     except requests.exceptions.RequestException as e:
         print(e)
 
@@ -145,13 +149,20 @@ def listen_to_request(spam_defender):
     """The main loop of the program.
 
 
-    Infinite loop that constantly checks to see whether requests have been made by users. If they have,
+    Intentional infinite loop that constantly checks to see whether requests have been made by users. If they have,
     it first checks that the user hasn't made too many requests. It then parses the input of the message,
-    and controls the resultant manipulation of the image.
+    and controls the resultant manipulation of the image. Before returning the manipulated image to the user.
+
+    Also controls the tooting of images from the NASA API.
     """
     file_count = 0
     status_notifications = []
+    #
+    image_recognition = ImageRecognition()
+    image_recognition.setup()
+
     schedule.every().day.at("10:30").do(toot_image_of_the_day)
+
     while True:
         print("Checking notifications!")
         notifications = mastodon.notifications(mentions_only=True)
@@ -165,9 +176,7 @@ def listen_to_request(spam_defender):
 
                 content = n["status"]["content"]
                 content = strip_tags(content).replace(settings.USERNAME, "").lower()
-                print(content)
                 content = re.sub('[^a-zA-Z0-9]', " ", content)  # Removes all non-alphanumeric characters
-                print(content)
 
                 params = content.split(" ")
                 user = UserNotification(account_id, account_name, status_id, content, params)
@@ -175,7 +184,6 @@ def listen_to_request(spam_defender):
 
                 reply_message_set = set()
                 about_list = []
-                print(params)
 
                 if not spam_defender.allow_account_to_make_request(account_id):
                     reply_to_toot(status_id, message=settings.TOO_MANY_REQUESTS_MESSAGE, account_name=account_name)
@@ -195,19 +203,21 @@ def listen_to_request(spam_defender):
                     spam_defender.add_user_to_requests(user.account_id)
                 file_count = 0
                 num_files = os.listdir(str(settings.INPUT_FOLDER))
-                if len(num_files) != 0 or "help" or "formats" in params:
+                if len(num_files) != 0 or "help" or "formats" or "hello" in params:
+
+                    sentiment_list = []
+
                     for reply in status_notifications:
                         os.chdir(str(settings.INPUT_FOLDER))
                         image_glob = glob.glob(settings.IMAGE_INPUT.format("*.png")) \
                                      + glob.glob(settings.IMAGE_INPUT.format("*.jpeg"))
                         print(image_glob)
-                        print(reply.params)
 
                         about_count = 1
 
                         while params:
 
-                            if params and params[0] == "help":
+                            if params and params[0] == "help" or params and params[0] == "hello":
                                 reply_message_set.add(settings.HELP_MESSAGE)
                                 params = params[1:]
 
@@ -363,33 +373,61 @@ def listen_to_request(spam_defender):
                                 try:
                                     remove_params = 0
                                     for image in image_glob:
-                                        if len(params) >= 3 and params[2] == "simple" and params != []:
+                                        if len(params) >= 4 and params[2] == "left" or params[2] == "right" and \
+                                                params[3] == "simple" and params != []:
                                             reply_message_set.add(rotate_image(image,
                                                                                rotate_by_degrees=params[1],
-                                                                               rotation_type=params[2]))
-                                            remove_params = 3
-                                        else:
+                                                                               rotation_direction=params[2],
+                                                                               rotation_type=params[3]))
+                                            remove_params = 4
+                                        elif len(params) >= 3 and params[2] == "left" or "right" and params != []:
                                             reply_message_set.add(rotate_image(image,
-                                                                               rotate_by_degrees=params[1]))
+                                                                               rotate_by_degrees=params[1],
+                                                                               rotation_direction=params[2]))
+                                            remove_params = 3
+                                        elif params:
+                                            reply_message_set.add(rotate_image(image, rotate_by_degrees=params[1]))
                                             remove_params = 2
                                     params = params[remove_params:]
                                 except (IndexError, ValueError):
                                     reply_message_set.add(settings.OPERATION_FAILED_MESSAGE.format("rotate")
                                                           + "You didn't specify how many degrees you wanted it"
                                                             " rotated by\n")
-                                    params = params[1:]
 
                             if params and params[0] == "append":
-                                reply_message_set.add(append_images(image_glob))
-                                params = params[1:]
+
+                                if params[1] == "vertical" or params[1] == "horizontal":
+                                    reply_message_set.add(append_images(image_glob), direction=params[1])
+                                    params = params[1:]
+                                else:
+                                    reply_message_set.add(append_images(image_glob))
+                                    params = params[2:]
+
+                            if params and params[0] == "landmarks":
+                                for image in image_glob:
+                                    reply_message_set.add(image_recognition.detect_landmarks(image))
+                                    params = params[1:]
+
+                            if params and params[0] == "objects":
+                                for image in image_glob:
+                                    reply_message_set.add(image_recognition.localize_objects(image))
+                                    params = params[1:]
+
+                            if params and params[0] == "properties":
+                                for image in image_glob:
+                                    reply_message_set.add(image_recognition.detect_labels(image))
+                                    params = params[1:]
 
                             elif params:
                                 if params[0] not in settings.SET_OF_COMMANDS:
-                                    reply_message_set.add(settings.INVALID_COMMAND.format(params[0]))
+                                    reply_message_set.add(settings.INVALID_COMMAND.format("\"" + params[0] + "\""))
+                                    sentiment_list.append(params[0] + " ")
                                     params = params[1:]
-
-                        reply_to_toot(reply.status_id, message="\n" + "".join(about_list) + "".join(reply_message_set),
-                                      account_name=account_name, status_notifications=status_notifications)
+                        sentiment_message = (sentiment_analysis("".join(sentiment_list)) + "\n\n") \
+                            if sentiment_list != [] else ""
+                        reply_to_toot(reply.status_id, message="\n" + sentiment_message + "".join(about_list) + "".join(
+                            reply_message_set),
+                                      account_name=account_name)
             mastodon.notifications_clear()
             status_notifications.clear()
             bot_delete_files_in_directory(settings.INPUT_FOLDER)
@@ -404,6 +442,20 @@ def get_trends():
         print(trends)
     except ValueError:
         print(settings.JSON_ERROR_MESSAGE)
+
+
+def sentiment_analysis(text):
+    """Reads a string and determines the sentiment of the string."""
+
+    polarity = TextBlob(text)
+    polarity_score = polarity.sentiment.polarity
+
+    if polarity_score >= .35:
+        return random.choice(settings.POSITIVE_RESPONSES)
+    if .35 > polarity_score > -.35:
+        return random.choice(settings.NEUTRAL_RESPONSES)
+    else:
+        return random.choice(settings.NEGATIVE_RESPONSES)
 
 
 def get_information_about_image(input_image, count):
@@ -472,8 +524,8 @@ def get_text_from_image(input_image):
 def check_image_type(filepath):
     """Checks what type of image the image in the toot is, and gives it the correct file extension"""
     try:
-        img = Image.open(filepath)
-        img_format = img.format
+        with Image.open(filepath) as img:
+            img_format = img.format
         user_message = ""
         if img_format == "GIF":
             os.remove(filepath)  # Mastodon uses MP4 for gifs, but in case one slips through.
@@ -492,13 +544,14 @@ def check_image_type(filepath):
         return "Something went wrong with converting the image"
 
 
-def rotate_image(input_image, rotate_by_degrees=None, rotation_type=None):
+def rotate_image(input_image, rotate_by_degrees=None, rotation_direction="right", rotation_type=None):
     """Rotates the image by the given number of degrees and saves a copy of the image
-
-
     There are two rotation types, simple and complex: simple rotates the image without resizing, and (complex)
     resizes the borders accordingly.
     """
+    rotate_by_degrees = rotate_by_degrees if rotation_direction == "right" \
+        else str(0 - int(rotate_by_degrees))
+
     try:
         image_open = cv2.imread(input_image)
         if str(rotation_type) == settings.ROTATE_SIMPLE:
@@ -514,6 +567,8 @@ def rotate_image(input_image, rotate_by_degrees=None, rotation_type=None):
 
 
 def show_image_histogram(input_image):
+    """ Currently unused method to produce histograms of the images sent to the bot.
+    """
     img = cv2.imread(input_image)
     color = ('b', 'g', 'r')
     for i, col in enumerate(color):
@@ -710,6 +765,7 @@ def blur_image(input_image):
 
 
 def blur_edges(input_image):
+    """Blurs the borders of a given image."""
     try:
         radius, diameter = 20, 40
         img = Image.open(input_image)  # Paste image on white background
@@ -732,13 +788,14 @@ def blur_edges(input_image):
 
 # TODO: Change this so user can change colour
 def add_border(input_image):
+    """Adds a border to the given image"""
     try:
         img = Image.open(input_image)
         colour = "white"
         border = (20, 10, 20, 10)
         bordered_img = ImageOps.expand(img, border=border, fill=colour)
         bordered_img.save(input_image)
-        return settings.OPERATION_SUCCESSFUL_MESSAGE("add border")
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("add border")
     except BaseException as e:
         print(e)
         return settings.OPERATION_FAILED_MESSAGE.format("add border")
@@ -773,6 +830,7 @@ def add_watermarks(input_image, wm_text):
 
 
 def convert_image_to_png(input_image):
+    """Converts the image to PNG"""
     try:
         Image.open(input_image).save(settings.PNG_OUTPUT)
         return settings.OPERATION_SUCCESSFUL_MESSAGE.format("convert to PNG")
@@ -782,6 +840,7 @@ def convert_image_to_png(input_image):
 
 
 def convert_image_to_jpeg(input_image):
+    """Converts the image to JPEG"""
     try:
         Image.open(input_image).save(settings.JPEG_OUTPUT)
         return settings.OPERATION_SUCCESSFUL_MESSAGE.format("convert to jpeg")
@@ -835,6 +894,7 @@ def append_images(images, direction='horizontal',
 
 
 def bot_delete_files_in_directory(path):
+    """Deletes all of the files in the given directory"""
     path = str(path)
     for filename in os.listdir(path):
         file_path = os.path.join(path, filename)
