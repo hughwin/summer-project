@@ -34,6 +34,10 @@ mastodon = Mastodon(
 
 
 def start_bot():
+    """
+    Starts the bot. Generates a class of SpamDefender and starts it on a separate thread,
+    and then starts the main listener thread.
+    """
     spam_defender = SpamDefender()
     spam_defender.start()
 
@@ -42,6 +46,12 @@ def start_bot():
 
 
 def reply_to_toot(post_id, account_name, message=None):
+    """Replies to the calling user with their modified images.
+
+    :param post_id: the post id that the bot is replying to
+    :param account_name: the account name that the bot is replying to
+    :param message: the informative message that is included in the reply toot.
+    """
     media_ids = []
     for fn in os.listdir(str(settings.INPUT_FOLDER)):
         if fn.endswith(('.jpeg', '.png')):
@@ -95,6 +105,12 @@ class UserNotification:
 
     Whilst this call is not strictly required, as all of the data is collected in notification dictionary
     returned from Mastodon, this class just collects all the important used parts together in one place.
+
+    :param account_id: The account ID of the requesting user
+    :param user_id: the user ID of the requesting user
+    :param status_id: the status ID of the requesting user
+    :param content: the content (message) sent to the bot
+    :param params: the content with HTML tags removed.
     """
 
     def __init__(self, account_id, user_id, status_id, content, params):
@@ -113,7 +129,7 @@ class SpamDefender(threading.Thread):
 
     This class checks to see how many user requests have been made in the last hour by a particular user.
     If the number if requests exceeds the number of requests allowed in settings.py (MAX_REQUESTS_PER_HOUR)
-    the bot denies that user from making any more requests.
+    the bot denies that user from making any more requests. The requesting users are cleared each hour.
     """
 
     def __init__(self):
@@ -131,12 +147,21 @@ class SpamDefender(threading.Thread):
             time.sleep(1)
 
     def add_user_to_requests(self, account_id):
+        """
+        Adds the user to the users_who_have_made_requests dictionary.
+        :param account_id: id of the account making the request
+        """
         if account_id in self.users_who_have_made_requests:
             self.users_who_have_made_requests[account_id] += 1
         else:
             self.users_who_have_made_requests[account_id] = 1
 
     def allow_account_to_make_request(self, account_id):
+        """
+         Determines whether a user is able to make a request.
+         :param account_id: id of the account making the request
+         :return : boolean
+         """
         if account_id not in self.users_who_have_made_requests:
             return True
         if self.users_who_have_made_requests[account_id] >= settings.MAX_REQUESTS_PER_HOUR:
@@ -148,16 +173,18 @@ class SpamDefender(threading.Thread):
 def listen_to_request(spam_defender):
     """The main loop of the program.
 
-
     Intentional infinite loop that constantly checks to see whether requests have been made by users. If they have,
     it first checks that the user hasn't made too many requests. It then parses the input of the message,
     and controls the resultant manipulation of the image. Before returning the manipulated image to the user.
 
     Also controls the tooting of images from the NASA API.
+
+    :param spam_defender: an instance of the SpamDefender class
+
     """
     file_count = 0
     status_notifications = []
-    #
+
     image_recognition = ImageRecognition()
     image_recognition.setup()
 
@@ -216,6 +243,7 @@ def listen_to_request(spam_defender):
                         about_count = 1
 
                         while params:
+                            print(params)
 
                             if params and params[0] == "help" or params and params[0] == "hello":
                                 reply_message_set.add(settings.HELP_MESSAGE)
@@ -373,18 +401,20 @@ def listen_to_request(spam_defender):
                                 try:
                                     remove_params = 0
                                     for image in image_glob:
-                                        if len(params) >= 4 and params[2] == "left" or params[2] == "right" and \
-                                                params[3] == "simple" and params != []:
-                                            reply_message_set.add(rotate_image(image,
-                                                                               rotate_by_degrees=params[1],
-                                                                               rotation_direction=params[2],
-                                                                               rotation_type=params[3]))
+                                        if len(params) >= 4:
+                                            if params[2] == "left" or params[2] == "right" and \
+                                                    params[3] == "simple" and params != []:
+                                                reply_message_set.add(rotate_image(image,
+                                                                                   rotate_by_degrees=params[1],
+                                                                                   rotation_direction=params[2],
+                                                                                   rotation_type=params[3]))
                                             remove_params = 4
-                                        elif len(params) >= 3 and params[2] == "left" or "right" and params != []:
-                                            reply_message_set.add(rotate_image(image,
-                                                                               rotate_by_degrees=params[1],
-                                                                               rotation_direction=params[2]))
-                                            remove_params = 3
+                                        elif len(params) >= 3:
+                                            if params[2] == "left" or params[2] == "left":
+                                                reply_message_set.add(rotate_image(image,
+                                                                                   rotate_by_degrees=params[1],
+                                                                                   rotation_direction=params[2]))
+                                                remove_params = 3
                                         elif params:
                                             reply_message_set.add(rotate_image(image, rotate_by_degrees=params[1]))
                                             remove_params = 2
@@ -395,13 +425,13 @@ def listen_to_request(spam_defender):
                                                             " rotated by\n")
 
                             if params and params[0] == "append":
-
-                                if params[1] == "vertical" or params[1] == "horizontal":
-                                    reply_message_set.add(append_images(image_glob), direction=params[1])
-                                    params = params[1:]
+                                if len(params) >= 2:
+                                    if params[1] == "vertical" or params[1] == "horizontal":
+                                        reply_message_set.add(append_images(image_glob, direction=params[1]))
+                                        params = params[2:]
                                 else:
                                     reply_message_set.add(append_images(image_glob))
-                                    params = params[2:]
+                                    params = params[1:]
 
                             if params and params[0] == "landmarks":
                                 for image in image_glob:
@@ -435,17 +465,12 @@ def listen_to_request(spam_defender):
         time.sleep(1)
 
 
-def get_trends():
-    try:
-        r = requests.get("%s/api/v1/trends/" % settings.BASE_ADDRESS)
-        trends = r.json()
-        print(trends)
-    except ValueError:
-        print(settings.JSON_ERROR_MESSAGE)
-
-
 def sentiment_analysis(text):
-    """Reads a string and determines the sentiment of the string."""
+    """Reads a string and determines the sentiment of the string.
+
+    :param text: string to be analysed.
+    :return str: appropriate semantic response to the input text.
+    """
 
     polarity = TextBlob(text)
     polarity_score = polarity.sentiment.polarity
@@ -461,8 +486,8 @@ def sentiment_analysis(text):
 def get_information_about_image(input_image, count):
     """Returns information about the image as a string.
 
-
-    Returns the number of pixels and the shape and dimensions of the image as a string.
+    :param input_image: str the image's file path.
+    :return: str the number of pixels and the shape and dimensions of the image.
     """
     try:
         img_open = cv2.imread(input_image)
@@ -476,7 +501,11 @@ def get_information_about_image(input_image, count):
 
 
 def decolourise_image(input_image):
-    """Returns a decolourised (greyscale) version of the image."""
+    """Returns a decolourised (greyscale) version of the image.
+
+    :param input_image: str the image's file path.
+    :return: str stating whether the requested operation was successful or not. .
+    """
     try:
         img_open = cv2.imread(input_image)
         gray = cv2.cvtColor(img_open, cv2.COLOR_BGR2GRAY)
@@ -488,7 +517,12 @@ def decolourise_image(input_image):
 
 
 def display_colour_channel(input_image, colour):
-    """Returns version of the image with only one colour channel (Red, green, or blue)."""
+    """Returns version of the image with only one colour channel (Red, green, or blue).
+
+    :param input_image: str the image's file path.
+    :param colour: colour of channel to be preserved
+    :return: str stating whether the requested operation was successful or not. .
+    """
     try:
         if colour not in settings.SET_OF_COLOURS:
             return settings.OPERATION_FAILED_MESSAGE.format("preserve colour") + "colour" + colour + "not recognised \n"
@@ -511,7 +545,11 @@ def display_colour_channel(input_image, colour):
 
 
 def get_text_from_image(input_image):
-    """Uses pytesseract to extract the text from the image and returns this as a string"""
+    """Uses pytesseract to extract the text from the image and returns this as a string
+
+    :param input_image: str the image's file path.
+    :return: str with text of image if operation successful. Error message if not.
+    """
     try:
         img = cv2.imread(input_image)
         text = pytesseract.image_to_string(img)
@@ -521,33 +559,44 @@ def get_text_from_image(input_image):
         return settings.OPERATION_FAILED_MESSAGE.format("get text from message \n\n")
 
 
-def check_image_type(filepath):
-    """Checks what type of image the image in the toot is, and gives it the correct file extension"""
+def check_image_type(input_image):
+    """
+    Checks what type of image the image in the toot is, and gives it the correct file extension
+
+    :param input_image: str the image's file path.
+    :return: str with text of image if operation successful. Error message if not.
+    """
     try:
-        with Image.open(filepath) as img:
+        with Image.open(input_image) as img:
             img_format = img.format
         user_message = ""
         if img_format == "GIF":
-            os.remove(filepath)  # Mastodon uses MP4 for gifs, but in case one slips through.
+            os.remove(input_image)  # Mastodon uses MP4 for gifs, but in case one slips through.
             user_message += settings.GIF_MESSAGE  # Informs the user.
         if img_format == "JPEG":  # If the file is JPEG, give it a JPEG extension.
-            os.renames(str(filepath), str(filepath + ".jpeg"))
+            os.renames(str(input_image), str(input_image + ".jpeg"))
         if img_format == "PNG":  # If the file is PNG, give it a PNG extension.
-            os.renames(str(filepath), str(filepath + ".png"))
+            os.renames(str(input_image), str(input_image + ".png"))
         if img_format == "BMP":  # Mastodon does not currently support TIFF
-            os.renames(str(filepath), str(filepath + ".bmp"))
+            os.renames(str(input_image), str(input_image + ".bmp"))
         if img_format == "TIFF":  # Mastodon does not currently support TIFF
-            os.renames(str(filepath), str(filepath + ".tiff"))
+            os.renames(str(input_image), str(input_image + ".tiff"))
         return user_message
     except OSError as e:
         print(e)
-        return "Something went wrong with converting the image"
+        return "Something went wrong with converting the image\n"
 
 
 def rotate_image(input_image, rotate_by_degrees=None, rotation_direction="right", rotation_type=None):
     """Rotates the image by the given number of degrees and saves a copy of the image
     There are two rotation types, simple and complex: simple rotates the image without resizing, and (complex)
     resizes the borders accordingly.
+
+    :param input_image: str the image's file path.
+    :param rotate_by_degrees: str the number of degrees the image is to be rotated by
+    :param rotation_direction: str which way the image is to be rotated left / right.
+    :param rotation_type: str simple/complex. Simple rotates the image without adjusting the size of the original image.
+    :return: str with text of image if operation successful. Error message if not.
     """
     rotate_by_degrees = rotate_by_degrees if rotation_direction == "right" \
         else str(0 - int(rotate_by_degrees))
@@ -580,7 +629,11 @@ def show_image_histogram(input_image):
 
 
 def create_reflective_border(input_image):
-    """Creates a reflective border around the edge of the image."""
+    """Creates a reflective border around the edge of the image.
+
+    :param input_image: str the image's file path.
+    :return: str with text of image if operation successful. Error message if not.
+    """
     try:
         img = cv2.imread(input_image)
         img = cv2.copyMakeBorder(img, 10, 10, 10, 10, cv2.BORDER_REFLECT)
@@ -592,7 +645,11 @@ def create_reflective_border(input_image):
 
 
 def crop_image(input_image, left, top, right, bottom):
-    """Crops the image by the input amounts (left, top, right, bottom)"""
+    """Crops the image by the input amounts (left, top, right, bottom)
+
+    :param input_image: str the image's file path.
+    :return: str with text of image if operation successful. Error message if not.
+    """
     try:
         img = Image.open(input_image)
         width, height = img.size
@@ -617,7 +674,7 @@ def crop_image(input_image, left, top, right, bottom):
         cropped_img = ImageOps.crop(img, (left, top, right, bottom))
         cropped_img.save(input_image)
 
-        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("rotate by " + str(left) + " " + str(top)
+        return settings.OPERATION_SUCCESSFUL_MESSAGE.format("Cropped by " + str(left) + " " + str(top)
                                                             + " " + str(right) + " " + str(bottom))
 
     except BaseException as e:
@@ -626,7 +683,11 @@ def crop_image(input_image, left, top, right, bottom):
 
 
 def enhance_image(input_image):
-    """Creates and saves an enhanced version of the image"""
+    """Creates and saves an enhanced version of the image
+
+    :param input_image: str the image's file path.
+    :return: str with text of image if operation successful. Error message if not.
+    """
     try:
         img = Image.open(input_image)
         enhancer = ImageEnhance.Sharpness(img)
@@ -639,7 +700,12 @@ def enhance_image(input_image):
 
 
 def adjust_brightness(input_image, value=1.5):
-    """Creates and saves a brightened / darkened version of the image"""
+    """Creates and saves a brightened / darkened version of the image
+
+    :param input_image: str the image's file path.
+    :param value: optional value determining how much brighter or darker the image is.
+    :return: str with text of image if operation successful. Error message if not.
+    """
     try:
         value = float(value)
         img = Image.open(input_image)
@@ -653,7 +719,12 @@ def adjust_brightness(input_image, value=1.5):
 
 
 def adjust_contrast(input_image, value=1.5):
-    """Adjusts the contrast and saves that version of the image"""
+    """Adjusts the contrast and saves that version of the image
+
+    :param input_image: str the image's file path.
+    :param value: optional value determining the change in contrast.
+    :return: str with text of image if operation successful. Error message if not.
+    """
     try:
         value = float(value)
         img = Image.open(input_image)
@@ -667,7 +738,12 @@ def adjust_contrast(input_image, value=1.5):
 
 
 def adjust_colour(input_image, value=1.5):
-    """Adjusts the colour in the image and saves that version of the image"""
+    """Adjusts the colour in the image and saves that version of the image
+
+    :param input_image: str the image's file path.
+    :param value: optional value determining the change in contrast.
+    :return: str with text of image if operation successful. Error message if not.
+    """
     try:
         value = float(value)
         img = Image.open(input_image)
@@ -681,7 +757,11 @@ def adjust_colour(input_image, value=1.5):
 
 
 def flip_image(input_image):
-    """Flips the image and saves the flipped version"""
+    """Flips the image and saves the flipped version
+
+    :param input_image: str the image's file path.
+    :return: str with text of image if operation successful. Error message if not.
+    """
     try:
         img = Image.open(input_image)
         img_flipped = ImageOps.flip(img)
@@ -693,7 +773,11 @@ def flip_image(input_image):
 
 
 def mirror_image(input_image):
-    """Mirrors the image and saves the mirrored version"""
+    """Mirrors the image and saves the mirrored version
+
+    :param input_image: str the image's file path.
+    :return: str with text of image if operation successful. Error message if not.
+    """
     try:
         img = Image.open(input_image)
         img_mirrored = ImageOps.mirror(img)
@@ -705,7 +789,11 @@ def mirror_image(input_image):
 
 
 def make_transparent_image(input_image):
-    """Creates a transparent (PNG) version of the image and saves it."""
+    """Creates a transparent (PNG) version of the image and saves it.
+
+    :param input_image: str the image's file path.
+    :return: str with text of image if operation successful. Error message if not.
+    """
     try:
         img_transparent = Image.open(input_image)
         img_transparent.putalpha(128)
@@ -717,7 +805,11 @@ def make_transparent_image(input_image):
 
 
 def make_negative_image(input_image):
-    """Creates a negative style version of the image and saves it"""
+    """Creates a negative style version of the image and saves it
+
+    :param input_image: str the image's file path.
+    :return: str with text of image if operation successful. Error message if not.
+    """
     try:
         img = Image.open(input_image)
         negative_img = Image.new('RGB', img.size)  # creates new image
@@ -734,7 +826,11 @@ def make_negative_image(input_image):
 
 
 def make_sepia_image(input_image):
-    """Creates a sepia style version of the image and saves it"""
+    """Creates a sepia style version of the image and saves it
+
+    :param input_image: str the image's file path.
+    :return: str with text of image if operation successful. Error message if not.
+    """
     try:
         img = Image.open(input_image)
         sepia_img = Image.new('RGB', img.size)  # creates new image
@@ -753,7 +849,11 @@ def make_sepia_image(input_image):
 
 
 def blur_image(input_image):
-    """Creates a blurred version of the image and saves it"""
+    """Creates a blurred version of the image and saves it
+
+    :param input_image: str the image's file path.
+    :return: str with text of image if operation successful. Error message if not.
+    """
     try:
         img = Image.open(input_image)
         blurred_image = img.filter(ImageFilter.BoxBlur(5))
@@ -765,7 +865,11 @@ def blur_image(input_image):
 
 
 def blur_edges(input_image):
-    """Blurs the borders of a given image."""
+    """Blurs the borders of a given image.
+
+    :param input_image: str the image's file path.
+    :return: str with text of image if operation successful. Error message if not.
+    """
     try:
         radius, diameter = 20, 40
         img = Image.open(input_image)  # Paste image on white background
@@ -788,7 +892,11 @@ def blur_edges(input_image):
 
 # TODO: Change this so user can change colour
 def add_border(input_image):
-    """Adds a border to the given image"""
+    """Adds a border to the given image
+
+    :param input_image: str the image's file path.
+    :return: str with text of image if operation successful. Error message if not.
+    """
     try:
         img = Image.open(input_image)
         colour = "white"
@@ -802,7 +910,12 @@ def add_border(input_image):
 
 
 def add_watermarks(input_image, wm_text):
-    """Creates a version of the image with the users requested water marks added and saves it"""
+    """Creates a version of the image with the users requested water marks added and saves it
+
+    :param input_image: str the image's file path.
+    :param wm_text: str the text to be added to the watermark
+    :return: str with text of image if operation successful. Error message if not.
+    """
     try:
         img = Image.open(input_image)  # open image to apply watermark to
         img.convert("RGB")  # get image size
@@ -830,7 +943,11 @@ def add_watermarks(input_image, wm_text):
 
 
 def convert_image_to_png(input_image):
-    """Converts the image to PNG"""
+    """Converts the image to PNG
+
+    :param input_image: str the image's file path.
+    :return: str with text of image if operation successful. Error message if not.
+    """
     try:
         Image.open(input_image).save(settings.PNG_OUTPUT)
         return settings.OPERATION_SUCCESSFUL_MESSAGE.format("convert to PNG")
@@ -840,7 +957,11 @@ def convert_image_to_png(input_image):
 
 
 def convert_image_to_jpeg(input_image):
-    """Converts the image to JPEG"""
+    """Converts the image to JPEG
+
+    :param input_image: str the image's file path.
+    :return: str with text of image if operation successful. Error message if not.
+    """
     try:
         Image.open(input_image).save(settings.JPEG_OUTPUT)
         return settings.OPERATION_SUCCESSFUL_MESSAGE.format("convert to jpeg")
@@ -850,7 +971,15 @@ def convert_image_to_jpeg(input_image):
 
 
 def append_images(images, direction='horizontal',
-                  bg_color=(255, 255, 255), aligment='center'):
+                  bg_color=(255, 255, 255), alignment='centre'):
+    """Appends images together
+
+    :param alignment: the alignment of the images. By default set at centre
+    :param bg_color: the background colour
+    :param images: the input images
+    :param direction: the direction which the images are appended together. By default set at "horizontal".
+    :return: str with text of image if operation successful. Error message if not.
+    """
     try:
         open_images = []
         for image in images:
@@ -871,17 +1000,17 @@ def append_images(images, direction='horizontal',
         for im in open_images:
             if direction == 'horizontal':
                 y = 0
-                if aligment == 'center':
+                if alignment == 'center':
                     y = int((new_height - im.size[1]) / 2)
-                elif aligment == 'bottom':
+                elif alignment == 'bottom':
                     y = new_height - im.size[1]
                 img.paste(im, (offset, y))
                 offset += im.size[0]
             else:
                 x = 0
-                if aligment == 'center':
+                if alignment == 'center':
                     x = int((new_width - im.size[0]) / 2)
-                elif aligment == 'right':
+                elif alignment == 'right':
                     x = new_width - im.size[0]
                 img.paste(im, (x, offset))
                 offset += im.size[1]
@@ -894,7 +1023,12 @@ def append_images(images, direction='horizontal',
 
 
 def bot_delete_files_in_directory(path):
-    """Deletes all of the files in the given directory"""
+    """Deletes all of the files in the given directory
+
+    :param path: str path of directory
+    :return: None
+
+    """
     path = str(path)
     for filename in os.listdir(path):
         file_path = os.path.join(path, filename)
@@ -908,6 +1042,9 @@ def bot_delete_files_in_directory(path):
 
 
 def clear_notifications():
+    """
+        Clears notifications
+    """
     mastodon.notifications_clear()
 
 
