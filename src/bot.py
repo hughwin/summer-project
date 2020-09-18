@@ -245,6 +245,10 @@ def listen_to_request(spam_defender):
                         while params:
                             print(params)
 
+                            if params and params[0] == "help":
+                                reply_message_set.add(settings.HELP_MESSAGE)
+                                params = params[1:]
+
                             if params and params[0] == "formats":
                                 reply_message_set.add(settings.SUPPORTED_FORMATS_MESSAGE)
                                 params = params[1:]
