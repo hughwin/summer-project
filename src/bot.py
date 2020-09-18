@@ -230,7 +230,7 @@ def listen_to_request(spam_defender):
                     spam_defender.add_user_to_requests(user.account_id)
                 file_count = 0
                 num_files = os.listdir(str(settings.INPUT_FOLDER))
-                if len(num_files) != 0 or "help" or "formats" or "hello" in params:
+                if len(num_files) != 0 or "help" in params or "formats" in params:
 
                     sentiment_list = []
 
@@ -245,7 +245,7 @@ def listen_to_request(spam_defender):
                         while params:
                             print(params)
 
-                            if params and params[0] == "help" or params and params[0] == "hello":
+                            if params and params[0] == "help":
                                 reply_message_set.add(settings.HELP_MESSAGE)
                                 params = params[1:]
 
@@ -445,7 +445,8 @@ def listen_to_request(spam_defender):
 
                             if params and params[0] == "properties":
                                 for image in image_glob:
-                                    reply_message_set.add(image_recognition.detect_labels(image))
+                                    reply_message_set.add("Properties in the image\n\n:" +
+                                                          image_recognition.detect_labels(image))
                                     params = params[1:]
 
                             elif params:
@@ -457,6 +458,14 @@ def listen_to_request(spam_defender):
                             if sentiment_list != [] else ""
                         reply_to_toot(reply.status_id, message="\n" + sentiment_message + "".join(about_list) + "".join(
                             reply_message_set),
+                                      account_name=account_name)
+                else:
+                    for reply in status_notifications:
+                        sentiment_message = (sentiment_analysis("".join(params)) + "\n\n") \
+                            if params != [] else ""
+                        reply_to_toot(reply.status_id, message="\n" + sentiment_message +
+                                                               "\n No commands recognised. If you need "
+                                                               "help, call \"@botbot.botsin.space help\"",
                                       account_name=account_name)
             mastodon.notifications_clear()
             status_notifications.clear()
