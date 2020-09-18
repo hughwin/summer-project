@@ -245,10 +245,6 @@ def listen_to_request(spam_defender):
                         while params:
                             print(params)
 
-                            if params and params[0] == "help" or params and params[0] == "hello":
-                                reply_message_set.add(settings.HELP_MESSAGE)
-                                params = params[1:]
-
                             if params and params[0] == "formats":
                                 reply_message_set.add(settings.SUPPORTED_FORMATS_MESSAGE)
                                 params = params[1:]
@@ -458,6 +454,14 @@ def listen_to_request(spam_defender):
                             if sentiment_list != [] else ""
                         reply_to_toot(reply.status_id, message="\n" + sentiment_message + "".join(about_list) + "".join(
                             reply_message_set),
+                                      account_name=account_name)
+                else:
+                    for reply in status_notifications:
+                        sentiment_message = (sentiment_analysis("".join(params)) + "\n\n") \
+                            if params != [] else ""
+                        reply_to_toot(reply.status_id, message="\n" + sentiment_message +
+                                                               "\n No commands recognised. If you need "
+                                                               "help, call \"@botbot.botsin.space help\"",
                                       account_name=account_name)
             mastodon.notifications_clear()
             status_notifications.clear()
