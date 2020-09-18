@@ -230,7 +230,7 @@ def listen_to_request(spam_defender):
                     spam_defender.add_user_to_requests(user.account_id)
                 file_count = 0
                 num_files = os.listdir(str(settings.INPUT_FOLDER))
-                if len(num_files) != 0 or "help" or "formats" or "hello" in params:
+                if len(num_files) != 0 or "help" in params or "formats" in params:
 
                     sentiment_list = []
 
