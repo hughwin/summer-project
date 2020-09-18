@@ -445,7 +445,8 @@ def listen_to_request(spam_defender):
 
                             if params and params[0] == "properties":
                                 for image in image_glob:
-                                    reply_message_set.add(image_recognition.detect_labels(image))
+                                    reply_message_set.add("Properties in the image\n\n:" +
+                                                          image_recognition.detect_labels(image))
                                     params = params[1:]
 
                             elif params:
