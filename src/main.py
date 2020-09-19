@@ -6,8 +6,8 @@ import settings
 
 
 def main():
-    os.mkdir(str(settings.INPUT_DIR))
-    os.mkdir(str(settings.DAILY_DIR))
+    os.makedirs(str(settings.INPUT_DIR), exist_ok=True)
+    os.makedirs(str(settings.DAILY_DIR), exist_ok=True)
 
     # build gcp_cred.json file required for the functioning of GCP.
     # Hides keys on HEROKU.
