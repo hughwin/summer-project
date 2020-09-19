@@ -193,6 +193,7 @@ def listen_to_request(spam_defender):
     while True:
         print("Checking notifications!")
         notifications = mastodon.notifications(mentions_only=True)
+        mastodon.notifications_clear()
 
         for n in notifications:
             if n["type"] == "mention":
@@ -473,7 +474,6 @@ def listen_to_request(spam_defender):
                                                                "\n No commands recognised. If you need "
                                                                "help, call \"@botbot.botsin.space help\"",
                                       account_name=account_name)
-            mastodon.notifications_clear()
             status_notifications.clear()
             bot_delete_files_in_directory(settings.INPUT_DIR)
         schedule.run_pending()
