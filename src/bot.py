@@ -53,10 +53,10 @@ def reply_to_toot(post_id, account_name, message=None):
     :param message: the informative message that is included in the reply toot.
     """
     media_ids = []
-    for fn in os.listdir(str(settings.INPUT_FOLDER)):
+    for fn in os.listdir(str(settings.INPUT_DIR)):
         if fn.endswith(('.jpeg', '.png')):
             print(Path(fn))
-            image_dict = mastodon.media_post(str(settings.INPUT_FOLDER / fn), description="Requested modified image")
+            image_dict = mastodon.media_post(str(settings.INPUT_DIR / fn), description="Requested modified image")
             media_ids.append(image_dict["id"])
     if message is not None:
         parts = []
@@ -220,8 +220,8 @@ def listen_to_request(spam_defender):
                         if m["type"] == "image":
                             media_url = m["url"]
                             media_path = "{}".format(file_count)
-                            urllib.request.urlretrieve(media_url, (str(settings.INPUT_FOLDER / media_path)))
-                            reply_message_set.add(check_image_type(str(settings.INPUT_FOLDER / media_path)))
+                            urllib.request.urlretrieve(media_url, (str(settings.INPUT_DIR / media_path)))
+                            reply_message_set.add(check_image_type(str(settings.INPUT_DIR / media_path)))
                             user.media.append(media)
                             file_count += 1
                         else:
@@ -229,13 +229,13 @@ def listen_to_request(spam_defender):
                     status_notifications.append(user)
                     spam_defender.add_user_to_requests(user.account_id)
                 file_count = 0
-                num_files = os.listdir(str(settings.INPUT_FOLDER))
+                num_files = os.listdir(str(settings.INPUT_DIR))
                 if len(num_files) != 0 or "help" in params or "formats" in params:
 
                     sentiment_list = []
 
                     for reply in status_notifications:
-                        os.chdir(str(settings.INPUT_FOLDER))
+                        os.chdir(str(settings.INPUT_DIR))
                         image_glob = glob.glob(settings.IMAGE_INPUT.format("*.png")) \
                                      + glob.glob(settings.IMAGE_INPUT.format("*.jpeg"))
                         print(image_glob)
@@ -409,12 +409,17 @@ def listen_to_request(spam_defender):
                                                                                    rotation_direction=params[2],
                                                                                    rotation_type=params[3]))
                                                 remove_params = 4
-                                            elif len(params) >= 3:
-                                                if params[2] == "left" or params[2] == "left":
-                                                    reply_message_set.add(rotate_image(image,
-                                                                                       rotate_by_degrees=params[1],
-                                                                                       rotation_direction=params[2]))
-                                                    remove_params = 3
+                                        if len(params) >= 3:
+                                            if params[2] == "left" or params[2] == "right":
+                                                reply_message_set.add(rotate_image(image,
+                                                                                   rotate_by_degrees=params[1],
+                                                                                   rotation_direction=params[2]))
+                                                remove_params = 3
+                                            if params[1] == "left" or params[1] == "right":
+                                                reply_message_set.add(rotate_image(image,
+                                                                                   rotate_by_degrees=params[2],
+                                                                                   rotation_direction=params[1]))
+                                                remove_params = 3
                                         elif params:
                                             reply_message_set.add(rotate_image(image, rotate_by_degrees=params[1]))
                                             remove_params = 2
@@ -469,7 +474,7 @@ def listen_to_request(spam_defender):
                                       account_name=account_name)
             mastodon.notifications_clear()
             status_notifications.clear()
-            bot_delete_files_in_directory(settings.INPUT_FOLDER)
+            bot_delete_files_in_directory(settings.INPUT_DIR)
         schedule.run_pending()
         time.sleep(1)
 
@@ -1023,7 +1028,7 @@ def append_images(images, direction='horizontal',
                     x = new_width - im.size[0]
                 img.paste(im, (x, offset))
                 offset += im.size[1]
-        bot_delete_files_in_directory(settings.INPUT_FOLDER)
+        bot_delete_files_in_directory(settings.INPUT_DIR)
         img.save(settings.IMAGE_INPUT.format(destination_file_name))
         return settings.OPERATION_SUCCESSFUL_MESSAGE.format("append")
     except BaseException as e:
