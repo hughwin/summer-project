@@ -193,6 +193,7 @@ def listen_to_request(spam_defender):
     while True:
         print("Checking notifications!")
         notifications = mastodon.notifications(mentions_only=True)
+        mastodon.notifications_clear()
 
         for n in notifications:
             if n["type"] == "mention":
@@ -401,25 +402,26 @@ def listen_to_request(spam_defender):
                                 try:
                                     remove_params = 0
                                     for image in image_glob:
-                                        if len(params) >= 4:
-                                            if params[2] == "left" and params[3] == "simple" or \
-                                                    params[2] == "right" and params[3] == "simple":
-                                                reply_message_set.add(rotate_image(image,
-                                                                                   rotate_by_degrees=params[1],
-                                                                                   rotation_direction=params[2],
-                                                                                   rotation_type=params[3]))
-                                                remove_params = 4
-                                        if len(params) >= 3:
-                                            if params[2] == "left" or params[2] == "right":
-                                                reply_message_set.add(rotate_image(image,
-                                                                                   rotate_by_degrees=params[1],
-                                                                                   rotation_direction=params[2]))
-                                                remove_params = 3
-                                            if params[1] == "left" or params[1] == "right":
-                                                reply_message_set.add(rotate_image(image,
-                                                                                   rotate_by_degrees=params[2],
-                                                                                   rotation_direction=params[1]))
-                                                remove_params = 3
+
+                                        if params[2] == "left" and params[3] == "simple" or \
+                                                params[2] == "right" and params[3] == "simple":
+                                            reply_message_set.add(rotate_image(image,
+                                                                               rotate_by_degrees=params[1],
+                                                                               rotation_direction=params[2],
+                                                                               rotation_type=params[3]))
+                                            remove_params = 4
+
+                                        elif params[2] == "left" or params[2] == "right":
+                                            reply_message_set.add(rotate_image(image,
+                                                                               rotate_by_degrees=params[1],
+                                                                               rotation_direction=params[2]))
+                                            remove_params = 3
+                                        elif params[1] == "left" or params[1] == "right":
+                                            reply_message_set.add(rotate_image(image,
+                                                                               rotate_by_degrees=params[2],
+                                                                               rotation_direction=params[1]))
+                                            remove_params = 3
+
                                         elif params:
                                             reply_message_set.add(rotate_image(image, rotate_by_degrees=params[1]))
                                             remove_params = 2
@@ -428,6 +430,7 @@ def listen_to_request(spam_defender):
                                     reply_message_set.add(settings.OPERATION_FAILED_MESSAGE.format("rotate")
                                                           + "You didn't specify how many degrees you wanted it"
                                                             " rotated by\n")
+                                    params = params[1:]
 
                             if params and params[0] == "append":
                                 if len(params) >= 2:
@@ -472,7 +475,6 @@ def listen_to_request(spam_defender):
                                                                "\n No commands recognised. If you need "
                                                                "help, call \"@botbot.botsin.space help\"",
                                       account_name=account_name)
-            mastodon.notifications_clear()
             status_notifications.clear()
             bot_delete_files_in_directory(settings.INPUT_DIR)
         schedule.run_pending()
@@ -587,7 +589,7 @@ def check_image_type(input_image):
         if img_format == "GIF":
             os.remove(input_image)  # Mastodon uses MP4 for gifs, but in case one slips through.
             user_message += settings.GIF_MESSAGE  # Informs the user.
-        if img_format == "JPEG":  # If the file is JPEG, give it a JPEG extension.
+        if img_format == "JPEG" or img_format == "JPG":  # If the file is JPEG, give it a JPEG extension.
             os.renames(str(input_image), str(input_image + ".jpeg"))
         if img_format == "PNG":  # If the file is PNG, give it a PNG extension.
             os.renames(str(input_image), str(input_image + ".png"))
