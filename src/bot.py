@@ -409,12 +409,17 @@ def listen_to_request(spam_defender):
                                                                                    rotation_direction=params[2],
                                                                                    rotation_type=params[3]))
                                                 remove_params = 4
-                                            elif len(params) >= 3:
-                                                if params[2] == "left" or params[2] == "left":
-                                                    reply_message_set.add(rotate_image(image,
-                                                                                       rotate_by_degrees=params[1],
-                                                                                       rotation_direction=params[2]))
-                                                    remove_params = 3
+                                        if len(params) >= 3:
+                                            if params[2] == "left" or params[2] == "right":
+                                                reply_message_set.add(rotate_image(image,
+                                                                                   rotate_by_degrees=params[1],
+                                                                                   rotation_direction=params[2]))
+                                                remove_params = 3
+                                            if params[1] == "left" or params[1] == "right":
+                                                reply_message_set.add(rotate_image(image,
+                                                                                   rotate_by_degrees=params[2],
+                                                                                   rotation_direction=params[1]))
+                                                remove_params = 3
                                         elif params:
                                             reply_message_set.add(rotate_image(image, rotate_by_degrees=params[1]))
                                             remove_params = 2
