@@ -17,6 +17,7 @@ Name | Required | Default | Description
 --- | --- | --- | ---
 ACCESS_TOKEN | Yes | N/A | The access token for the Mastodon account that you want the toots to come from
 NASA_TOKEN | NO | N/A | The bot toots images obtained from NASA's [APOD](https://api.nasa.gov/) API. The main benefit of this is to show users that the bot is still active, and to advertise it to the userbase - it is not strictly required. Without a key, the bot will simply print an exception to the log. 
+gcp_cred.json | Yes | Yes | NA | The bot has some requirment that is perfromed through Google Vision. In order to get this to work properly, you need to get a key from Google, and put the gcp_cred.json in the root of the folder. 
 
 ### Heroku
 
