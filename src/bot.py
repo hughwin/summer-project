@@ -483,7 +483,7 @@ def listen_to_request(spam_defender):
         status_notifications.clear()
         bot_delete_files_in_directory(settings.INPUT_DIR)
         schedule.run_pending()
-        time.sleep(1)
+        time.sleep(2)
 
 
 def sentiment_analysis(text):
