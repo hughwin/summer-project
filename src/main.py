@@ -11,6 +11,7 @@ def main():
 
     # build gcp_cred.json file required for the functioning of GCP.
     # Hides keys on HEROKU.
+    # Uncomment lines below if adding to Heroku.
     with open(str(settings.BASE_DIRECTORY / "gcp_cred.json"), "w") as file:
         credentials = json.loads(os.getenv("GCP_CRED"))
         json.dump(credentials, file)

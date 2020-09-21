@@ -49,7 +49,7 @@ class ImageRecognition:
 
         for landmark in landmarks:
             return "Looks like the " + landmark.description + "\n\n"
-        return return_string
+        return "No landmarks detected. Try calling landmarks as the first argument\n"
 
     def detect_labels(self, input_image):
         """Detects labels in the file."""
