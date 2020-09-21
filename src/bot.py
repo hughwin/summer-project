@@ -235,16 +235,16 @@ def listen_to_request(spam_defender):
 
                     sentiment_list = []
 
-                    for reply in status_notifications:
-                        os.chdir(str(settings.INPUT_DIR))
-                        image_glob = glob.glob(settings.IMAGE_INPUT.format("*.png")) \
-                                     + glob.glob(settings.IMAGE_INPUT.format("*.jpeg"))
-                        print(image_glob)
+                    os.chdir(str(settings.INPUT_DIR))
 
+                    for reply in status_notifications:
                         about_count = 1
 
                         while params:
                             print(params)
+
+                            image_glob = glob.glob(settings.IMAGE_INPUT.format("*.png")) \
+                                         + glob.glob(settings.IMAGE_INPUT.format("*.jpeg"))
 
                             if params and params[0] == "help":
                                 reply_message_set.add(settings.HELP_MESSAGE)
@@ -440,6 +440,7 @@ def listen_to_request(spam_defender):
                                     if params[1] == "vertical" or params[1] == "horizontal":
                                         reply_message_set.add(append_images(image_glob, direction=params[1]))
                                         params = params[2:]
+                                        continue
                                 else:
                                     reply_message_set.add(append_images(image_glob))
                                     params = params[1:]
@@ -465,11 +466,12 @@ def listen_to_request(spam_defender):
                                     reply_message_set.add(settings.INVALID_COMMAND.format("\"" + params[0] + "\""))
                                     sentiment_list.append(params[0] + " ")
                                     params = params[1:]
-                        sentiment_message = (sentiment_analysis("".join(sentiment_list)) + "\n\n") \
-                            if sentiment_list != [] else ""
-                        reply_to_toot(reply.status_id, message="\n" + sentiment_message + "".join(about_list) + "".join(
-                            reply_message_set),
-                                      account_name=account_name)
+                            sentiment_message = (sentiment_analysis("".join(sentiment_list)) + "\n\n") \
+                                if sentiment_list != [] else ""
+                            reply_to_toot(reply.status_id,
+                                          message="\n" + sentiment_message + "".join(about_list) + "".join(
+                                              reply_message_set),
+                                          account_name=account_name)
                 else:
                     for reply in status_notifications:
                         sentiment_message = (sentiment_analysis("".join(params)) + "\n\n") \
@@ -478,8 +480,8 @@ def listen_to_request(spam_defender):
                                                                "\n No commands recognised. If you need "
                                                                "help, call \"@botbot.botsin.space help\"",
                                       account_name=account_name)
-            status_notifications.clear()
-            bot_delete_files_in_directory(settings.INPUT_DIR)
+        status_notifications.clear()
+        bot_delete_files_in_directory(settings.INPUT_DIR)
         schedule.run_pending()
         time.sleep(1)
 
