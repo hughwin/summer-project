@@ -24,7 +24,7 @@ mock==3.0.5
 nltk==3.5
 numpy==1.18.5
 opencv-python==4.4.0.42
-Pillow==7.2.0
+Pillow==9.3.0
 protobuf==3.13.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
